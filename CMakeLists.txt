@@ -1,8 +1,20 @@
 cmake_minimum_required(VERSION 3.24)
-project(hpc LANGUAGES CXX)
+project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# openmp
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include")
+  set(OpenMP_CXX_FLAGS "${OpenMP_C_FLAGS}")
+  set(OpenMP_C_LIB_NAMES "omp")
+  set(OpenMP_CXX_LIB_NAMES "omp")
+  set(OpenMP_omp_LIBRARY "/opt/homebrew/opt/libomp/lib/libomp.dylib")
+endif()
+
+find_package(OpenMP REQUIRED)
+
+# 3rdparty
 
 
 # Colored printing
@@ -32,6 +44,7 @@ file(GLOB_RECURSE HEADER_FILES include/*.h include/*.hpp)
 
 add_library(hpc ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(hpc PUBLIC include include/hpc)
+target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX)
 
 set_target_properties(hpc PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY src
