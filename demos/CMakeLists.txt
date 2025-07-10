@@ -3,7 +3,7 @@ project(demos LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB projects ./cmu-15-418/*)
+file(GLOB projects ./startup/*)
 
 print_info("――――――――――――――――――APP SCOPE――――――――――――――――――" "0")
 
@@ -14,9 +14,9 @@ foreach(project ${projects})
     get_filename_component(project-name ${project} NAME)
     file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
     file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hpp)
-    file(GLOB_RECURSE ${project}-obj ${project}/*.o)
+    # file(GLOB_RECURSE ${project}-obj ${project}/*.o)
 
-    add_executable(${project-name} ${${project}-src} ${${project}-hdr} ${${project}-obj})
+    add_executable(${project-name} ${${project}-src} ${${project}-hdr})
 
     target_link_libraries(${project-name} PRIVATE hpc)
 
