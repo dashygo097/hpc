@@ -4,6 +4,8 @@ project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(GoogleTest)
+enable_testing()
 
 # openmp
 if(APPLE)
@@ -18,8 +20,8 @@ endif()
 find_package(OpenMP REQUIRED)
 
 # 3rdparty
+add_subdirectory(3rdparty/googletest)
 include_directories(3rdparty)
-
 
 # hpc
 
@@ -93,4 +95,3 @@ print_info("[TRACE] Source files: ${REL_SOURCES}" "96")
 add_subdirectory(tests)
 add_subdirectory(demos)
 
-enable_testing()
