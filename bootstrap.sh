@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-source env.sh
 
 CURRENT_DIR=$(pwd)
 BUILD_DIR="build"

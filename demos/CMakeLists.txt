@@ -12,10 +12,11 @@ foreach(project ${projects})
     set(EXECUTABLE_OUTPUT_PATH ../outputs/demos)
     math(EXPR index "${index} + 1" OUTPUT_FORMAT DECIMAL)
     get_filename_component(project-name ${project} NAME)
-    file(GLOB ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
-    file(GLOB ${project}-headers ${project}/*.h ${project}/*.hpp)
+    file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
+    file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hpp)
+    file(GLOB_RECURSE ${project}-obj ${project}/*.o)
 
-    add_executable(${project-name} ${${project}-src} ${${project}-headers})
+    add_executable(${project-name} ${${project}-src} ${${project}-hdr} ${${project}-obj})
 
     target_link_libraries(${project-name} PRIVATE hpc)
 
