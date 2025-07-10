@@ -18,6 +18,7 @@ if(APPLE)
 endif()
 
 find_package(OpenMP REQUIRED)
+find_package(MPI REQUIRED)
 
 # 3rdparty
 add_subdirectory(3rdparty/googletest)
@@ -33,7 +34,7 @@ target_include_directories(hpc PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX)
 
 set_target_properties(hpc PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
@@ -82,6 +83,8 @@ endfunction()
 print_info("――――――――――――――――――LIB SCOPE――――――――――――――――――" "0")
 print_info("[INFO] Openmp C version: ${OpenMP_C_VERSION}" "90")
 print_info("[INFO] Openmp CXX version: ${OpenMP_CXX_VERSION}" "90")
+print_info("[INFO] MPI C version: ${MPI_C_VERSION}" "90")
+print_info("[INFO] MPI CXX version: ${MPI_CXX_VERSION}" "90")
 
 make_paths_relative(REL_SOURCES HPC_SOURCES)
 make_paths_relative(REL_HEADERS HPC_HEADERS)
