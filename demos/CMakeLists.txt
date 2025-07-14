@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.21)
-project(demos LANGUAGES CXX)
+project(demos LANGUAGES C CXX)
+
+if (HAS_CUDA) 
+  add_language(CUDA)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 file(GLOB projects ./startup/*)
 
@@ -12,7 +18,13 @@ foreach(project ${projects})
     set(EXECUTABLE_OUTPUT_PATH ../outputs/demos)
     math(EXPR index "${index} + 1" OUTPUT_FORMAT DECIMAL)
     get_filename_component(project-name ${project} NAME)
-    file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
+
+    if (HAS_CUDA)
+      file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc ${project}/*.cu)
+    else()
+      file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
+    endif()
+
     file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hpp)
     # file(GLOB_RECURSE ${project}-obj ${project}/*.o)
 
