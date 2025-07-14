@@ -20,16 +20,13 @@ if(CMAKE_CUDA_COMPILER)
 
     if(WIN32)
         message(STATUS "Building on Windows")
-        set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.8/bin/nvcc.exe" CACHE FILEPATH "" FORCE)
     elseif(UNIX AND NOT APPLE)
         message(STATUS "Building on Unix-like system")
-        set(CMAKE_CUDA_COMPILER "/bin/nvcc" CACHE FILEPATH "" FORCE)
-        set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda" CACHE PATH "" FORCE)
     endif()
 
     message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
 
-    find_package(CUDA REQUIRED)
+    find_package(CUDAToolkit REQUIRED)
 
     message(STATUS "CUDA toolkit root: ${CUDA_TOOLKIT_ROOT_DIR}")
 
@@ -79,7 +76,7 @@ target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX)
 
 if (HAS_CUDA)
   file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
-  add_library(hpc_cuda ${HPC_CUDA_SOURCES})
+  target_link_libraries(hpc PUBLIC ${HPC_CUDA_SOURCES})
   
   set_target_properties(hpc PROPERTIES 
       CUDA_SEPARABLE_COMPILATION ON
