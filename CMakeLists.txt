@@ -9,52 +9,41 @@ include(GoogleTest)
 enable_testing()
 
 # CUDA
-if (WIN32)
-  message(STATUS "Building on Windows")
 
-    include(CheckLanguage)
-    check_language(CUDA)
+include(CheckLanguage)
 
-    # INFO: This is a placeholder for the actual CUDA compiler path.
-    set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v*.0/bin/nvcc.exe")
+check_language(CUDA)
 
-    if (CMAKE_CUDA_COMPILER)
-        enable_language(CUDA)
-        message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
-        set(HAS_CUDA TRUE)
-    else()
-        message(WARNING "CUDA compiler not found on this system.")
-        set(HAS_CUDA FALSE)
+if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    set(HAS_CUDA TRUE)
+
+    if(WIN32)
+        message(STATUS "Building on Windows")
+        set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.8/bin/nvcc.exe" CACHE FILEPATH "" FORCE)
+    elseif(UNIX AND NOT APPLE)
+        message(STATUS "Building on Unix-like system")
+        set(CMAKE_CUDA_COMPILER "/bin/nvcc" CACHE FILEPATH "" FORCE)
+        set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda" CACHE PATH "" FORCE)
     endif()
-elseif(UNIX AND NOT APPLE)
-  message(STATUS "Building on Unix-like system")
 
-    include(CheckLanguage)
-    check_language(CUDA)
+    message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
 
-    # INFO: This is a placeholder for the actual CUDA compiler path.
-    set(CMAKE_CUDA_COMPILER /bin/nvcc)
+    find_package(CUDA REQUIRED)
 
-    if (CMAKE_CUDA_COMPILER)
-        enable_language(CUDA)
-        message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
-        set(HAS_CUDA TRUE)
-    else()
-        message(WARNING "CUDA not found on this system.")
-        set(HAS_CUDA FALSE)
-    endif()
+    message(STATUS "CUDA toolkit root: ${CUDA_TOOLKIT_ROOT_DIR}")
+
 else()
-  message(STATUS "Invalid platform for CUDA; skipping CUDA check here.")
+  message(WARNING "CUDA compiler not found; CUDA support will be disabled.")
     set(HAS_CUDA FALSE)
 endif()
 
-if (HAS_CUDA)
-  find_package(CUDA REQUIRED)
-  if (NOT TARGET CUDA::cudart)
-    message(FATAL_ERROR "CUDA runtime library not found.")
-  endif()
+if(HAS_CUDA)
+    if(NOT TARGET CUDA::cudart)
+        message(FATAL_ERROR "CUDA::cudart target not found — missing CUDA Toolkit?")
+    endif()
 else()
-  message(STATUS "CUDA support is disabled.")
+    message(STATUS "CUDA support is disabled.")
 endif()
 
 
