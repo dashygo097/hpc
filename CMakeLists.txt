@@ -20,7 +20,7 @@ endif()
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 
-if (WIN32)
+if (WINDOWS)
     message(STATUS "Building on Windows")
 
     include(CheckLanguage)
