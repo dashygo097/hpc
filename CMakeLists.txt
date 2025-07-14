@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
+project(hpc LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -14,24 +15,32 @@ if (WIN32)
     include(CheckLanguage)
     check_language(CUDA)
 
+    # INFO: This is a placeholder for the actual CUDA compiler path.
+    set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v*.0/bin/nvcc.exe")
+
     if (CMAKE_CUDA_COMPILER)
         enable_language(CUDA)
         message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
         set(HAS_CUDA TRUE)
     else()
-        message(WARNING "CUDA not available on Windows.")
+        message(WARNING "CUDA compiler not found on this system.")
         set(HAS_CUDA FALSE)
     endif()
 elseif(UNIX AND NOT APPLE)
   message(STATUS "Building on Unix-like system")
+
     include(CheckLanguage)
     check_language(CUDA)
+
+    # INFO: This is a placeholder for the actual CUDA compiler path.
+    set(CMAKE_CUDA_COMPILER /bin/nvcc)
+
     if (CMAKE_CUDA_COMPILER)
         enable_language(CUDA)
         message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
         set(HAS_CUDA TRUE)
     else()
-        message(WARNING "CUDA not available on Unix-like systems.")
+        message(WARNING "CUDA not found on this system.")
         set(HAS_CUDA FALSE)
     endif()
 else()
@@ -44,10 +53,8 @@ if (HAS_CUDA)
   if (NOT TARGET CUDA::cudart)
     message(FATAL_ERROR "CUDA runtime library not found.")
   endif()
-  project(hpc LANGUAGES C CXX CUDA)
 else()
   message(STATUS "CUDA support is disabled.")
-  project(hpc LANGUAGES C CXX)
 endif()
 
 
