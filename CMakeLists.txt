@@ -1,25 +1,13 @@
 cmake_minimum_required(VERSION 3.21)
-project(hpc LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# test
 include(GoogleTest)
 enable_testing()
 
-# openmp
-if(APPLE)
-  set(OPENMP_PATH "/opt/homebrew/opt/libomp")
-  set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_PATH}/include")
-  set(OpenMP_CXX_FLAGS "${OpenMP_C_FLAGS}")
-  set(OpenMP_C_LIB_NAMES "omp")
-  set(OpenMP_CXX_LIB_NAMES "omp")
-  set(OpenMP_omp_LIBRARY "${OPENMP_PATH}/lib/libomp.dylib")
-endif()
-
-find_package(OpenMP REQUIRED)
-find_package(MPI REQUIRED)
-
+# CUDA
 if (WIN32)
   message(STATUS "Building on Windows")
 
@@ -50,6 +38,32 @@ else()
   message(STATUS "Invalid platform for CUDA; skipping CUDA check here.")
     set(HAS_CUDA FALSE)
 endif()
+
+if (HAS_CUDA)
+  find_package(CUDA REQUIRED)
+  if (NOT TARGET CUDA::cudart)
+    message(FATAL_ERROR "CUDA runtime library not found.")
+  endif()
+  project(hpc LANGUAGES C CXX CUDA)
+else()
+  message(STATUS "CUDA support is disabled.")
+  project(hpc LANGUAGES C CXX)
+endif()
+
+
+# openmp
+if(APPLE)
+  set(OPENMP_PATH "/opt/homebrew/opt/libomp")
+  set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_PATH}/include")
+  set(OpenMP_CXX_FLAGS "${OpenMP_C_FLAGS}")
+  set(OpenMP_C_LIB_NAMES "omp")
+  set(OpenMP_CXX_LIB_NAMES "omp")
+  set(OpenMP_omp_LIBRARY "${OPENMP_PATH}/lib/libomp.dylib")
+endif()
+
+find_package(OpenMP REQUIRED)
+find_package(MPI REQUIRED)
+
 
 # 3rdparty
 add_subdirectory(3rdparty/googletest)
