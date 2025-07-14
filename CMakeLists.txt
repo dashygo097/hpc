@@ -20,6 +20,25 @@ endif()
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 
+if (WIN32)
+    message(STATUS "Building on Windows")
+
+    include(CheckLanguage)
+    check_language(CUDA)
+
+    if (CMAKE_CUDA_COMPILER)
+        enable_language(CUDA)
+        message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
+        set(HAS_CUDA TRUE)
+    else()
+        message(WARNING "CUDA not available on Windows.")
+        set(HAS_CUDA FALSE)
+    endif()
+else()
+    message(STATUS "Non-Windows platform; skipping CUDA check here.")
+    set(HAS_CUDA FALSE)
+endif()
+
 # 3rdparty
 add_subdirectory(3rdparty/googletest)
 include_directories(3rdparty)
@@ -35,6 +54,18 @@ target_include_directories(hpc PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX)
+
+if (HAS_CUDA)
+  file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
+  add_library(hpc_cuda ${HPC_CUDA_SOURCES})
+  
+  set_target_properties(hpc PROPERTIES 
+      CUDA_SEPARABLE_COMPILATION ON
+      CUDA_ARCHITECTURES "native"
+  )
+  target_link_libraries(hpc PUBLIC CUDA::cudart)
+endif()
+
 
 set_target_properties(hpc PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
@@ -85,14 +116,36 @@ print_info("[INFO] Openmp C version: ${OpenMP_C_VERSION}" "90")
 print_info("[INFO] Openmp CXX version: ${OpenMP_CXX_VERSION}" "90")
 print_info("[INFO] MPI C version: ${MPI_C_VERSION}" "90")
 print_info("[INFO] MPI CXX version: ${MPI_CXX_VERSION}" "90")
+if (HAS_CUDA)
+  print_info("[INFO] CUDA compiler: ${CMAKE_CUDA_COMPILER}" "90")
+else()
+  print_info("[INFO] CUDA not available" "90")
+endif()
 
 make_paths_relative(REL_SOURCES HPC_SOURCES)
 make_paths_relative(REL_HEADERS HPC_HEADERS)
 make_preview_string(REL_SOURCES 3)
 make_preview_string(REL_HEADERS 3)
 
+if (HAS_CUDA)
+  file(GLOB_RECURSE HPC_CUDA_HEADERS include/cuda/*.h include/cuda/*.hpp)
+  make_paths_relative(REL_CUDA_HEADERS HPC_CUDA_HEADERS)
+  make_preview_string(REL_CUDA_HEADERS 3)
+  print_info("[TRACE] CUDA headers: ${REL_CUDA_HEADERS}" "92")
+else()
+  set(REL_CUDA_HEADERS "")
+endif()
+
+if (HPC_CUDA_SOURCES)
+  print_info("[TRACE] CUDA source files: ${REL_CUDA_HEADERS}" "96")
+else()
+  set(REL_CUDA_SOURCES "")
+endif()
+
 print_info("[TRACE] Header files: ${REL_HEADERS}" "94")
 print_info("[TRACE] Source files: ${REL_SOURCES}" "96")
+
+
 
 # Apps
 add_subdirectory(tests)
