@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(demos LANGUAGES C CXX)
 
 if (HAS_CUDA) 
-  add_language(CUDA)
+  enable_language(CUDA)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
