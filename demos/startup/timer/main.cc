@@ -1,9 +1,13 @@
+#define USE_MPI
 #include <hpc.hpp>
+
+#ifdef USE_MPI
 #include <mpi.h>
+#endif
 
 int main() {
   {
-    hpc::ProgTimer t(HPC_TIMER_SERIAL, "Serial");
+    hpc::ProgTimer t(hpc::Backend::SERIAL, "Serial");
     for (volatile int i = 0; i < 1e8; ++i)
       ;
     t.stop();
@@ -12,7 +16,7 @@ int main() {
 
 #ifdef _OPENMP
   {
-    hpc::ProgTimer t(HPC_TIMER_OPENMP, "OpenMP");
+    hpc::ProgTimer t(hpc::Backend::OPENMP, "OpenMP");
 #pragma omp parallel for
     for (int i = 0; i < 1e8; ++i)
       ;
@@ -24,7 +28,7 @@ int main() {
 #ifdef USE_MPI
   MPI_Init(nullptr, nullptr);
   {
-    hpc::ProgTimer t(HPC_TIMER_OPENMPI, "MPI");
+    hpc::ProgTimer t(hpc::Backend::OPENMPI, "MPI");
     MPI_Barrier(MPI_COMM_WORLD);
     t.stop();
     t.report();
@@ -34,7 +38,7 @@ int main() {
 
 #ifdef USE_CUDA
   {
-    hpc::ProgTimer t(HPC_TIMER_CUDA, "CUDA");
+    hpc::ProgTimer t(hpc::Backend::CUDA, "CUDA");
     // kernel<<<...>>>(); cudaDeviceSynchronize();
     t.stop();
     t.report();
