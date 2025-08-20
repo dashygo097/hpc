@@ -4,6 +4,9 @@ project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_C_COMPILER_LAUCHER ccache)
+set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+
 # test
 include(GoogleTest)
 enable_testing()
