@@ -16,7 +16,7 @@
 #include <cuda_runtime.h>
 #endif
 
-#include "hpc/constants.hpp"
+#include "hpc/constants.hh"
 
 namespace hpc {
 class ProgTimer {
