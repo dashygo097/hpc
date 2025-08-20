@@ -75,7 +75,7 @@ target_include_directories(hpc PUBLIC
 target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX)
 
 if (HAS_CUDA)
-  file(GLOB_RECURSE HPC_CUDA_HEADERS include/cuda/*.cuh)
+  file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
   file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
   target_link_libraries(hpc PUBLIC ${HPC_CUDA_SOURCES})
   
@@ -146,7 +146,6 @@ make_paths_relative(REL_SOURCES HPC_SOURCES)
 make_paths_relative(REL_HEADERS HPC_HEADERS)
 
 if (HAS_CUDA)
-
   make_paths_relative(REL_CUDA_HEADERS HPC_CUDA_HEADERS)
   make_paths_relative(REL_CUDA_SOURCES HPC_CUDA_SOURCES)
   make_preview_string(REL_CUDA_HEADERS 3)
