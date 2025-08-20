@@ -6,9 +6,10 @@
 #endif
 
 int main() {
+  int iterations = 100000000;
   {
     hpc::ProgTimer t(hpc::Backend::SERIAL, "Serial");
-    for (volatile int i = 0; i < 1e8; ++i)
+    for (volatile int i = 0; i < iterations; ++i)
       ;
     t.stop();
     t.report();
@@ -18,7 +19,7 @@ int main() {
   {
     hpc::ProgTimer t(hpc::Backend::OPENMP, "OpenMP");
 #pragma omp parallel for
-    for (int i = 0; i < 1e8; ++i)
+    for (int i = 0; i < iterations; ++i)
       ;
     t.stop();
     t.report();
