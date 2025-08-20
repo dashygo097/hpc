@@ -123,7 +123,7 @@ function(make_preview_string LIST_VAR N)
 
   if(list_length GREATER N)
     math(EXPR remaining_items "${list_length} - ${N}")
-    list(APPEND preview "; …(+${remaining_items} more)")
+    list(APPEND preview "; ...(+${remaining_items} more)")
   endif()
 
   set(PREVIOUS_SCOPE_VAR "${preview}" PARENT_SCOPE)
@@ -143,8 +143,6 @@ endif()
 
 make_paths_relative(REL_SOURCES HPC_SOURCES)
 make_paths_relative(REL_HEADERS HPC_HEADERS)
-make_preview_string(REL_SOURCES 3)
-make_preview_string(REL_HEADERS 3)
 
 if (HAS_CUDA)
   file(GLOB_RECURSE HPC_CUDA_HEADERS include/cuda/*.h include/cuda/*.hpp)
@@ -158,7 +156,9 @@ else()
   set(REL_CUDA_HEADERS "")
 endif()
 
+make_preview_string(REL_HEADERS 3)
 print_info("[TRACE] Header files: ${REL_HEADERS}" "94")
+make_preview_string(REL_SOURCES 3)
 print_info("[TRACE] Source files: ${REL_SOURCES}" "96")
 
 
