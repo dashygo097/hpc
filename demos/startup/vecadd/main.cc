@@ -36,7 +36,6 @@ int main() {
   timer_serial.stop();
   timer_serial.report();
 
-  float sum = 0.0f;
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP");
 #pragma omp parallel for
   for (size_t i = 0; i < DSIZE; ++i) {

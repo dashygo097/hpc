@@ -5,6 +5,6 @@ namespace hpc::openmp {
 template <typename T> class Sequence {
 public:
 private:
-}
+};
 #endif
 } // namespace hpc::openmp
