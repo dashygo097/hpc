@@ -75,6 +75,7 @@ target_include_directories(hpc PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
 target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX)
 
 if (HAS_CUDA)

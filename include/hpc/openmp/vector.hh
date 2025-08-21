@@ -1,12 +1,8 @@
 #pragma once
-
-#ifdef _OPENMP
-#include <memory>
-#include <omp.h>
-#endif
+#include "../pch.hh"
 
 namespace hpc::openmp {
-#ifdef _OPENMP
+#ifdef ENABLE_OPENMP
 template <typename T> class Vector {
 public:
   Vector() : _data(nullptr), _size(0), _capacity(0) {}

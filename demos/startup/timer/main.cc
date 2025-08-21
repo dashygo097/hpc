@@ -1,9 +1,7 @@
-#define USE_MPI
-#include <hpc.hh>
+#define ENABLE_OPENMP
+#define ENABLE_MPI
 
-#ifdef USE_MPI
-#include <mpi.h>
-#endif
+#include <hpc.hh>
 
 int main() {
   int iterations = 100000000;
@@ -15,7 +13,7 @@ int main() {
     t.report();
   }
 
-#ifdef _OPENMP
+#ifdef ENABLE_OPENMP
   {
     hpc::ProgTimer t(hpc::Backend::OPENMP, "OpenMP");
 #pragma omp parallel for
@@ -26,7 +24,7 @@ int main() {
   }
 #endif
 
-#ifdef USE_MPI
+#ifdef ENABLE_MPI
   MPI_Init(nullptr, nullptr);
   {
     hpc::ProgTimer t(hpc::Backend::OPENMPI, "MPI");
@@ -37,7 +35,7 @@ int main() {
   MPI_Finalize();
 #endif
 
-#ifdef USE_CUDA
+#ifdef ENABLE_CUDA
   {
     hpc::ProgTimer t(hpc::Backend::CUDA, "CUDA");
     // kernel<<<...>>>(); cudaDeviceSynchronize();
