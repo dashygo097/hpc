@@ -1,5 +1,8 @@
 #pragma once
+
+#ifdef ENABLE_OPENMP
 #include "../pch.hh"
+#endif
 
 namespace hpc::openmp {
 #ifdef ENABLE_OPENMP
@@ -16,15 +19,6 @@ public:
     }
   }
 
-  Vector(const T &value, size_t size) : _size(size), _capacity(size) {
-    _data = std::make_unique<T[]>(_capacity);
-
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      _data[i] = value;
-    }
-  }
-
   Vector(std::initializer_list<T> init)
       : _size(init.size()), _capacity(init.size()) {
     _data = std::make_unique<T[]>(_capacity);
@@ -33,12 +27,57 @@ public:
 
   ~Vector() = default;
 
+  Vector(const Vector &other) : _size(other._size), _capacity(other._capacity) {
+    _data = std::make_unique<T[]>(_capacity);
+
+#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
+    for (size_t i = 0; i < _size; ++i) {
+      _data[i] = other._data[i];
+    }
+  }
+
+  Vector(Vector &&other) noexcept
+      : _data(std::move(other._data)), _size(other._size),
+        _capacity(other._capacity) {
+    other._size = 0;
+    other._capacity = 0;
+  }
+
+  Vector &operator=(const Vector &other) {
+    if (this != &other) {
+      if (_capacity < other._size) {
+        _data = std::make_unique<T[]>(other._capacity);
+        _capacity = other._capacity;
+      }
+      _size = other._size;
+
+#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
+      for (size_t i = 0; i < _size; ++i) {
+        _data[i] = other._data[i];
+      }
+    }
+    return *this;
+  }
+
+  Vector &operator=(Vector &&other) noexcept {
+    if (this != &other) {
+      _data = std::move(other._data);
+      _size = other._size;
+      _capacity = other._capacity;
+      other._size = 0;
+      other._capacity = 0;
+    }
+    return *this;
+  }
+
   [[nodiscard]] size_t size() const noexcept { return _size; }
   [[nodiscard]] size_t capacity() const noexcept { return _capacity; }
   [[nodiscard]] bool empty() const noexcept { return _size == 0; }
 
-  [[nodiscard]] T &operator[](size_t idx) { return _data[idx]; }
-  [[nodiscard]] const T &operator[](size_t idx) const { return _data[idx]; }
+  [[nodiscard]] T &operator[](size_t idx) noexcept { return _data[idx]; }
+  [[nodiscard]] const T &operator[](size_t idx) const noexcept {
+    return _data[idx];
+  }
 
   [[nodiscard]] T &at(size_t idx) {
     if (idx >= _size) {
@@ -72,7 +111,7 @@ public:
     }
   }
 
-  void resize(size_t new_size, const T &calue = T{}) {
+  void resize(size_t new_size, const T &value = T{}) {
     if (new_size > _capacity) {
       reallocate(new_size);
     }
@@ -80,119 +119,83 @@ public:
     if (new_size > _size) {
 #pragma omp parallel for if (new_size > PARALLEL_THRESHOLD)
       for (size_t i = _size; i < new_size; ++i) {
-        _data[i] = calue;
+        _data[i] = value;
       }
     }
     _size = new_size;
   }
 
-  Vector operator+(const T &value) const {
-    Vector result(_size);
-
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] + value;
-    }
-    return result;
-  }
-
-  Vector operator-(const T &value) const {
-    Vector result(_size);
-
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] - value;
-    }
-    return result;
-  }
-
-  Vector operator*(const T &value) const {
-    Vector result(_size);
-
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] * value;
-    }
-    return result;
-  }
-
-  Vector operator/(const T &value) const {
-    if (value == 0) {
-      throw std::runtime_error("Division by zero in vector division.");
-    }
-    Vector result(_size);
-
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] / value;
-    }
-    return result;
-  }
-
-  Vector operator+(const Vector &other) const {
-    if (_size != other._size) {
+  template <typename Func> void assign(const Vector &vec1, Func &&func) {
+    if (_size != vec1._size) {
       throw std::runtime_error(
-          "Vectors must be of the same size for addition.");
+          "Vectors must be of the same size for assignment.");
     }
 
-    Vector result(_size);
+    T *this_data = _data.get();
+    const T *vec1_data = vec1._data.get();
 
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] + other._data[i];
+      this_data[i] = func(vec1_data[i]);
     }
 
-    return result;
+    return *this;
   }
 
-  Vector operator-(const Vector &other) const {
-    if (_size != other._size) {
+  template <typename Func>
+  void assign(const Vector &vec1, const Vector &vec2, Func &&func) {
+    if (_size != vec1._size || _size != vec2._size) {
       throw std::runtime_error(
-          "Vectors must be of the same size for subtraction.");
+          "Vectors must be of the same size for assignment.");
     }
 
-    Vector result(_size);
+    T *this_data = _data.get();
+    const T *vec1_data = vec1._data.get();
+    const T *vec2_data = vec2._data.get();
 
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] - other._data[i];
+      this_data[i] = func(vec1_data[i], vec2_data[i]);
     }
-
-    return result;
   }
 
-  Vector operator*(const Vector &other) const {
-    if (_size != other._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for multiplication.");
-    }
-
-    Vector result(_size);
+  Vector &operator+=(const T &value) {
+    T *this_data = _data.get();
 
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      result._data[i] = _data[i] * other._data[i];
+      this_data[i] += value;
     }
-
-    return result;
+    return *this;
   }
 
-  Vector operator/(const Vector &other) const {
-    if (_size != other._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for division.");
-    }
-
-    Vector result(_size);
+  Vector &operator-=(const T &value) {
+    T *this_data = _data.get();
 
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      if (other._data[i] == 0) {
-        throw std::runtime_error("Division by zero in vector division.");
-      }
-      result._data[i] = _data[i] / other._data[i];
+      this_data[i] -= value;
     }
-    return result;
+    return *this;
+  }
+
+  Vector &operator*=(const T &value) {
+    T *this_data = _data.get();
+
+#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
+    for (size_t i = 0; i < _size; ++i) {
+      this_data[i] *= value;
+    }
+    return *this;
+  }
+
+  Vector &operator/=(const T &value) {
+    T *this_data = _data.get();
+#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
+    for (size_t i = 0; i < _size; ++i) {
+      this_data[i] /= value;
+    }
+    return *this;
   }
 
   Vector &operator+=(const Vector &other) {
@@ -201,9 +204,12 @@ public:
           "Vectors must be of the same size for addition.");
     }
 
+    T *this_data = _data.get();
+    const T *other_data = other._data.get();
+
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      _data[i] += other._data[i];
+      this_data[i] += other_data[i];
     }
     return *this;
   }
@@ -214,9 +220,12 @@ public:
           "Vectors must be of the same size for subtraction.");
     }
 
+    T *this_data = _data.get();
+    const T *other_data = other._data.get();
+
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      _data[i] -= other._data[i];
+      this_data[i] -= other_data[i];
     }
     return *this;
   }
@@ -227,9 +236,12 @@ public:
           "Vectors must be of the same size for multiplication.");
     }
 
+    T *this_data = _data.get();
+    const T *other_data = other._data.get();
+
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      _data[i] *= other._data[i];
+      this_data[i] *= other_data[i];
     }
 
     return *this;
@@ -241,12 +253,15 @@ public:
           "Vectors must be of the same size for division.");
     }
 
+    T *this_data = _data.get();
+    const T *other_data = other._data.get();
+
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
       if (other._data[i] == 0) {
         throw std::runtime_error("Division by zero in vector division.");
       }
-      _data[i] /= other._data[i];
+      this_data[i] /= other_data[i];
     }
     return *this;
   }
@@ -258,10 +273,12 @@ public:
     }
 
     T result = T{};
+    T *this_data = _data.get();
+    const T *other_data = other._data.get();
 
 #pragma omp parallel for reduction(+ : result) if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      result += _data[i] * other._data[i];
+      result += this_data[i] * other_data[i];
     }
 
     return result;
@@ -273,10 +290,11 @@ public:
     }
 
     T result = T{};
+    T *this_data = _data.get();
 
 #pragma omp parallel for reduction(+ : result) if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
-      result += _data[i];
+      result += this_data[i];
     }
     return result;
   }
@@ -286,7 +304,7 @@ private:
   size_t _size;
   size_t _capacity;
 
-  static constexpr size_t PARALLEL_THRESHOLD = 4096;
+  static constexpr size_t PARALLEL_THRESHOLD = 8192;
 
   void reallocate(size_t new_capacity) {
     auto new_data = std::make_unique<T[]>(new_capacity);
