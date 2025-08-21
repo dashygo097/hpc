@@ -1,5 +1,5 @@
 #define USE_MPI
-#include <hpc.hpp>
+#include <hpc.hh>
 
 #ifdef USE_MPI
 #include <mpi.h>
