@@ -31,15 +31,16 @@ int main() {
   ProgTimer timer_serial(Backend::SERIAL, "Serial");
   float tmp;
   for (size_t i = 0; i < DSIZE; ++i) {
-    tmp = a_serial[i] + 1.0f;
+    tmp = a_serial[i] + b_serial[i];
   }
   timer_serial.stop();
   timer_serial.report();
 
+  float sum = 0.0f;
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP");
 #pragma omp parallel for
   for (size_t i = 0; i < DSIZE; ++i) {
-    c_data[i] = a_data[i] + 1.0f;
+    c_data[i] = a_data[i] + b_data[i];
   }
 
   timer_openmp.stop();
