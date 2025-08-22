@@ -29,14 +29,15 @@ int main() {
     c[i] = 0.0f;
   }
   ProgTimer timer_serial(Backend::SERIAL, "Serial");
-  float tmp;
+  timer_serial.start();
   for (size_t i = 0; i < DSIZE; ++i) {
-    tmp = a_serial[i] + b_serial[i];
+    c_serial[i] = a_serial[i] + b_serial[i];
   }
   timer_serial.stop();
   timer_serial.report();
 
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP");
+  timer_openmp.start();
 #pragma omp parallel for
   for (size_t i = 0; i < DSIZE; ++i) {
     c_data[i] = a_data[i] + b_data[i];
@@ -45,10 +46,26 @@ int main() {
   timer_openmp.stop();
   timer_openmp.report();
 
+  for (size_t i = 0; i < DSIZE; ++i) {
+    if (c_serial[i] != c_data[i]) {
+      std::cerr << "Error at index " << i << ": " << c_serial[i]
+                << " != " << c_data[i] << std::endl;
+      return 1;
+    }
+  }
+
   timer_openmp.start();
   c.assign(a, b, std::plus<float>());
   timer_openmp.stop();
   timer_openmp.report();
+
+  for (size_t i = 0; i < DSIZE; ++i) {
+    if (c_serial[i] != c_data[i]) {
+      std::cerr << "Error at index " << i << ": " << c_serial[i]
+                << " != " << c_data[i] << std::endl;
+      return 1;
+    }
+  }
 
   return 0;
 }
