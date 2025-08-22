@@ -153,19 +153,18 @@ if (HAS_CUDA)
   make_paths_relative(REL_CUDA_HEADERS HPC_CUDA_HEADERS)
   make_paths_relative(REL_CUDA_SOURCES HPC_CUDA_SOURCES)
   make_preview_string(REL_CUDA_HEADERS 3)
+  print_info("[TRACE] CUDA headers: ${PREVIOUS_SCOPE_VAR}" "94")
   make_preview_string(REL_CUDA_SOURCES 3)
-  print_info("[TRACE] CUDA headers: ${REL_CUDA_HEADERS}" "94")
-  print_info("[TRACE] CUDA sources: ${REL_CUDA_SOURCES}" "96")
+  print_info("[TRACE] CUDA sources: ${PREVIOUS_SCOPE_VAR}" "96")
+
 else()
   set(REL_CUDA_HEADERS "")
 endif()
 
 make_preview_string(REL_HEADERS 3)
-print_info("[TRACE] Header files: ${REL_HEADERS}" "94")
+print_info("[TRACE] Header files: ${PREVIOUS_SCOPE_VAR}" "94")
 make_preview_string(REL_SOURCES 3)
-print_info("[TRACE] Source files: ${REL_SOURCES}" "96")
-
-
+print_info("[TRACE] Source files: ${PREVIOUS_SCOPE_VAR}" "96")
 
 # Apps
 add_subdirectory(tests)
