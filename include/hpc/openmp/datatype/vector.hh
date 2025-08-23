@@ -1,13 +1,16 @@
 #pragma once
 
 #ifdef ENABLE_OPENMP
-#include "../pch.hh"
+#include "../../pch.hh"
 #endif
 
 namespace hpc::openmp {
 #ifdef ENABLE_OPENMP
 template <typename T> class Vector {
 public:
+  using value_type = T;
+  static constexpr size_t PARALLEL_THRESHOLD = 819200;
+
   Vector() : _data(nullptr), _size(0), _capacity(0) {}
 
   explicit Vector(size_t size) : _size(size), _capacity(size) {
@@ -16,6 +19,15 @@ public:
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
       _data[i] = T{};
+    }
+  }
+
+  explicit Vector(size_t size, const T &value) : _size(size), _capacity(size) {
+    _data = std::make_unique<T[]>(_capacity);
+
+#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
+    for (size_t i = 0; i < _size; ++i) {
+      _data[i] = value;
     }
   }
 
@@ -92,12 +104,12 @@ public:
     return _data[idx];
   }
 
-  T *begin() noexcept { return _data.get(); }
-  const T *begin() const noexcept { return _data.get(); }
-  T *end() noexcept { return _data.get() + _size; }
-  const T *end() const noexcept { return _data.get() + _size; }
-  T *data() noexcept { return _data.get(); }
-  const T *data() const noexcept { return _data.get(); }
+  [[nodiscard]] T *begin() noexcept { return _data.get(); }
+  [[nodiscard]] const T *begin() const noexcept { return _data.get(); }
+  [[nodiscard]] T *end() noexcept { return _data.get() + _size; }
+  [[nodiscard]] const T *end() const noexcept { return _data.get() + _size; }
+  [[nodiscard]] T *data() noexcept { return _data.get(); }
+  [[nodiscard]] const T *data() const noexcept { return _data.get(); }
 
   void clear() noexcept {
     _size = 0;
@@ -150,8 +162,8 @@ public:
     }
 
     T *this_data = _data.get();
-    const T *vec1_data = vec1._data.get();
-    const T *vec2_data = vec2._data.get();
+    const T *vec1_data = vec1.data();
+    const T *vec2_data = vec2.data();
 
 #pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
     for (size_t i = 0; i < _size; ++i) {
@@ -303,8 +315,6 @@ private:
   std::unique_ptr<T[], std::default_delete<T[]>> _data;
   size_t _size;
   size_t _capacity;
-
-  static constexpr size_t PARALLEL_THRESHOLD = 8192;
 
   void reallocate(size_t new_capacity) {
     auto new_data = std::make_unique<T[]>(new_capacity);
