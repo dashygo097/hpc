@@ -3,6 +3,7 @@
 
 using namespace hpc;
 const size_t DSIZE = 10000000;
+const size_t TSIZE = 50;
 
 int main() {
   ProgTimer timer_serial(Backend::SERIAL, "Serial");
@@ -30,18 +31,23 @@ int main() {
   }
 
   timer_serial.start();
-  for (size_t i = 0; i < DSIZE; ++i) {
-    c_serial[i] = a_serial[i] + b_serial[i] - 1.0f;
-    c_serial[i] = c_serial[i] * c_serial[i];
+  for (size_t time = 0; time < TSIZE; ++time) {
+    for (size_t i = 0; i < DSIZE; ++i) {
+      c_serial[i] = a_serial[i] + b_serial[i] - 1.0f;
+      c_serial[i] = c_serial[i] * c_serial[i];
+    }
   }
+
   timer_serial.stop();
   timer_serial.report();
 
   timer_openmp.start();
+  for (size_t time = 0; time < TSIZE; ++time) {
 #pragma omp parallel for
-  for (size_t i = 0; i < DSIZE; ++i) {
-    c_data[i] = a_data[i] + b_data[i] - 1.0f;
-    c_data[i] = c_data[i] * c_data[i];
+    for (size_t i = 0; i < DSIZE; ++i) {
+      c_data[i] = a_data[i] + b_data[i] - 1.0f;
+      c_data[i] = c_data[i] * c_data[i];
+    }
   }
 
   timer_openmp.stop();
@@ -56,9 +62,12 @@ int main() {
   }
 
   timer_openmp.start();
-  c.assign(a, b, [](const float &x, const float &y) {
-    return (x + y - 1.0f) * (x + y - 1.0f);
-  });
+  for (size_t time = 0; time < TSIZE; ++time) {
+    c.assign(a, b, [](const float &x, const float &y) {
+      float temp = (x + y - 1.0f);
+      return temp * temp;
+    });
+  }
 
   timer_openmp.stop();
   timer_openmp.report();

@@ -10,6 +10,10 @@
 #include <omp.h>
 #endif
 
+#ifdef ENABLE_SIMD
+#include "./simd/simd.hh"
+#endif
+
 #ifdef ENABLE_MPI
 #include <mpi.h>
 #endif

@@ -10,24 +10,55 @@ template <typename T> class Vector {
 public:
   using value_type = T;
   static constexpr size_t PARALLEL_THRESHOLD = 819200;
+  static constexpr size_t BLOCK_SIZE = 1024;
 
   Vector() : _data(nullptr), _size(0), _capacity(0) {}
 
   explicit Vector(size_t size) : _size(size), _capacity(size) {
     _data = std::make_unique<T[]>(_capacity);
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      _data[i] = T{};
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = T{};
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = T{};
+      }
     }
   }
 
   explicit Vector(size_t size, const T &value) : _size(size), _capacity(size) {
     _data = std::make_unique<T[]>(_capacity);
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      _data[i] = value;
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = value;
+      }
     }
   }
 
@@ -42,9 +73,25 @@ public:
   Vector(const Vector &other) : _size(other._size), _capacity(other._capacity) {
     _data = std::make_unique<T[]>(_capacity);
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      _data[i] = other._data[i];
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = other_data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = other_data[i];
+      }
     }
   }
 
@@ -63,9 +110,25 @@ public:
       }
       _size = other._size;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-      for (size_t i = 0; i < _size; ++i) {
-        _data[i] = other._data[i];
+      T *__restrict__ this_data = _data.get();
+      const T *__restrict__ other_data = other._data.get();
+      const size_t block_size = BLOCK_SIZE;
+
+      if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block = 0; block < _size; block += block_size) {
+            size_t end = std::min(block + block_size, _size);
+            for (size_t i = block; i < end; ++i) {
+              this_data[i] = other_data[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; ++i) {
+          this_data[i] = other_data[i];
+        }
       }
     }
     return *this;
@@ -129,83 +192,179 @@ public:
     }
 
     if (new_size > _size) {
-#pragma omp parallel for if (new_size > PARALLEL_THRESHOLD)
-      for (size_t i = _size; i < new_size; ++i) {
-        _data[i] = value;
+      T *__restrict__ this_data = _data.get();
+      const size_t block_size = BLOCK_SIZE;
+
+      if (new_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block = _size; block < new_size; block += block_size) {
+            size_t end = std::min(block + block_size, new_size);
+            for (size_t i = block; i < end; ++i) {
+              this_data[i] = value;
+            }
+          }
+        }
+      } else {
+        for (size_t i = _size; i < new_size; ++i) {
+          this_data[i] = value;
+        }
       }
     }
     _size = new_size;
   }
 
-  template <typename Func> void assign(const Vector &vec1, Func &&func) {
+  template <typename Func> Vector &assign(const Vector &vec1, Func &&func) {
     if (_size != vec1._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for assignment.");
     }
 
-    T *this_data = _data.get();
-    const T *vec1_data = vec1._data.get();
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ vec1_data = vec1._data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] = func(vec1_data[i]);
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = func(vec1_data[i]);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = func(vec1_data[i]);
+      }
     }
 
     return *this;
   }
 
   template <typename Func>
-  void assign(const Vector &vec1, const Vector &vec2, Func &&func) {
+  Vector &assign(const Vector &vec1, const Vector &vec2, Func &&func) {
     if (_size != vec1._size || _size != vec2._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for assignment.");
     }
 
-    T *this_data = _data.get();
-    const T *vec1_data = vec1.data();
-    const T *vec2_data = vec2.data();
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ vec1_data = vec1.data();
+    const T *__restrict__ vec2_data = vec2.data();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] = func(vec1_data[i], vec2_data[i]);
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = func(vec1_data[i], vec2_data[i]);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = func(vec1_data[i], vec2_data[i]);
+      }
     }
+
+    return *this;
   }
 
   Vector &operator+=(const T &value) {
-    T *this_data = _data.get();
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] += value;
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] += value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] += value;
+      }
     }
     return *this;
   }
 
   Vector &operator-=(const T &value) {
-    T *this_data = _data.get();
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] -= value;
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] -= value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] -= value;
+      }
     }
     return *this;
   }
 
   Vector &operator*=(const T &value) {
-    T *this_data = _data.get();
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] *= value;
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] *= value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] *= value;
+      }
     }
     return *this;
   }
 
   Vector &operator/=(const T &value) {
-    T *this_data = _data.get();
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] /= value;
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] /= value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] /= value;
+      }
     }
     return *this;
   }
@@ -216,12 +375,25 @@ public:
           "Vectors must be of the same size for addition.");
     }
 
-    T *this_data = _data.get();
-    const T *other_data = other._data.get();
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] += other_data[i];
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] += other_data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] += other_data[i];
+      }
     }
     return *this;
   }
@@ -232,12 +404,25 @@ public:
           "Vectors must be of the same size for subtraction.");
     }
 
-    T *this_data = _data.get();
-    const T *other_data = other._data.get();
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] -= other_data[i];
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] -= other_data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] -= other_data[i];
+      }
     }
     return *this;
   }
@@ -248,12 +433,25 @@ public:
           "Vectors must be of the same size for multiplication.");
     }
 
-    T *this_data = _data.get();
-    const T *other_data = other._data.get();
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      this_data[i] *= other_data[i];
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] *= other_data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] *= other_data[i];
+      }
     }
 
     return *this;
@@ -265,15 +463,31 @@ public:
           "Vectors must be of the same size for division.");
     }
 
-    T *this_data = _data.get();
-    const T *other_data = other._data.get();
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      if (other._data[i] == 0) {
-        throw std::runtime_error("Division by zero in vector division.");
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            if (other_data[i] == 0) {
+              throw std::runtime_error("Division by zero in vector division.");
+            }
+            this_data[i] /= other_data[i];
+          }
+        }
       }
-      this_data[i] /= other_data[i];
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        if (other_data[i] == 0) {
+          throw std::runtime_error("Division by zero in vector division.");
+        }
+        this_data[i] /= other_data[i];
+      }
     }
     return *this;
   }
@@ -285,12 +499,27 @@ public:
     }
 
     T result = T{};
-    T *this_data = _data.get();
-    const T *other_data = other._data.get();
+    const T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for reduction(+ : result) if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      result += this_data[i] * other_data[i];
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel reduction(+ : result)
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          T local_result = T{};
+          for (size_t i = block; i < end; ++i) {
+            local_result += this_data[i] * other_data[i];
+          }
+          result += local_result;
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        result += this_data[i] * other_data[i];
+      }
     }
 
     return result;
@@ -302,11 +531,26 @@ public:
     }
 
     T result = T{};
-    T *this_data = _data.get();
+    const T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-#pragma omp parallel for reduction(+ : result) if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      result += this_data[i];
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel reduction(+ : result)
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          T local_result = T{};
+          for (size_t i = block; i < end; ++i) {
+            local_result += this_data[i];
+          }
+          result += local_result;
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        result += this_data[i];
+      }
     }
     return result;
   }
@@ -319,9 +563,25 @@ private:
   void reallocate(size_t new_capacity) {
     auto new_data = std::make_unique<T[]>(new_capacity);
 
-#pragma omp parallel for if (_size > PARALLEL_THRESHOLD)
-    for (size_t i = 0; i < _size; ++i) {
-      new_data[i] = std::move(_data[i]);
+    T *__restrict__ new_ptr = new_data.get();
+    const T *__restrict__ old_ptr = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            new_ptr[i] = std::move(old_ptr[i]);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        new_ptr[i] = std::move(old_ptr[i]);
+      }
     }
 
     _data = std::move(new_data);
