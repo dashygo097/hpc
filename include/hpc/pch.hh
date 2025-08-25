@@ -1,7 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <chrono>
-#include <functional>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <string>

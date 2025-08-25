@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef ENABLE_OPENMP
-#include "../../pch.hh"
+#include <memory>
 #endif
 
 namespace hpc::openmp {
@@ -300,28 +300,7 @@ public:
     return *this;
   }
 
-  Vector &operator-=(const T &value) {
-    T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
-
-    if (_size > PARALLEL_THRESHOLD) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            this_data[i] -= value;
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        this_data[i] -= value;
-      }
-    }
-    return *this;
-  }
+  Vector &operator-=(const T &value) { return *this += -value; }
 
   Vector &operator*=(const T &value) {
     T *__restrict__ this_data = _data.get();
@@ -346,28 +325,7 @@ public:
     return *this;
   }
 
-  Vector &operator/=(const T &value) {
-    T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
-
-    if (_size > PARALLEL_THRESHOLD) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            this_data[i] /= value;
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        this_data[i] /= value;
-      }
-    }
-    return *this;
-  }
+  Vector &operator/=(const T &value) { return *this *= (1 / value); }
 
   Vector &operator+=(const Vector &other) {
     if (_size != other._size) {
