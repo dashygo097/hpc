@@ -20,4 +20,4 @@ gtest_discover_tests(test_runner
 
 make_paths_relative(REL_TEST_FILES TEST_FILES)
 make_preview_string(REL_TEST_FILES 3)
-print_info("[DEBUG] Test files: ${REL_TEST_FILES}" "93")
+print_info("[DEBUG] Test files: ${PREVIOUS_SCOPE_VAR}" "93")

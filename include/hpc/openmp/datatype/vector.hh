@@ -4,6 +4,10 @@
 #include <memory>
 #endif
 
+#ifdef ENABLE_SIMD
+#include "../../simd/omp_vec_impl.hh"
+#endif
+
 namespace hpc::openmp {
 #ifdef ENABLE_OPENMP
 template <typename T> class Vector {
@@ -11,6 +15,8 @@ public:
   using value_type = T;
   static constexpr size_t PARALLEL_THRESHOLD = 819200;
   static constexpr size_t BLOCK_SIZE = 1024;
+  static constexpr bool IS_FLOAT = std::is_same_v<T, float>;
+  static constexpr bool IS_DOUBLE = std::is_same_v<T, double>;
 
   Vector() : _data(nullptr), _size(0), _capacity(0) {}
 
@@ -213,6 +219,28 @@ public:
       }
     }
     _size = new_size;
+  }
+
+  void fill(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = T{};
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = T{};
+      }
+    }
   }
 
   template <typename Func> Vector &assign(const Vector &vec1, Func &&func) {
@@ -545,6 +573,8 @@ private:
     _data = std::move(new_data);
     _capacity = new_capacity;
   }
+
+  void fill_simd(const T &value);
 };
 
 #endif
