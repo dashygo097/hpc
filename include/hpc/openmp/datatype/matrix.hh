@@ -319,23 +319,9 @@ private:
 
     T *__restrict__ new_ptr = new_data.get();
     const T *__restrict__ old_ptr = _data.get();
-    const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            new_ptr[i] = std::move(old_ptr[i]);
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        new_ptr[i] = std::move(old_ptr[i]);
-      }
+    for (size_t i = 0; i < _size; ++i) {
+      new_ptr[i] = std::move(old_ptr[i]);
     }
 
     _data = std::move(new_data);
