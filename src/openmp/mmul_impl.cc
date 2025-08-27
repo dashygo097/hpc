@@ -1,6 +1,3 @@
 #include "hpc/openmp/datatype/matrix.hh"
 
-namespace hpc::openmp {
-#ifdef ENABLE_OPENMP
-#endif
-} // namespace hpc::openmp
+namespace hpc::openmp {} // namespace hpc::openmp

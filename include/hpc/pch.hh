@@ -12,7 +12,7 @@
 #endif
 
 #ifdef ENABLE_SIMD
-#include "./simd/simd.hh"
+#include "./simd.hh"
 #endif
 
 #ifdef ENABLE_MPI
