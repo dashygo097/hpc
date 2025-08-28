@@ -85,6 +85,60 @@ public:
 
   ~Matrix() = default;
 
+  Matrix(Matrix &&other) noexcept
+      : _data(std::move(other._data)), _rows(other._rows), _cols(other._cols),
+        _size(other._size), _capacity(other._capacity) {
+    other._size = 0;
+    other._rows = 0;
+    other._cols = 0;
+    other._capacity = 0;
+  }
+
+  Matrix &operator=(const Matrix &other) {
+    if (this != &other) {
+      if (_capacity < other._size) {
+        _data = std::make_unique<T[]>(other._capacity);
+        _capacity = other._capacity;
+      }
+      _size = other._size;
+
+      T *__restrict__ this_data = _data.get();
+      const T *__restrict__ other_data = other._data.get();
+      const size_t block_size = BLOCK_SIZE;
+
+      if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block = 0; block < _size; block += block_size) {
+            size_t end = std::min(block + block_size, _size);
+            for (size_t i = block; i < end; ++i) {
+              this_data[i] = other_data[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; ++i) {
+          this_data[i] = other_data[i];
+        }
+      }
+    }
+    return *this;
+  }
+
+  Matrix &operator=(Matrix &&other) noexcept {
+    if (this != &other) {
+      _data = std::move(other._data);
+      _size = other._size;
+      _rows = other._rows;
+      _cols = other._cols;
+      _capacity = other._capacity;
+      other._size = 0;
+      other._capacity = 0;
+    }
+    return *this;
+  }
+
   [[nodiscard]] size_t rows() const noexcept { return _rows; }
   [[nodiscard]] size_t cols() const noexcept { return _cols; }
   [[nodiscard]] size_t size() const noexcept { return _size; }
@@ -307,6 +361,33 @@ public:
 
   Matrix &operator/=(const T &value) { return *this *= (1 / value); }
 
+  void fill(const T &value) {
+#ifndef ENABLE_SIMD
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = T{};
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = T{};
+      }
+    }
+
+#else
+    fill_simd(value);
+#endif
+  }
+
 private:
   std::unique_ptr<T[], std::default_delete<T[]>> _data;
   size_t _size;
@@ -319,14 +400,61 @@ private:
 
     T *__restrict__ new_ptr = new_data.get();
     const T *__restrict__ old_ptr = _data.get();
+    const size_t block_size = BLOCK_SIZE;
 
-    for (size_t i = 0; i < _size; ++i) {
-      new_ptr[i] = std::move(old_ptr[i]);
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            new_ptr[i] = std::move(old_ptr[i]);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        new_ptr[i] = std::move(old_ptr[i]);
+      }
     }
 
     _data = std::move(new_data);
     _capacity = new_capacity;
   }
+
+#ifdef ENABLE_SIMD
+  void fill_simd(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+    const size_t simd_size = block_size - block_size % 4;
+    const size_t is_float = IS_FLOAT;
+
+#if defined(__APPLE__)
+    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t idx = 0; idx < _size; idx += block_size) {
+          for (size_t i = idx; i < idx + block_size; i += 4) {
+            *((simd_float4 *)(this_data + i)) = simd_float4(value);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = T{};
+      }
+    }
+
+#else
+    std::cerr << "Not Implement SIMD for `fill` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+#endif
 };
+
 #endif
 } // namespace hpc::openmp

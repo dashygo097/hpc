@@ -1,4 +1,5 @@
 #pragma once
+#define ENABLE_OPENMP
 
 #include <algorithm>
 #include <chrono>
