@@ -627,7 +627,7 @@ private:
       {
 #pragma omp for schedule(static)
         for (size_t idx = 0; idx < _size; idx += block_size) {
-          size_t i_end = std::min(idx + simd_size, _size);
+          size_t i_end = idx + simd_size;
           for (size_t i = idx; i < i_end; i += SIMD_WIDTH) {
             *((simd_type *)(this_data + i)) = simd_type(value);
           }
