@@ -48,7 +48,7 @@ void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
     C[i] = T{};
   }
 
-#pragma omp parallel for collapse(2) schedule(static)
+#pragma omp parallel for schedule(static)
   for (size_t ii = 0; ii < M; ii += tile_size) {
     for (size_t jj = 0; jj < N; jj += tile_size) {
       for (size_t kk = 0; kk < K; kk += tile_size) {

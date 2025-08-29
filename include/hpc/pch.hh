@@ -12,7 +12,12 @@
 #endif
 
 #ifdef ENABLE_SIMD
-#include "./simd.hh"
+
+#if defined(__APPLE__)
+#include <Accelerate/Accelerate.h>
+#include <simd/simd.h>
+#endif
+
 #endif
 
 #ifdef ENABLE_MPI

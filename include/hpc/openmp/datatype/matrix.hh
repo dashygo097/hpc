@@ -5,13 +5,20 @@
 #include "./vector.hh"
 #endif
 
+#ifdef ENABLE_SIMD
+#include "../../simd_impl.hh"
+#endif
+
 namespace hpc::openmp {
 #ifdef ENABLE_OPENMP
 template <typename T> class Matrix {
 public:
   using value_type = T;
-  constexpr static size_t PARALLEL_THRESHOLD = 10240;
-  constexpr static size_t BLOCK_SIZE = 256;
+#ifdef ENABLE_SIMD
+  using simd_type = simd_t<T>;
+#endif
+  static constexpr bool IS_FLOAT = std::is_same_v<T, float>;
+  static constexpr bool IS_DOUBLE = std::is_same_v<T, double>;
 
   Matrix() : _data(nullptr), _size(0), _rows(0), _cols(0), _capacity(0) {}
   explicit Matrix(size_t rows, size_t cols)
@@ -21,7 +28,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -46,7 +53,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -73,7 +80,7 @@ public:
     const T *__restrict__ init_data = init.begin();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -114,7 +121,7 @@ public:
       const T *__restrict__ other_data = other._data.get();
       const size_t block_size = BLOCK_SIZE;
 
-      if (_size > PARALLEL_THRESHOLD) {
+      if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
@@ -169,7 +176,7 @@ public:
     T *__restrict__ result_data = result.data();
     const T *__restrict__ this_data = _data.get() + row * _cols;
     const size_t block_size = BLOCK_SIZE;
-    if (_cols > PARALLEL_THRESHOLD) {
+    if (_cols > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -193,7 +200,7 @@ public:
     T *__restrict__ result_data = result.data();
     const T *__restrict__ this_data = _data.get() + col;
     const size_t block_size = BLOCK_SIZE;
-    if (_rows > PARALLEL_THRESHOLD) {
+    if (_rows > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -242,7 +249,7 @@ public:
       T *__restrict__ this_data = _data.get();
       const size_t old_size = _size;
       const size_t block_size = BLOCK_SIZE;
-      if (new_size > PARALLEL_THRESHOLD) {
+      if (new_size > PARALLEL_THRESHOLD_2D) {
 
 #pragma omp parallel
         {
@@ -272,7 +279,7 @@ public:
     const T *__restrict__ mat1_data = mat1._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -302,7 +309,7 @@ public:
     const T *__restrict__ mat1_data = mat1._data.get();
     const T *__restrict__ mat2_data = mat2._data.get();
     const size_t block_size = BLOCK_SIZE;
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -324,7 +331,7 @@ public:
   Matrix &operator+=(const T &value) {
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -348,7 +355,7 @@ public:
   Matrix &operator*=(const T &value) {
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -374,7 +381,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -400,7 +407,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -423,7 +430,7 @@ public:
   Matrix &operator-=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -451,7 +458,8 @@ public:
                                std::to_string(other._cols) + ")");
     }
     Matrix result(_rows, other._cols);
-    tiled_mmul(result._data, _data, other._data, _rows, _cols, other._cols);
+    tiled_mmul(result._data, _data, other._data, _rows, _cols, other._cols,
+               BLOCK_SIZE);
     *this = std::move(result);
     return *this;
   }
@@ -470,7 +478,7 @@ private:
     const T *__restrict__ old_ptr = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -499,7 +507,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_2D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -541,7 +549,7 @@ Matrix<T> naive_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
 
 template <typename T>
 Matrix<T> tiled_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2,
-                     const size_t &tile_size = 32) {
+                     const size_t &tile_size = GEMM_TILE_SIZE) {
   if (mat1.cols() != mat2.rows()) {
     throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
                              std::to_string(mat1.rows()) + ", " +

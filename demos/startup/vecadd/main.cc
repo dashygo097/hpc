@@ -1,4 +1,5 @@
 #define ENABLE_OPENMP
+#define ENABLE_SIMD
 #include <hpc.hh>
 
 using namespace hpc;
@@ -22,6 +23,11 @@ int main() {
   a += 1.0f;
   timer_openmp.stop();
   timer_openmp.report();
+
+  for (size_t i = 0; i < 10; ++i) {
+    std::cout << "a[" << i << "] = " << a[i] << ", a_data[" << i
+              << "] = " << a_data[i] << std::endl;
+  }
 
   return 0;
 }

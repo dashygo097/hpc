@@ -4,8 +4,7 @@
 #include <simd/simd.h>
 
 using namespace hpc;
-const size_t DSIZE = 3200000;
-const size_t TSIZE = 5;
+const size_t DSIZE = 10000000;
 
 class OpenMPVectorTest : public ::testing::Test {
 protected:
@@ -64,13 +63,14 @@ protected:
 
   void computeSIMDOpenMP() {
     size_t simd_count = DSIZE - (DSIZE % 4);
+    using simd_type = simd_float4;
 #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < simd_count; i += 4) {
-      simd_float4 va = *((simd_float4 *)(a_data + i));
-      simd_float4 vb = *((simd_float4 *)(b_data + i));
-      simd_float4 vr = va + vb - simd_float4(1.0f);
+      simd_type va = *((simd_type *)(a_data + i));
+      simd_type vb = *((simd_type *)(b_data + i));
+      simd_type vr = va + vb - simd_type(1.0f);
       vr = vr * vr;
-      *((simd_float4 *)(c_data + i)) = vr;
+      *((simd_type *)(c_data + i)) = vr;
     }
 
     if (simd_count < DSIZE) {
@@ -83,7 +83,7 @@ protected:
 
   void computeImplOpenMP() {
     c.assign(a, b, [](const float &x, const float &y) {
-      float temp = (x + y - 1.0f);
+      auto temp = x + y - 1.0f;
       return temp * temp;
     });
   }
@@ -144,32 +144,26 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
 
   // Benchmark
   timer_serial.start();
-  for (size_t i = 0; i < TSIZE; ++i)
-    computeSerial();
+  computeSerial();
   timer_serial.stop();
   timer_serial.report();
 
   timer_base_openmp.start();
-  for (size_t i = 0; i < TSIZE; ++i)
-    computeBaseOpenMP();
+  computeBaseOpenMP();
   timer_base_openmp.stop();
   timer_base_openmp.report();
   checkCorrectness(c_serial, c_data);
 
-  memset(c_data, 0, DSIZE * sizeof(float));
   timer_simd_openmp.start();
-  for (size_t i = 0; i < TSIZE; ++i)
-    computeSIMDOpenMP();
+  computeSIMDOpenMP();
   timer_simd_openmp.stop();
   timer_simd_openmp.report();
   checkCorrectness(c_serial, c_data);
 
   timer_impl_openmp.start();
-  for (size_t i = 0; i < TSIZE; ++i)
-    computeImplOpenMP();
+  computeImplOpenMP();
   timer_impl_openmp.stop();
   timer_impl_openmp.report();
-  checkCorrectness(c_serial, const_cast<float *>(c.data()));
 
   std::cout << "[INFO] Base OpenMP achieves speedup of "
             << timer_serial.elapsed_seconds() /

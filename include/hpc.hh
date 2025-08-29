@@ -14,5 +14,5 @@
 #endif
 
 #ifdef ENABLE_SIMD
-#include "hpc/simd.hh"
+#include "hpc/simd_impl.hh"
 #endif

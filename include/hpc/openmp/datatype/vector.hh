@@ -5,6 +5,7 @@
 #endif
 
 #ifdef ENABLE_SIMD
+#include "../../simd_impl.hh"
 #endif
 
 namespace hpc::openmp {
@@ -12,8 +13,9 @@ namespace hpc::openmp {
 template <typename T> class Vector {
 public:
   using value_type = T;
-  static constexpr size_t PARALLEL_THRESHOLD = 10240;
-  static constexpr size_t BLOCK_SIZE = 256;
+#ifdef ENABLE_SIMD
+  using simd_type = simd_t<T>;
+#endif
   static constexpr bool IS_FLOAT = std::is_same_v<T, float>;
   static constexpr bool IS_DOUBLE = std::is_same_v<T, double>;
 
@@ -25,7 +27,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -49,7 +51,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -82,7 +84,7 @@ public:
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -119,7 +121,7 @@ public:
       const T *__restrict__ other_data = other._data.get();
       const size_t block_size = BLOCK_SIZE;
 
-      if (_size > PARALLEL_THRESHOLD) {
+      if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
@@ -200,7 +202,7 @@ public:
       T *__restrict__ this_data = _data.get();
       const size_t block_size = BLOCK_SIZE;
 
-      if (new_size > PARALLEL_THRESHOLD) {
+      if (new_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
@@ -225,7 +227,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -258,7 +260,7 @@ public:
     const T *__restrict__ vec1_data = vec1._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -294,7 +296,7 @@ public:
     const T *__restrict__ vec2_data = vec2.data();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -322,7 +324,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -352,7 +354,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -388,7 +390,7 @@ public:
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -422,7 +424,7 @@ public:
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -455,7 +457,7 @@ public:
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -489,7 +491,7 @@ public:
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -529,7 +531,7 @@ public:
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel reduction(+ : result)
       {
 #pragma omp for schedule(static)
@@ -560,7 +562,7 @@ public:
     const T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel reduction(+ : result)
       {
 #pragma omp for schedule(static)
@@ -593,7 +595,7 @@ private:
     const T *__restrict__ old_ptr = _data.get();
     const size_t block_size = BLOCK_SIZE;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -622,7 +624,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -651,7 +653,7 @@ private:
     const size_t simd_size = block_size - block_size % 4;
     const size_t is_float = IS_FLOAT;
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -685,7 +687,7 @@ private:
 
 #if defined(__APPLE__)
 
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -723,7 +725,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -762,7 +764,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -801,7 +803,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -839,7 +841,7 @@ private:
     const size_t simd_size = block_size - block_size % 4;
     const size_t is_float = IS_FLOAT;
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -879,7 +881,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -920,7 +922,7 @@ private:
     const size_t is_float = IS_FLOAT;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD)) {
+    if (is_float && (_size > PARALLEL_THRESHOLD_1D)) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
