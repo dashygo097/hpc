@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 namespace hpc {
 constexpr size_t PARALLEL_THRESHOLD_1D = 102400;
 constexpr size_t PARALLEL_THRESHOLD_2D = 8192;

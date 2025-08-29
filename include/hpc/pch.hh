@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+#include "./constants.hh"
+
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif

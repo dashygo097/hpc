@@ -1,11 +1,10 @@
 #pragma once
-#ifdef ENABLE_SIMD
-
-#if defined(__APPLE__)
 
 namespace hpc {
-
 template <typename T, size_t Width = SIMD_WIDTH> struct simd_type;
+
+#ifdef ENABLE_SIMD
+#if defined(__APPLE__)
 
 template <> struct simd_type<float, 1> {
   using type = float;
@@ -27,7 +26,6 @@ template <> struct simd_type<float, 8> {
   static constexpr size_t width = 8;
 };
 
-// double类型的特化
 template <> struct simd_type<double, 1> {
   using type = double;
   static constexpr size_t width = 1;
@@ -60,8 +58,6 @@ template <> struct simd_type<int, 8> {
 
 template <typename T> using simd_t = typename simd_type<T>::type;
 
+#endif
+#endif
 } // namespace hpc
-
-#endif
-
-#endif

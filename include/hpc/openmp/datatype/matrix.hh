@@ -17,8 +17,6 @@ public:
 #ifdef ENABLE_SIMD
   using simd_type = simd_t<T>;
 #endif
-  static constexpr bool IS_FLOAT = std::is_same_v<T, float>;
-  static constexpr bool IS_DOUBLE = std::is_same_v<T, double>;
 
   Matrix() : _data(nullptr), _size(0), _rows(0), _cols(0), _capacity(0) {}
   explicit Matrix(size_t rows, size_t cols)
@@ -504,22 +502,31 @@ private:
     T *__restrict__ this_data = _data.get();
     const size_t block_size = BLOCK_SIZE;
     const size_t simd_size = block_size - block_size % 4;
-    const size_t is_float = IS_FLOAT;
+    const size_t tail_flag = (block_size % 4) != 0;
 
 #if defined(__APPLE__)
-    if (is_float && (_size > PARALLEL_THRESHOLD_2D)) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
         for (size_t idx = 0; idx < _size; idx += block_size) {
-          for (size_t i = idx; i < idx + block_size; i += 4) {
-            *((simd_float4 *)(this_data + i)) = simd_float4(value);
+          size_t i_end = idx + block_size;
+          for (size_t i = idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) = simd_type(value);
+          }
+          if (tail_flag) {
+            size_t tail = i_end - SIMD_WIDTH + 1;
+            *((simd_type *)(this_data + tail)) = simd_type(value);
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; ++i) {
-        this_data[i] = T{};
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) = simd_type(value);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        size_t tail = _size - SIMD_WIDTH;
+        *((simd_type *)(this_data + tail)) = simd_type(value);
       }
     }
 

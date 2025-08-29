@@ -1,4 +1,5 @@
 #define ENABLE_OPENMP
+#define ENABLE_SIMD
 #include <gtest/gtest.h>
 #include <hpc.hh>
 #include <simd/simd.h>
@@ -82,8 +83,9 @@ protected:
   }
 
   void computeImplOpenMP() {
-    c.assign(a, b, [](const float &x, const float &y) {
-      auto temp = x + y - 1.0f;
+    using simd_type = simd_float4;
+    c.assign(a, b, [](const simd_type &x, const simd_type &y) {
+      auto temp = x + y - simd_type(1.0f);
       return temp * temp;
     });
   }
