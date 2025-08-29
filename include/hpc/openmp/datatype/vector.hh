@@ -12,8 +12,8 @@ namespace hpc::openmp {
 template <typename T> class Vector {
 public:
   using value_type = T;
-  static constexpr size_t PARALLEL_THRESHOLD = 102400;
-  static constexpr size_t BLOCK_SIZE = 512;
+  static constexpr size_t PARALLEL_THRESHOLD = 10240;
+  static constexpr size_t BLOCK_SIZE = 256;
   static constexpr bool IS_FLOAT = std::is_same_v<T, float>;
   static constexpr bool IS_DOUBLE = std::is_same_v<T, double>;
 

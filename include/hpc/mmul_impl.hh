@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include "./pch.hh"
 
 namespace hpc::serial {
 template <typename T>
@@ -67,4 +67,5 @@ void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
     }
   }
 }
+
 } // namespace hpc::openmp

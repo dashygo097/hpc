@@ -10,7 +10,7 @@ namespace hpc::openmp {
 template <typename T> class Matrix {
 public:
   using value_type = T;
-  constexpr static size_t PARALLEL_THRESHOLD = 81920;
+  constexpr static size_t PARALLEL_THRESHOLD = 10240;
   constexpr static size_t BLOCK_SIZE = 256;
 
   Matrix() : _data(nullptr), _size(0), _rows(0), _cols(0), _capacity(0) {}
