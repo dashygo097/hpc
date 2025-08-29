@@ -11,7 +11,7 @@ template <typename T> class Matrix {
 public:
   using value_type = T;
   constexpr static size_t PARALLEL_THRESHOLD = 81920;
-  constexpr static size_t BLOCK_SIZE = 1024;
+  constexpr static size_t BLOCK_SIZE = 256;
 
   Matrix() : _data(nullptr), _size(0), _rows(0), _cols(0), _capacity(0) {}
   explicit Matrix(size_t rows, size_t cols)
@@ -57,6 +57,10 @@ public:
           }
         }
       }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = value;
+      }
     }
   }
 
@@ -79,6 +83,10 @@ public:
             this_data[i] = init_data[i];
           }
         }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = init_data[i];
       }
     }
   }

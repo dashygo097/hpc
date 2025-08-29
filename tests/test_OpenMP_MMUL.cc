@@ -4,8 +4,7 @@
 #include <hpc/mmul_impl.hh>
 
 using namespace hpc;
-const size_t DSIZE = 128;
-const size_t TSIZE = 5;
+const size_t DSIZE = 512;
 
 class OpenMPMatrixTest : public ::testing::Test {
 protected:
@@ -14,15 +13,15 @@ protected:
     b_serial = (float *)malloc(DSIZE * DSIZE * sizeof(float));
     c_serial = (float *)malloc(DSIZE * DSIZE * sizeof(float));
 
-    a = openmp::Matrix<float>(DSIZE, DSIZE, 1.0f);
-    b = openmp::Matrix<float>(DSIZE, DSIZE, 1.0f);
-    c = openmp::Matrix<float>(DSIZE, DSIZE, 0.0f);
-
     for (size_t i = 0; i < DSIZE * DSIZE; ++i) {
       a_serial[i] = 1.0f;
       b_serial[i] = 1.0f;
       c_serial[i] = 0.0f;
     }
+
+    a = openmp::Matrix<float>(DSIZE, DSIZE, 1.0f);
+    b = openmp::Matrix<float>(DSIZE, DSIZE, 1.0f);
+    c = openmp::Matrix<float>(DSIZE, DSIZE, 0.0f);
   }
 
   void TearDown() override {
@@ -31,13 +30,13 @@ protected:
     free(c_serial);
   }
 
-  void checkCorrectness(float *a, float *b) {
+  void checkCorrectness(float *c_src, float *c_tgt) {
     for (size_t i = 0; i < DSIZE * DSIZE; ++i) {
-      EXPECT_FLOAT_EQ(a[i], b[i]) << "Mismatch at index " << i;
+      EXPECT_FLOAT_EQ(c_src[i], c_tgt[i]) << "Mismatch at index " << i;
     }
   }
 
-  void cleanUp() {
+  void reset() {
     memset(c_serial, 0, DSIZE * DSIZE * sizeof(float));
     c.fill(0.0f);
   }
@@ -62,7 +61,7 @@ TEST_F(OpenMPMatrixTest, ParallelNaiveCorrectness) {
   computeSerialNaive();
   computeOpenMPNaive();
   checkCorrectness(c_serial, c.data());
-  cleanUp();
+  reset();
 }
 
 TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
@@ -70,26 +69,24 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   computeSerialNaive();
   computeOpenMPNaive();
 
-  cleanUp();
+  reset();
 
   ProgTimer timer_serial(Backend::SERIAL, "Serial Naive");
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP Naive");
 
   // Benchmark
   timer_serial.start();
-  for (size_t i = 0; i < TSIZE; ++i)
-    computeSerialNaive();
+  computeSerialNaive();
   timer_serial.stop();
   timer_serial.report();
 
   timer_openmp.start();
-  for (size_t i = 0; i < TSIZE; ++i)
-    computeOpenMPNaive();
+  computeOpenMPNaive();
   timer_openmp.stop();
   timer_openmp.report();
   checkCorrectness(c_serial, c.data());
 
-  std::cout << "[INFO] Base OpenMP achieves speedup of "
+  std::cout << "[INFO] OpenMP Naive achieves speedup of "
             << timer_serial.elapsed_seconds() / timer_openmp.elapsed_seconds()
             << "x over Serial;" << std::endl;
   ;

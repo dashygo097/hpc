@@ -41,9 +41,9 @@ protected:
     free(c_data);
   }
 
-  void checkCorrectness(float *a, float *b) {
+  void checkCorrectness(float *c_src, float *c_tgt) {
     for (size_t i = 0; i < DSIZE; ++i) {
-      EXPECT_FLOAT_EQ(a[i], b[i]) << "Mismatch at index " << i;
+      EXPECT_FLOAT_EQ(c_src[i], c_tgt[i]) << "Mismatch at index " << i;
     }
   }
 
@@ -88,7 +88,7 @@ protected:
     });
   }
 
-  void cleanUp() {
+  void reset() {
     memset(c_serial, 0, DSIZE * sizeof(float));
     memset(c_data, 0, DSIZE * sizeof(float));
     c.fill(0.0f);
@@ -111,21 +111,21 @@ TEST_F(OpenMPVectorTest, BaseParallelComputationCorrectness) {
   computeSerial();
   computeBaseOpenMP();
   checkCorrectness(c_serial, c_data);
-  cleanUp();
+  reset();
 }
 
 TEST_F(OpenMPVectorTest, SIMDParallelComputationCorrectness) {
   computeSerial();
   computeSIMDOpenMP();
   checkCorrectness(c_serial, c_data);
-  cleanUp();
+  reset();
 }
 
 TEST_F(OpenMPVectorTest, ParallelizedVectorAssignComputationCorrectness) {
   computeSerial();
   computeImplOpenMP();
   checkCorrectness(c_serial, const_cast<float *>(c.data()));
-  cleanUp();
+  reset();
 }
 
 TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
@@ -135,7 +135,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
   computeSIMDOpenMP();
   computeImplOpenMP();
 
-  cleanUp();
+  reset();
 
   ProgTimer timer_serial(Backend::SERIAL, "Serial");
   ProgTimer timer_base_openmp(Backend::OPENMP, "Base OpenMP");

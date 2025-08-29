@@ -22,12 +22,12 @@ namespace hpc::openmp {
 template <typename T>
 void naive_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
                      const size_t &K, const size_t &N) {
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M * N; ++i) {
     C[i] = T{};
   }
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M; ++i) {
     for (size_t k = 0; k < K; ++k) {
       T a_ik = A[i * K + k];
@@ -42,12 +42,13 @@ template <typename T>
 void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
                      const size_t &K, const size_t &N,
                      const size_t &tile_size) {
-#pragma omp parallel for
+
+#pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M * N; ++i) {
     C[i] = T{};
   }
 
-#pragma omp parallel for
+#pragma omp parallel for collapse(2) schedule(static)
   for (size_t ii = 0; ii < M; ii += tile_size) {
     for (size_t jj = 0; jj < N; jj += tile_size) {
       for (size_t kk = 0; kk < K; kk += tile_size) {
