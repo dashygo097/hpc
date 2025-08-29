@@ -1,23 +1,32 @@
-#include "hpc/openmp/datatype/matrix.hh"
+#pragma once
 
-namespace hpc::openmp {
-// template <typename T>
-// void naive_mmul_serial(T *C, T *A, T *B, const size_t &M, const size_t &K,
-//                        const size_t &N) {
-//   for (size_t i = 0; i < M; ++i) {
-//     for (size_t j = 0; j < N; ++j) {
-//       T sum = T{};
-//       for (size_t k = 0; k < K; ++k) {
-//         sum += A[i * K + k] * B[k * N + j];
-//       }
-//       C[i * N + j] = sum;
-//     }
-//   }
-// }
+#include <memory>
 
+namespace hpc::serial {
 template <typename T>
 void naive_mmul(T *C, T *A, T *B, const size_t &M, const size_t &K,
                 const size_t &N) {
+  for (size_t i = 0; i < M; ++i) {
+    for (size_t j = 0; j < N; ++j) {
+      T sum = T{};
+      for (size_t k = 0; k < K; ++k) {
+        sum += A[i * K + k] * B[k * N + j];
+      }
+      C[i * N + j] = sum;
+    }
+  }
+}
+} // namespace hpc::serial
+
+namespace hpc::openmp {
+template <typename T>
+void naive_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
+                     const size_t &K, const size_t &N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < M * N; ++i) {
+    C[i] = T{};
+  }
+
 #pragma omp parallel for
   for (size_t i = 0; i < M; ++i) {
     for (size_t k = 0; k < K; ++k) {
@@ -30,8 +39,14 @@ void naive_mmul(T *C, T *A, T *B, const size_t &M, const size_t &K,
 }
 
 template <typename T>
-void tiled_mmul(T *C, T *A, T *B, const size_t &M, const size_t &K,
-                const size_t &N, const size_t &tile_size) {
+void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
+                     const size_t &K, const size_t &N,
+                     const size_t &tile_size) {
+#pragma omp parallel for
+  for (size_t i = 0; i < M * N; ++i) {
+    C[i] = T{};
+  }
+
 #pragma omp parallel for
   for (size_t ii = 0; ii < M; ii += tile_size) {
     for (size_t jj = 0; jj < N; jj += tile_size) {
@@ -51,5 +66,4 @@ void tiled_mmul(T *C, T *A, T *B, const size_t &M, const size_t &K,
     }
   }
 }
-
 } // namespace hpc::openmp

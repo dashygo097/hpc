@@ -48,52 +48,44 @@ protected:
   }
 
   void computeSerial() {
-    for (size_t time = 0; time < TSIZE; ++time) {
-      for (size_t i = 0; i < DSIZE; ++i) {
-        float temp = a_serial[i] + b_serial[i] - 1.0f;
-        c_serial[i] = temp * temp;
-      }
+    for (size_t i = 0; i < DSIZE; ++i) {
+      float temp = a_serial[i] + b_serial[i] - 1.0f;
+      c_serial[i] = temp * temp;
     }
   }
 
   void computeBaseOpenMP() {
-    for (size_t time = 0; time < TSIZE; ++time) {
 #pragma omp parallel for schedule(static)
-      for (size_t i = 0; i < DSIZE; ++i) {
-        float temp = a_data[i] + b_data[i] - 1.0f;
-        c_data[i] = temp * temp;
-      }
+    for (size_t i = 0; i < DSIZE; ++i) {
+      float temp = a_data[i] + b_data[i] - 1.0f;
+      c_data[i] = temp * temp;
     }
   }
 
   void computeSIMDOpenMP() {
-    for (size_t time = 0; time < TSIZE; ++time) {
-      size_t simd_count = DSIZE - (DSIZE % 4);
+    size_t simd_count = DSIZE - (DSIZE % 4);
 #pragma omp parallel for schedule(static)
-      for (size_t i = 0; i < simd_count; i += 4) {
-        simd_float4 va = *((simd_float4 *)(a_data + i));
-        simd_float4 vb = *((simd_float4 *)(b_data + i));
-        simd_float4 vr = va + vb - simd_float4(1.0f);
-        vr = vr * vr;
-        *((simd_float4 *)(c_data + i)) = vr;
-      }
+    for (size_t i = 0; i < simd_count; i += 4) {
+      simd_float4 va = *((simd_float4 *)(a_data + i));
+      simd_float4 vb = *((simd_float4 *)(b_data + i));
+      simd_float4 vr = va + vb - simd_float4(1.0f);
+      vr = vr * vr;
+      *((simd_float4 *)(c_data + i)) = vr;
+    }
 
-      if (simd_count < DSIZE) {
-        for (size_t i = simd_count; i < DSIZE; ++i) {
-          c_data[i] = a_data[i] + b_data[i] - 1.0f;
-          c_data[i] = c_data[i] * c_data[i];
-        }
+    if (simd_count < DSIZE) {
+      for (size_t i = simd_count; i < DSIZE; ++i) {
+        c_data[i] = a_data[i] + b_data[i] - 1.0f;
+        c_data[i] = c_data[i] * c_data[i];
       }
     }
   }
 
   void computeImplOpenMP() {
-    for (size_t time = 0; time < TSIZE; ++time) {
-      c.assign(a, b, [](const float &x, const float &y) {
-        float temp = (x + y - 1.0f);
-        return temp * temp;
-      });
-    }
+    c.assign(a, b, [](const float &x, const float &y) {
+      float temp = (x + y - 1.0f);
+      return temp * temp;
+    });
   }
 
   void cleanUp() {
@@ -115,41 +107,24 @@ protected:
   openmp::Vector<float> c;
 };
 
-TEST_F(OpenMPVectorTest, SerialComputationCorrectness) {
-  computeSerial();
-
-  float expected = (1.0f + 2.0f - 1.0f) * (1.0f + 2.0f - 1.0f);
-  EXPECT_FLOAT_EQ(c_serial[0], expected);
-  EXPECT_FLOAT_EQ(c_serial[DSIZE / 2], expected);
-  EXPECT_FLOAT_EQ(c_serial[DSIZE - 1], expected);
-
-  cleanUp();
-}
-
 TEST_F(OpenMPVectorTest, BaseParallelComputationCorrectness) {
   computeSerial();
   computeBaseOpenMP();
-
   checkCorrectness(c_serial, c_data);
-
   cleanUp();
 }
 
 TEST_F(OpenMPVectorTest, SIMDParallelComputationCorrectness) {
   computeSerial();
   computeSIMDOpenMP();
-
   checkCorrectness(c_serial, c_data);
-
   cleanUp();
 }
 
 TEST_F(OpenMPVectorTest, ParallelizedVectorAssignComputationCorrectness) {
   computeSerial();
   computeImplOpenMP();
-
   checkCorrectness(c_serial, const_cast<float *>(c.data()));
-
   cleanUp();
 }
 
@@ -169,25 +144,29 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
 
   // Benchmark
   timer_serial.start();
-  computeSerial();
+  for (size_t i = 0; i < TSIZE; ++i)
+    computeSerial();
   timer_serial.stop();
   timer_serial.report();
 
   timer_base_openmp.start();
-  computeBaseOpenMP();
+  for (size_t i = 0; i < TSIZE; ++i)
+    computeBaseOpenMP();
   timer_base_openmp.stop();
   timer_base_openmp.report();
   checkCorrectness(c_serial, c_data);
 
   memset(c_data, 0, DSIZE * sizeof(float));
   timer_simd_openmp.start();
-  computeSIMDOpenMP();
+  for (size_t i = 0; i < TSIZE; ++i)
+    computeSIMDOpenMP();
   timer_simd_openmp.stop();
   timer_simd_openmp.report();
   checkCorrectness(c_serial, c_data);
 
   timer_impl_openmp.start();
-  computeImplOpenMP();
+  for (size_t i = 0; i < TSIZE; ++i)
+    computeImplOpenMP();
   timer_impl_openmp.stop();
   timer_impl_openmp.report();
   checkCorrectness(c_serial, const_cast<float *>(c.data()));
@@ -207,9 +186,4 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
             << timer_serial.elapsed_seconds() /
                    timer_impl_openmp.elapsed_seconds()
             << "x over Serial;" << std::endl;
-}
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

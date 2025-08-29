@@ -1,8 +1,8 @@
 #pragma once
 
 #ifdef ENABLE_OPENMP
+#include "../../mmul_impl.hh"
 #include "./vector.hh"
-#include <memory>
 #endif
 
 namespace hpc::openmp {
@@ -388,6 +388,66 @@ public:
 #endif
   }
 
+  Matrix &operator+=(const Matrix &other) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] += other._data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] += other._data[i];
+      }
+    }
+
+    return *this;
+  }
+
+  Matrix &operator-=(const Matrix &other) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = BLOCK_SIZE;
+    if (_size > PARALLEL_THRESHOLD) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] -= other._data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] -= other._data[i];
+      }
+    }
+    return *this;
+  }
+
+  Matrix &operator*=(const Matrix &other) {
+    if (_cols != other._rows) {
+      throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                               std::to_string(_rows) + ", " +
+                               std::to_string(_cols) + ") x (" +
+                               std::to_string(other._rows) + ", " +
+                               std::to_string(other._cols) + ")");
+    }
+    Matrix result(_rows, other._cols);
+    tiled_mmul(result._data, _data, other._data, _rows, _cols, other._cols);
+    *this = std::move(result);
+    return *this;
+  }
+
 private:
   std::unique_ptr<T[], std::default_delete<T[]>> _data;
   size_t _size;
@@ -456,5 +516,37 @@ private:
 #endif
 };
 
+template <typename T>
+Matrix<T> naive_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  naive_mmul_impl(result.data(), mat1.data(), mat2.data(), mat1.rows(),
+                  mat1.cols(), mat2.cols());
+  return result;
+}
+
+template <typename T>
+Matrix<T> tiled_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2,
+                     const size_t &tile_size = 32) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  tiled_mmul_impl(result.data(), mat1.data(), mat2.data(), mat1.rows(),
+                  mat1.cols(), mat2.cols(), tile_size);
+  return result;
+}
+
 #endif
+
 } // namespace hpc::openmp
