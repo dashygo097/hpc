@@ -15,7 +15,9 @@ template <typename T> class Matrix {
 public:
   using value_type = T;
 #ifdef ENABLE_SIMD
+#if defined(__APPLE__)
   using simd_type = simd_t<T>;
+#endif
 #endif
 
   Matrix() : _data(nullptr), _size(0), _rows(0), _cols(0), _capacity(0) {}

@@ -14,7 +14,9 @@ template <typename T> class Vector {
 public:
   using value_type = T;
 #ifdef ENABLE_SIMD
+#if defined(__APPLE__)
   using simd_type = simd_t<T>;
+#endif
 #endif
 
   Vector() : _data(nullptr), _size(0), _capacity(0) {}

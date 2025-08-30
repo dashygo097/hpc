@@ -2,7 +2,7 @@
 #if defined(__APPLE__)
 #include <Accelerate/Accelerate.h>
 #endif
-#include <complex.h>
+#include <complex>
 #include <gtest/gtest.h>
 #include <hpc.hh>
 
