@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include <simd/simd.h>
 #include <string>
 
 #include "./constants.hh"

@@ -554,6 +554,17 @@ private:
           }
         }
       }
+    } else {
+      for (size_t i = 0; i < simd_size; i += SIMD_WIDTH) {
+        simd_type v = traits::duplicate(value);
+        traits::store(this_data + i, v);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *(this_data + simd_size + i) = value;
+        }
+      }
+    }
 
 #else
     std::cerr << "Not Implement SIMD for `fill` function for "
