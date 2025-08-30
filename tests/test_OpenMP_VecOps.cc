@@ -4,6 +4,8 @@
 #include <hpc.hh>
 #if defined(__APPLE__)
 #include <simd/simd.h>
+#elif defined(__ARM_NEON)
+#include <arm_neon.h>
 #endif
 
 using namespace hpc;
@@ -84,6 +86,24 @@ protected:
       }
     }
   }
+#elif defined(__ARM_NEON)
+  void computeSIMDOpenMP() {
+    size_t simd_count = DSIZE - (DSIZE % 4);
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < simd_count; i += 4) {
+      float32x4_t va = vld1q_f32(a_data + i);
+      float32x4_t vb = vld1q_f32(b_data + i);
+      float32x4_t vr = vsubq_f32(vaddq_f32(va, vb), vdupq_n_f32(1.0f));
+      vr = vmulq_f32(vr, vr);
+      vst1q_f32(c_data + i, vr);
+    }
+    if (simd_count < DSIZE) {
+      for (size_t i = simd_count; i < DSIZE; ++i) {
+        c_data[i] = a_data[i] + b_data[i] - 1.0f;
+        c_data[i] = c_data[i] * c_data[i];
+      }
+    }
+  }
 #endif
 
 #if defined(__APPLE__)
@@ -92,6 +112,13 @@ protected:
     c.assign(a, b, [](const simd_type &x, const simd_type &y) {
       auto temp = x + y - simd_type(1.0f);
       return temp * temp;
+    });
+  }
+#elif defined(__ARM_NEON)
+  void computeImplOpenMP() {
+    c.assign(a, b, [](const float32x4_t &x, const float32x4_t &y) {
+      auto temp = vsubq_f32(vaddq_f32(x, y), vdupq_n_f32(1.0f));
+      return vmulq_f32(temp, temp);
     });
   }
 #endif
@@ -122,7 +149,7 @@ TEST_F(OpenMPVectorTest, BaseParallelComputationCorrectness) {
   reset();
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__ARM_NEON)
 TEST_F(OpenMPVectorTest, SIMDParallelComputationCorrectness) {
   computeSerial();
   computeSIMDOpenMP();
@@ -142,7 +169,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
   // Warm-up
   computeSerial();
   computeBaseOpenMP();
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__ARM_NEON)
   computeSIMDOpenMP();
   computeImplOpenMP();
 #endif
@@ -151,7 +178,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
 
   ProgTimer timer_serial(Backend::SERIAL, "Serial");
   ProgTimer timer_base_openmp(Backend::OPENMP, "Base OpenMP");
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__ARM_NEON)
   ProgTimer timer_simd_openmp(Backend::OPENMP, "SIMD OpenMP");
   ProgTimer timer_impl_openmp(Backend::OPENMP, "Impled OpenMP");
 #endif
@@ -168,7 +195,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
   timer_base_openmp.report();
   checkCorrectness(c_serial, c_data);
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__ARM_NEON)
   timer_simd_openmp.start();
   computeSIMDOpenMP();
   timer_simd_openmp.stop();
@@ -187,7 +214,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
             << "x over Serial;" << std::endl;
   ;
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__ARM_NEON)
   std::cout << "[INFO] SIMD OpenMP achieves speedup of "
             << timer_serial.elapsed_seconds() /
                    timer_simd_openmp.elapsed_seconds()

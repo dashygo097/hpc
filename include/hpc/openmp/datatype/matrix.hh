@@ -17,6 +17,9 @@ public:
 #ifdef ENABLE_SIMD
 #if defined(__APPLE__)
   using simd_type = simd_t<T>;
+#elif defined(__ARM_NEON)
+  using traits = neon_traits<T>;
+  using simd_type = typename traits::type;
 #endif
 #endif
 
@@ -517,10 +520,8 @@ private:
           }
         }
         if (_size % SIMD_WIDTH != 0) {
-          simd_type v = *((simd_type *)(this_data + simd_size));
-          simd_type result = simd_type(value);
           for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
-            *((this_data + simd_size + i)) = result[i];
+            *((this_data + simd_size + i)) = value;
           }
         }
       }
@@ -529,10 +530,38 @@ private:
         *((simd_type *)(this_data + i)) = simd_type(value);
       }
       if (_size % SIMD_WIDTH != 0) {
-        simd_type v = *((simd_type *)(this_data + simd_size));
-        simd_type result = simd_type(value);
         for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
-          *((this_data + simd_size + i)) = result[i];
+          *((this_data + simd_size + i)) = value;
+        }
+      }
+    }
+
+#elif defined(__ARM_NEON)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            simd_type v = traits::duplicate(value);
+            traits::store(this_data + i, v);
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < simd_size; i += SIMD_WIDTH) {
+        simd_type v = traits::duplicate(value);
+        traits::store(this_data + i, v);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *(this_data + simd_size + i) = value;
         }
       }
     }
