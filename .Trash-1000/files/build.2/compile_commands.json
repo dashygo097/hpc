@@ -1,0 +1,68 @@
+[
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -Winvalid-pch -x c++-header -include \"/home/parallels/Desktop/Parallels Shared Folders/HPC/build/CMakeFiles/hpc.dir/cmake_pch.hxx\" -o CMakeFiles/hpc.dir/cmake_pch.hxx.gch -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/build/CMakeFiles/hpc.dir/cmake_pch.hxx.cxx\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/CMakeFiles/hpc.dir/cmake_pch.hxx.cxx",
+  "output": "CMakeFiles/hpc.dir/cmake_pch.hxx.gch"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -Winvalid-pch -include \"/home/parallels/Desktop/Parallels Shared Folders/HPC/build/CMakeFiles/hpc.dir/cmake_pch.hxx\" -o CMakeFiles/hpc.dir/src/hpc.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/src/hpc.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/src/hpc.cc",
+  "output": "CMakeFiles/hpc.dir/src/hpc.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/3rdparty/googletest/googlemock",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock/include\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -std=c++17 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock/src/gmock-all.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock/src/gmock-all.cc",
+  "output": "3rdparty/googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/3rdparty/googletest/googlemock",
+  "command": "/usr/bin/c++  -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -std=c++17 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock/src/gmock_main.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googlemock/src/gmock_main.cc",
+  "output": "3rdparty/googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/3rdparty/googletest/googletest",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -std=c++17 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/src/gtest-all.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/src/gtest-all.cc",
+  "output": "3rdparty/googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/3rdparty/googletest/googletest",
+  "command": "/usr/bin/c++  -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -std=c++17 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/src/gtest_main.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/src/gtest_main.cc",
+  "output": "3rdparty/googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/tests",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -o CMakeFiles/test_runner.dir/test_OpenMP_MMUL.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/tests/test_OpenMP_MMUL.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/tests/test_OpenMP_MMUL.cc",
+  "output": "tests/CMakeFiles/test_runner.dir/test_OpenMP_MMUL.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/tests",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -o CMakeFiles/test_runner.dir/test_OpenMP_VecOps.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/tests/test_OpenMP_VecOps.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/tests/test_OpenMP_VecOps.cc",
+  "output": "tests/CMakeFiles/test_runner.dir/test_OpenMP_VecOps.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/tests",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest/include\" -isystem \"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty/googletest/googletest\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -o CMakeFiles/test_runner.dir/test_TrueIsTure.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/tests/test_TrueIsTure.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/tests/test_TrueIsTure.cc",
+  "output": "tests/CMakeFiles/test_runner.dir/test_TrueIsTure.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/demos",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -o CMakeFiles/timer.dir/startup/timer/main.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/demos/startup/timer/main.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/demos/startup/timer/main.cc",
+  "output": "demos/CMakeFiles/timer.dir/startup/timer/main.cc.o"
+},
+{
+  "directory": "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/demos",
+  "command": "/usr/bin/c++  -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/3rdparty\" -I\"/home/parallels/Desktop/Parallels Shared Folders/HPC/include\" -isystem /usr/lib/aarch64-linux-gnu/openmpi/include -isystem /usr/lib/aarch64-linux-gnu/openmpi/include/openmpi -std=gnu++17 -fopenmp -o CMakeFiles/vecadd.dir/startup/vecadd/main.cc.o -c \"/home/parallels/Desktop/Parallels Shared Folders/HPC/demos/startup/vecadd/main.cc\"",
+  "file": "/home/parallels/Desktop/Parallels Shared Folders/HPC/demos/startup/vecadd/main.cc",
+  "output": "demos/CMakeFiles/vecadd.dir/startup/vecadd/main.cc.o"
+}
+]

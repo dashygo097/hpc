@@ -1,0 +1,2 @@
+/usr/bin/ar qc lib/libhpc.a CMakeFiles/hpc.dir/src/hpc.cc.o
+/usr/bin/ranlib lib/libhpc.a

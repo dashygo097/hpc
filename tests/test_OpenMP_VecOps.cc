@@ -2,7 +2,9 @@
 #define ENABLE_SIMD
 #include <gtest/gtest.h>
 #include <hpc.hh>
+#if defined(__APPLE__)
 #include <simd/simd.h>
+#endif
 
 using namespace hpc;
 const size_t DSIZE = 10000000;
@@ -62,6 +64,7 @@ protected:
     }
   }
 
+#if defined(__APPLE__)
   void computeSIMDOpenMP() {
     size_t simd_count = DSIZE - (DSIZE % 4);
     using simd_type = simd_float4;
@@ -81,7 +84,9 @@ protected:
       }
     }
   }
+#endif
 
+#if defined(__APPLE__)
   void computeImplOpenMP() {
     using simd_type = simd_float4;
     c.assign(a, b, [](const simd_type &x, const simd_type &y) {
@@ -89,6 +94,7 @@ protected:
       return temp * temp;
     });
   }
+#endif
 
   void reset() {
     memset(c_serial, 0, DSIZE * sizeof(float));
@@ -116,6 +122,7 @@ TEST_F(OpenMPVectorTest, BaseParallelComputationCorrectness) {
   reset();
 }
 
+#if defined(__APPLE__)
 TEST_F(OpenMPVectorTest, SIMDParallelComputationCorrectness) {
   computeSerial();
   computeSIMDOpenMP();
@@ -129,20 +136,25 @@ TEST_F(OpenMPVectorTest, ParallelizedVectorAssignComputationCorrectness) {
   checkCorrectness(c_serial, const_cast<float *>(c.data()));
   reset();
 }
+#endif
 
 TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
   // Warm-up
   computeSerial();
   computeBaseOpenMP();
+#if defined(__APPLE__)
   computeSIMDOpenMP();
   computeImplOpenMP();
+#endif
 
   reset();
 
   ProgTimer timer_serial(Backend::SERIAL, "Serial");
   ProgTimer timer_base_openmp(Backend::OPENMP, "Base OpenMP");
+#if defined(__APPLE__)
   ProgTimer timer_simd_openmp(Backend::OPENMP, "SIMD OpenMP");
   ProgTimer timer_impl_openmp(Backend::OPENMP, "Impled OpenMP");
+#endif
 
   // Benchmark
   timer_serial.start();
@@ -156,6 +168,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
   timer_base_openmp.report();
   checkCorrectness(c_serial, c_data);
 
+#if defined(__APPLE__)
   timer_simd_openmp.start();
   computeSIMDOpenMP();
   timer_simd_openmp.stop();
@@ -166,6 +179,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
   computeImplOpenMP();
   timer_impl_openmp.stop();
   timer_impl_openmp.report();
+#endif
 
   std::cout << "[INFO] Base OpenMP achieves speedup of "
             << timer_serial.elapsed_seconds() /
@@ -173,6 +187,7 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
             << "x over Serial;" << std::endl;
   ;
 
+#if defined(__APPLE__)
   std::cout << "[INFO] SIMD OpenMP achieves speedup of "
             << timer_serial.elapsed_seconds() /
                    timer_simd_openmp.elapsed_seconds()
@@ -182,4 +197,5 @@ TEST_F(OpenMPVectorTest, PerformanceBenchmark) {
             << timer_serial.elapsed_seconds() /
                    timer_impl_openmp.elapsed_seconds()
             << "x over Serial;" << std::endl;
+#endif
 }
