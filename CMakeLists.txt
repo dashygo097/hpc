@@ -57,6 +57,8 @@ if(APPLE)
   set(OpenMP_omp_LIBRARY "${OPENMP_PATH}/lib/libomp.dylib")
 endif()
 
+
+
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 
@@ -65,8 +67,9 @@ find_package(MPI REQUIRED)
 add_subdirectory(3rdparty/googletest)
 include_directories(3rdparty)
 
-# hpc
 
+
+# hpc
 file(GLOB_RECURSE HPC_SOURCES src/*.cpp src/*.c src/*.cc)
 file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hpp include/*.hh)
 
@@ -88,6 +91,13 @@ if (HAS_CUDA)
       CUDA_ARCHITECTURES "native"
   )
   target_link_libraries(hpc PUBLIC CUDA::cudart)
+endif()
+
+# Accelerate
+if(APPLE)
+  add_compile_definitions(ACCELERATE_NEW_LAPACK ACCELERATE_LAPACK_ILP64)
+  find_library(ACCELERATE_LIB Accelerate)
+  target_link_libraries(hpc PUBLIC ${ACCELERATE_LIB})
 endif()
 
 

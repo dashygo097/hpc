@@ -4,13 +4,18 @@
 #include <memory>
 #endif
 
+#ifdef ENABLE_SIMD
+#include "../../simd_impl.hh"
+#endif
+
 namespace hpc::openmp {
 #ifdef ENABLE_OPENMP
 template <typename T> class Vector {
 public:
   using value_type = T;
-  static constexpr size_t PARALLEL_THRESHOLD = 819200;
-  static constexpr size_t BLOCK_SIZE = 1024;
+#ifdef ENABLE_SIMD
+  using simd_type = simd_t<T>;
+#endif
 
   Vector() : _data(nullptr), _size(0), _capacity(0) {}
 
@@ -18,14 +23,14 @@ public:
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = T{};
           }
@@ -42,14 +47,14 @@ public:
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = value;
           }
@@ -75,14 +80,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = other_data[i];
           }
@@ -112,14 +117,14 @@ public:
 
       T *__restrict__ this_data = _data.get();
       const T *__restrict__ other_data = other._data.get();
-      const size_t block_size = BLOCK_SIZE;
+      const size_t block_dim = BLOCK_DIM;
 
-      if (_size > PARALLEL_THRESHOLD) {
+      if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
-          for (size_t block = 0; block < _size; block += block_size) {
-            size_t end = std::min(block + block_size, _size);
+          for (size_t block = 0; block < _size; block += block_dim) {
+            size_t end = std::min(block + block_dim, _size);
             for (size_t i = block; i < end; ++i) {
               this_data[i] = other_data[i];
             }
@@ -193,14 +198,14 @@ public:
 
     if (new_size > _size) {
       T *__restrict__ this_data = _data.get();
-      const size_t block_size = BLOCK_SIZE;
+      const size_t block_dim = BLOCK_DIM;
 
-      if (new_size > PARALLEL_THRESHOLD) {
+      if (new_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
-          for (size_t block = _size; block < new_size; block += block_size) {
-            size_t end = std::min(block + block_size, new_size);
+          for (size_t block = _size; block < new_size; block += block_dim) {
+            size_t end = std::min(block + block_dim, new_size);
             for (size_t i = block; i < end; ++i) {
               this_data[i] = value;
             }
@@ -215,7 +220,35 @@ public:
     _size = new_size;
   }
 
+  void fill(const T &value) {
+#ifndef ENABLE_SIMD
+    T *__restrict__ this_data = _data.get();
+    const size_t block_dim = BLOCK_DIM;
+
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = T{};
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = T{};
+      }
+    }
+
+#else
+    fill_simd(value);
+#endif
+  }
+
   template <typename Func> Vector &assign(const Vector &vec1, Func &&func) {
+#ifndef ENABLE_SIMD
     if (_size != vec1._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for assignment.");
@@ -223,14 +256,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = func(vec1_data[i]);
           }
@@ -241,12 +274,16 @@ public:
         this_data[i] = func(vec1_data[i]);
       }
     }
+#else
+    assign_unary_simd(vec1, func);
+#endif
 
     return *this;
   }
 
   template <typename Func>
   Vector &assign(const Vector &vec1, const Vector &vec2, Func &&func) {
+#ifndef ENABLE_SIMD
     if (_size != vec1._size || _size != vec2._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for assignment.");
@@ -255,14 +292,14 @@ public:
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1.data();
     const T *__restrict__ vec2_data = vec2.data();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = func(vec1_data[i], vec2_data[i]);
           }
@@ -273,20 +310,24 @@ public:
         this_data[i] = func(vec1_data[i], vec2_data[i]);
       }
     }
+#else
+    assign_binary_simd(vec1, vec2, func);
+#endif
 
     return *this;
   }
 
   Vector &operator+=(const T &value) {
+#ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] += value;
           }
@@ -297,21 +338,26 @@ public:
         this_data[i] += value;
       }
     }
+#else
+    add_simd(value);
+#endif
+
     return *this;
   }
 
   Vector &operator-=(const T &value) { return *this += -value; }
 
   Vector &operator*=(const T &value) {
+#ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] *= value;
           }
@@ -322,12 +368,17 @@ public:
         this_data[i] *= value;
       }
     }
+#else
+    return mul_simd(value);
+#endif
+
     return *this;
   }
 
   Vector &operator/=(const T &value) { return *this *= (1 / value); }
 
   Vector &operator+=(const Vector &other) {
+#ifndef ENABLE_SIMD
     if (_size != other._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for addition.");
@@ -335,14 +386,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] += other_data[i];
           }
@@ -353,10 +404,15 @@ public:
         this_data[i] += other_data[i];
       }
     }
+#else
+    add_vec_simd(other);
+#endif
+
     return *this;
   }
 
   Vector &operator-=(const Vector &other) {
+#ifndef ENABLE_SIMD
     if (_size != other._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for subtraction.");
@@ -364,14 +420,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] -= other_data[i];
           }
@@ -382,10 +438,14 @@ public:
         this_data[i] -= other_data[i];
       }
     }
+#else
+    sub_vec_simd(other);
+#endif
     return *this;
   }
 
   Vector &operator*=(const Vector &other) {
+#ifndef ENABLE_SIMD
     if (_size != other._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for multiplication.");
@@ -393,14 +453,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] *= other_data[i];
           }
@@ -411,11 +471,15 @@ public:
         this_data[i] *= other_data[i];
       }
     }
+#else
+    mul_vec_simd(other);
+#endif
 
     return *this;
   }
 
   Vector &operator/=(const Vector &other) {
+#ifndef ENABLE_SIMD
     if (_size != other._size) {
       throw std::runtime_error(
           "Vectors must be of the same size for division.");
@@ -423,14 +487,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             if (other_data[i] == 0) {
               throw std::runtime_error("Division by zero in vector division.");
@@ -447,6 +511,10 @@ public:
         this_data[i] /= other_data[i];
       }
     }
+#else
+    div_vec_simd(other);
+#endif
+
     return *this;
   }
 
@@ -459,14 +527,14 @@ public:
     T result = T{};
     const T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel reduction(+ : result)
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           T local_result = T{};
           for (size_t i = block; i < end; ++i) {
             local_result += this_data[i] * other_data[i];
@@ -490,14 +558,14 @@ public:
 
     T result = T{};
     const T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel reduction(+ : result)
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           T local_result = T{};
           for (size_t i = block; i < end; ++i) {
             local_result += this_data[i];
@@ -523,14 +591,14 @@ private:
 
     T *__restrict__ new_ptr = new_data.get();
     const T *__restrict__ old_ptr = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_dim = BLOCK_DIM;
 
-    if (_size > PARALLEL_THRESHOLD) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
+        for (size_t block = 0; block < _size; block += block_dim) {
+          size_t end = std::min(block + block_dim, _size);
           for (size_t i = block; i < end; ++i) {
             new_ptr[i] = std::move(old_ptr[i]);
           }
@@ -545,6 +613,448 @@ private:
     _data = std::move(new_data);
     _capacity = new_capacity;
   }
+
+#ifdef ENABLE_SIMD
+  void fill_simd(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) = simd_type(value);
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v = *((simd_type *)(this_data + simd_size));
+          simd_type result = simd_type(value);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) = simd_type(value);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v = *((simd_type *)(this_data + simd_size));
+        simd_type result = simd_type(value);
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+
+#else
+    std::cerr << "Not Implement SIMD for `fill` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  void add_simd(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) += simd_type(value);
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v = *((simd_type *)(this_data + simd_size));
+          simd_type result = v + simd_type(value);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) += simd_type(value);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v = *((simd_type *)(this_data + simd_size));
+        simd_type result = v + simd_type(value);
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `+=` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  void mul_simd(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) *= simd_type(value);
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v = *((simd_type *)(this_data + simd_size));
+          simd_type result = v * simd_type(value);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) *= simd_type(value);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v = *((simd_type *)(this_data + simd_size));
+        simd_type result = v * simd_type(value);
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `*=` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  void add_vec_simd(const Vector &other) {
+    if (_size != other._size) {
+      throw std::runtime_error(
+          "Vectors must be of the same size for addition.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) += *((simd_type *)(other_data + i));
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = *((simd_type *)(this_data + simd_size));
+          simd_type v2 = *((simd_type *)(other_data + simd_size));
+          simd_type result = v1 + v2;
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) += *((simd_type *)(other_data + i));
+      }
+
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v1 = *((simd_type *)(this_data + simd_size));
+        simd_type v2 = *((simd_type *)(other_data + simd_size));
+        simd_type result = v1 + v2;
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `+=` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  void sub_vec_simd(const Vector &other) {
+    if (_size != other._size) {
+      throw std::runtime_error(
+          "Vectors must be of the same size for subtraction.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) -= *((simd_type *)(other_data + i));
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = *((simd_type *)(this_data + simd_size));
+          simd_type v2 = *((simd_type *)(other_data + simd_size));
+          simd_type result = v1 - v2;
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) -= *((simd_type *)(other_data + i));
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v1 = *((simd_type *)(this_data + simd_size));
+        simd_type v2 = *((simd_type *)(other_data + simd_size));
+        simd_type result = v1 - v2;
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `-=` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  void div_vec_simd(const Vector &other) {
+    if (_size != other._size) {
+      throw std::runtime_error(
+          "Vectors must be of the same size for division.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) /= *((simd_type *)(other_data + i));
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = *((simd_type *)(this_data + simd_size));
+          simd_type v2 = *((simd_type *)(other_data + simd_size));
+          simd_type result = v1 / v2;
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) /= *((simd_type *)(other_data + i));
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v1 = *((simd_type *)(this_data + simd_size));
+        simd_type v2 = *((simd_type *)(other_data + simd_size));
+        simd_type result = v1 / v2;
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `-=` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  void mul_vec_simd(const Vector &other) {
+    if (_size != other._size) {
+      throw std::runtime_error(
+          "Vectors must be of the same size for multiplication.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ other_data = other._data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            *((simd_type *)(this_data + i)) *= *((simd_type *)(other_data + i));
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = *((simd_type *)(this_data + simd_size));
+          simd_type v2 = *((simd_type *)(other_data + simd_size));
+          simd_type result = v1 * v2;
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        *((simd_type *)(this_data + i)) *= *((simd_type *)(other_data + i));
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v1 = *((simd_type *)(this_data + simd_size));
+        simd_type v2 = *((simd_type *)(other_data + simd_size));
+        simd_type result = v1 * v2;
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `*=` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  template <typename Func>
+  void assign_unary_simd(const Vector &vec1, Func &&func) {
+    if (_size != vec1._size) {
+      throw std::runtime_error(
+          "Vectors must be of the same size for assignment.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ vec1_data = vec1._data.get();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            simd_type vi = *((simd_type *)(vec1_data + i));
+            *((simd_type *)(this_data + i)) = func(vi);
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type vi = *((simd_type *)(vec1_data + simd_size));
+            simd_type result = func(vi);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *((this_data + simd_size + i)) = result[i];
+            }
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        simd_type vi = *((simd_type *)(vec1_data + i));
+        *((simd_type *)(this_data + i)) = func(vi);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type vi = *((simd_type *)(vec1_data + simd_size));
+        simd_type result = func(vi);
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+#else
+    std::cerr << "Not Implement SIMD for `assign` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+  template <typename Func>
+  void assign_binary_simd(const Vector &vec1, const Vector &vec2, Func &&func) {
+    if (_size != vec1._size || _size != vec2._size) {
+      throw std::runtime_error(
+          "Vectors must be of the same size for assignment.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ vec1_data = vec1.data();
+    const T *__restrict__ vec2_data = vec2.data();
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
+
+#if defined(__APPLE__)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            simd_type v1 = *((simd_type *)(vec1_data + i));
+            simd_type v2 = *((simd_type *)(vec2_data + i));
+            *((simd_type *)(this_data + i)) = func(v1, v2);
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = *((simd_type *)(vec1_data + simd_size));
+          simd_type v2 = *((simd_type *)(vec2_data + simd_size));
+          simd_type result = func(v1, v2);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+        simd_type v1 = *((simd_type *)(vec1_data + i));
+        simd_type v2 = *((simd_type *)(vec2_data + i));
+        *((simd_type *)(this_data + i)) = func(v1, v2);
+      }
+      if (_size % SIMD_WIDTH != 0) {
+        simd_type v1 = *((simd_type *)(vec1_data + simd_size));
+        simd_type v2 = *((simd_type *)(vec2_data + simd_size));
+        simd_type result = func(v1, v2);
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
+      }
+    }
+
+#else
+    std::cerr << "Not Implement SIMD for `assign` function for "
+                 "non-Apple platforms."
+              << std::endl;
+#endif
+  }
+
+#endif
 };
 
 #endif
