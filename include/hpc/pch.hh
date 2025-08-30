@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <simd/simd.h>
 #include <string>
 
 #include "./constants.hh"
@@ -18,6 +19,9 @@
 #if defined(__APPLE__)
 #include <Accelerate/Accelerate.h>
 #include <simd/simd.h>
+
+#elif defined(__ARM_NEON)
+#include <arm_neon.h>
 #endif
 
 #endif

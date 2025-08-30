@@ -16,6 +16,9 @@ public:
 #ifdef ENABLE_SIMD
 #if defined(__APPLE__)
   using simd_type = simd_t<T>;
+#elif defined(__ARM_NEON)
+  using traits = neon_traits<T>;
+  using simd_type = typename traits::type;
 #endif
 #endif
 
@@ -634,10 +637,8 @@ private:
           }
         }
         if (_size % SIMD_WIDTH != 0) {
-          simd_type v = *((simd_type *)(this_data + simd_size));
-          simd_type result = simd_type(value);
           for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
-            *((this_data + simd_size + i)) = result[i];
+            *((this_data + simd_size + i)) = value;
           }
         }
       }
@@ -646,13 +647,30 @@ private:
         *((simd_type *)(this_data + i)) = simd_type(value);
       }
       if (_size % SIMD_WIDTH != 0) {
-        simd_type v = *((simd_type *)(this_data + simd_size));
-        simd_type result = simd_type(value);
         for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
-          *((this_data + simd_size + i)) = result[i];
+          *((this_data + simd_size + i)) = value;
         }
       }
     }
+
+#elif defined(__ARM_NEON)
+    if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+            simd_type v = traits::duplicate(value);
+            traits::store(this_data + i, v);
+          }
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = value;
+          }
+        }
+      }
 
 #else
     std::cerr << "Not Implement SIMD for `fill` function for "
@@ -697,6 +715,44 @@ private:
         }
       }
     }
+
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v = traits::load(this_data + i);
+              traits::store(this_data + i,
+                            traits::add(v, traits::duplicate(value)));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v = traits::load(this_data + simd_size);
+            simd_type result = traits::add(v, traits::duplicate(value));
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v = traits::load(this_data + i);
+          traits::store(this_data + i,
+                        traits::add(v, traits::duplicate(value)));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v = traits::load(this_data + simd_size);
+          simd_type result = traits::add(v, traits::duplicate(value));
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
+
 #else
     std::cerr << "Not Implement SIMD for `+=` function for "
                  "non-Apple platforms."
@@ -740,6 +796,43 @@ private:
         }
       }
     }
+
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v = traits::load(this_data + i);
+              traits::store(this_data + i,
+                            traits::mul(v, traits::duplicate(value)));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v = traits::load(this_data + simd_size);
+            simd_type result = traits::mul(v, traits::duplicate(value));
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v = traits::load(this_data + i);
+          traits::store(this_data + i,
+                        traits::mul(v, traits::duplicate(value)));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v = traits::load(this_data + simd_size);
+          simd_type result = traits::mul(v, traits::duplicate(value));
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
 #else
     std::cerr << "Not Implement SIMD for `*=` function for "
                  "non-Apple platforms."
@@ -791,6 +884,45 @@ private:
         }
       }
     }
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v1 = traits::load(this_data + i);
+              simd_type v2 = traits::load(other_data + i);
+              traits::store(this_data + i, traits::add(v1, v2));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v1 = traits::load(this_data + simd_size);
+            simd_type v2 = traits::load(other_data + simd_size);
+            simd_type result = traits::add(v1, v2);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v1 = traits::load(this_data + i);
+          simd_type v2 = traits::load(other_data + i);
+          traits::store(this_data + i, traits::add(v1, v2));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = traits::load(this_data + simd_size);
+          simd_type v2 = traits::load(other_data + simd_size);
+          simd_type result = traits::add(v1, v2);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
+
 #else
     std::cerr << "Not Implement SIMD for `+=` function for "
                  "non-Apple platforms."
@@ -841,6 +973,46 @@ private:
         }
       }
     }
+
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v1 = traits::load(this_data + i);
+              simd_type v2 = traits::load(other_data + i);
+              traits::store(this_data + i, traits::sub(v1, v2));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v1 = traits::load(this_data + simd_size);
+            simd_type v2 = traits::load(other_data + simd_size);
+            simd_type result = traits::sub(v1, v2);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v1 = traits::load(this_data + i);
+          simd_type v2 = traits::load(other_data + i);
+          traits::store(this_data + i, traits::sub(v1, v2));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = traits::load(this_data + simd_size);
+          simd_type v2 = traits::load(other_data + simd_size);
+          simd_type result = traits::sub(v1, v2);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
+
 #else
     std::cerr << "Not Implement SIMD for `-=` function for "
                  "non-Apple platforms."
@@ -891,6 +1063,45 @@ private:
         }
       }
     }
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v1 = traits::load(this_data + i);
+              simd_type v2 = traits::load(other_data + i);
+              traits::store(this_data + i, traits::div(v1, v2));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v1 = traits::load(this_data + simd_size);
+            simd_type v2 = traits::load(other_data + simd_size);
+            simd_type result = traits::div(v1, v2);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v1 = traits::load(this_data + i);
+          simd_type v2 = traits::load(other_data + i);
+          traits::store(this_data + i, traits::div(v1, v2));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = traits::load(this_data + simd_size);
+          simd_type v2 = traits::load(other_data + simd_size);
+          simd_type result = traits::div(v1, v2);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
+
 #else
     std::cerr << "Not Implement SIMD for `-=` function for "
                  "non-Apple platforms."
@@ -941,6 +1152,45 @@ private:
         }
       }
     }
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v1 = traits::load(this_data + i);
+              simd_type v2 = traits::load(other_data + i);
+              traits::store(this_data + i, traits::mul(v1, v2));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v1 = traits::load(this_data + simd_size);
+            simd_type v2 = traits::load(other_data + simd_size);
+            simd_type result = traits::mul(v1, v2);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v1 = traits::load(this_data + i);
+          simd_type v2 = traits::load(other_data + i);
+          traits::store(this_data + i, traits::mul(v1, v2));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = traits::load(this_data + simd_size);
+          simd_type v2 = traits::load(other_data + simd_size);
+          simd_type result = traits::mul(v1, v2);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
+
 #else
     std::cerr << "Not Implement SIMD for `*=` function for "
                  "non-Apple platforms."
@@ -992,6 +1242,42 @@ private:
         }
       }
     }
+
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type vi = traits::load(vec1_data + i);
+              traits::store(this_data + i, func(vi));
+            }
+          }
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type vi = traits::load(vec1_data + simd_size);
+            simd_type result = func(vi);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type vi = traits::load(vec1_data + i);
+          traits::store(this_data + i, func(vi));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type vi = traits::load(vec1_data + simd_size);
+          simd_type result = func(vi);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
+
 #else
     std::cerr << "Not Implement SIMD for `assign` function for "
                  "non-Apple platforms."
@@ -1048,6 +1334,45 @@ private:
         }
       }
     }
+#elif defined(__ARM_NEON)
+      if (_size > PARALLEL_THRESHOLD_1D) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static)
+          for (size_t block_idx = 0; block_idx < _size;
+               block_idx += block_dim) {
+            size_t i_end = std::min(block_idx + block_dim, simd_size);
+            for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
+              simd_type v1 = traits::load(vec1_data + i);
+              simd_type v2 = traits::load(vec2_data + i);
+              traits::store(this_data + i, func(v1, v2));
+            }
+          }
+
+          if (_size % SIMD_WIDTH != 0) {
+            simd_type v1 = traits::load(vec1_data + simd_size);
+            simd_type v2 = traits::load(vec2_data + simd_size);
+            simd_type result = func(v1, v2);
+            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+              *(this_data + simd_size + i) = result[i];
+            }
+          }
+        }
+      } else {
+        for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
+          simd_type v1 = traits::load(vec1_data + i);
+          simd_type v2 = traits::load(vec2_data + i);
+          traits::store(this_data + i, func(v1, v2));
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v1 = traits::load(vec1_data + simd_size);
+          simd_type v2 = traits::load(vec2_data + simd_size);
+          simd_type result = func(v1, v2);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *(this_data + simd_size + i) = result[i];
+          }
+        }
+      }
 
 #else
     std::cerr << "Not Implement SIMD for `assign` function for "
