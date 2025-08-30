@@ -24,7 +24,7 @@ public:
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -49,7 +49,7 @@ public:
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -76,7 +76,7 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ init_data = init.begin();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -117,7 +117,7 @@ public:
 
       T *__restrict__ this_data = _data.get();
       const T *__restrict__ other_data = other._data.get();
-      const size_t block_size = BLOCK_SIZE;
+      const size_t block_size = BLOCK_DIM;
 
       if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -173,7 +173,7 @@ public:
     Vector<T> result(_cols);
     T *__restrict__ result_data = result.data();
     const T *__restrict__ this_data = _data.get() + row * _cols;
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
     if (_cols > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
@@ -197,7 +197,7 @@ public:
     Vector<T> result(_rows);
     T *__restrict__ result_data = result.data();
     const T *__restrict__ this_data = _data.get() + col;
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
     if (_rows > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
@@ -246,7 +246,7 @@ public:
     if (new_size > _size) {
       T *__restrict__ this_data = _data.get();
       const size_t old_size = _size;
-      const size_t block_size = BLOCK_SIZE;
+      const size_t block_size = BLOCK_DIM;
       if (new_size > PARALLEL_THRESHOLD_2D) {
 
 #pragma omp parallel
@@ -275,7 +275,7 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ mat1_data = mat1._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -306,7 +306,7 @@ public:
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ mat1_data = mat1._data.get();
     const T *__restrict__ mat2_data = mat2._data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
@@ -328,7 +328,7 @@ public:
 
   Matrix &operator+=(const T &value) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
@@ -352,7 +352,7 @@ public:
 
   Matrix &operator*=(const T &value) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
@@ -377,7 +377,7 @@ public:
   void fill(const T &value) {
 #ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -403,7 +403,7 @@ public:
 
   Matrix &operator+=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -427,7 +427,7 @@ public:
 
   Matrix &operator-=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
@@ -457,7 +457,7 @@ public:
     }
     Matrix result(_rows, other._cols);
     tiled_mmul(result._data, _data, other._data, _rows, _cols, other._cols,
-               BLOCK_SIZE);
+               BLOCK_DIM);
     *this = std::move(result);
     return *this;
   }
@@ -474,7 +474,7 @@ private:
 
     T *__restrict__ new_ptr = new_data.get();
     const T *__restrict__ old_ptr = _data.get();
-    const size_t block_size = BLOCK_SIZE;
+    const size_t block_size = BLOCK_DIM;
 
     if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
@@ -500,23 +500,25 @@ private:
 #ifdef ENABLE_SIMD
   void fill_simd(const T &value) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_size = BLOCK_SIZE;
-    const size_t simd_size = block_size - block_size % 4;
-    const size_t tail_flag = (block_size % 4) != 0;
+    const size_t block_dim = BLOCK_DIM;
+    const size_t simd_size = _size - _size % SIMD_WIDTH;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_2D) {
+    if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t idx = 0; idx < _size; idx += block_size) {
-          size_t i_end = idx + block_size;
-          for (size_t i = idx; i < i_end; i += SIMD_WIDTH) {
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
+          size_t i_end = std::min(block_idx + block_dim, simd_size);
+          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
             *((simd_type *)(this_data + i)) = simd_type(value);
           }
-          if (tail_flag) {
-            size_t tail = i_end - SIMD_WIDTH + 1;
-            *((simd_type *)(this_data + tail)) = simd_type(value);
+        }
+        if (_size % SIMD_WIDTH != 0) {
+          simd_type v = *((simd_type *)(this_data + simd_size));
+          simd_type result = simd_type(value);
+          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+            *((this_data + simd_size + i)) = result[i];
           }
         }
       }
@@ -525,8 +527,11 @@ private:
         *((simd_type *)(this_data + i)) = simd_type(value);
       }
       if (_size % SIMD_WIDTH != 0) {
-        size_t tail = _size - SIMD_WIDTH;
-        *((simd_type *)(this_data + tail)) = simd_type(value);
+        simd_type v = *((simd_type *)(this_data + simd_size));
+        simd_type result = simd_type(value);
+        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          *((this_data + simd_size + i)) = result[i];
+        }
       }
     }
 
