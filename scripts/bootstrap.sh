@@ -2,8 +2,9 @@
 set -euo pipefail
 
 CURRENT_DIR=$(pwd)
-BASE_DIR=$(dirname $(cd "$(dirname "$0")" && pwd))
-BUILD_DIR=$BASE_DIR/build
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(dirname "$SCRIPT_DIR")"
+BUILD_DIR="$BASE_DIR/build"
 
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -56,13 +57,13 @@ select_cmake_build_type() {
     
     display_menu() {
         for i in "${!options[@]}"; do
-            if [ $i -eq $current_selection ]; then
+            if [ $i -eq "$current_selection" ]; then
                 echo -e "│ ${BOLD}${GREEN}❯ ${options[i]}${NC}${SPACE}" >&2
             else
                 echo -e "│ ${DIM}${GRAY}${options[i]}${NC}${SPACE}" >&2
             fi
         done
-        menu_lines=${#options[@]}
+        menu_lines="${#options[@]}"
     }
     
     display_menu
@@ -78,16 +79,16 @@ select_cmake_build_type() {
                 read -rsn1 key3
                 case "$key3" in
                     'A')
-                        if [ $current_selection -gt 0 ]; then
-                            current_selection=$((current_selection - 1))
+                        if [ "$current_selection" -gt 0 ]; then
+                            current_selection="$((current_selection - 1))"
                             echo -ne "\033[u" >&2
                             echo -ne "\033[${menu_lines}A\033[J" >&2
                             display_menu
                         fi
                         ;;
                     'B') 
-                        if [ $current_selection -lt $((${#options[@]} - 1)) ]; then
-                            current_selection=$((current_selection + 1))
+                        if [ "$current_selection" -lt "$((${#options[@]} - 1))" ]; then
+                            current_selection="$((current_selection + 1))"
                             echo -ne "\033[u" >&2
                             echo -ne "\033[${menu_lines}A\033[J" >&2
                             display_menu
@@ -102,7 +103,7 @@ select_cmake_build_type() {
     
     echo -ne "\033[u\033[J" >&2 
     
-    case ${options[current_selection]} in
+    case "${options[current_selection]}" in
         "None") 
             build_type=""
             ;;
@@ -127,11 +128,11 @@ select_cmake_build_type() {
 # Build script for a CMake project
 bootstrap() {
   show_header
-  mkdir -p $BUILD_DIR
-  cd $BUILD_DIR
+  mkdir -p "$BUILD_DIR"
+  cd "$BUILD_DIR"
   build_type=$(select_cmake_build_type)
-  cmake $BASE_DIR -DCMAKE_BUILD_TYPE=$build_type
-  cd $CURRENT_DIR
+  cmake "$BASE_DIR" -DCMAKE_BUILD_TYPE="$build_type"
+  cd "$CURRENT_DIR"
 }
 
 # Main execution
