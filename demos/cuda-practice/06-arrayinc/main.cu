@@ -29,16 +29,15 @@ const size_t ds = 32ULL * 1024ULL * 1024ULL;
 
 int main() {
 
-  int *h_array, *d_array;
+  int *h_array;
   alloc_bytes(h_array, ds * sizeof(h_array[0]));
-  cudaMalloc(&d_array, ds * sizeof(d_array[0]));
   cudaCheckErrors("cudaMalloc Error");
   memset(h_array, 0, ds * sizeof(h_array[0]));
-  cudaMemcpy(d_array, h_array, ds * sizeof(h_array[0]), cudaMemcpyHostToDevice);
+  cudaMemPrefetchAsync(h_array, ds * sizeof(h_array[0]), 0);
   cudaCheckErrors("cudaMemcpy H->D Error");
-  inc<<<256, 256>>>(d_array, ds);
+  inc<<<256, 256>>>(h_array, ds);
   cudaCheckErrors("kernel launch error");
-  cudaMemcpy(h_array, d_array, ds * sizeof(h_array[0]), cudaMemcpyDeviceToHost);
+  cudaMemPrefetchAsync(h_array, ds * sizeof(h_array[0]), cudaCpuDeviceId);
   cudaCheckErrors("kernel execution or cudaMemcpy D->H Error");
   for (int i = 0; i < ds; i++)
     if (h_array[i] != 1) {

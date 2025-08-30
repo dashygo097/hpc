@@ -16,21 +16,29 @@ const size_t DSIZE = 16384; // matrix side dimension
 const int block_size = 256; // CUDA maximum is 1024
 // matrix row-sum kernel
 __global__ void row_sums(const float *A, float *sums, size_t ds) {
-
-  int idx =
-      threadIdx.x +
-      blockDim.x *
-          blockIdx.x; // create typical 1D thread index from built-in variables
+  int idx = blockIdx.x;
   if (idx < ds) {
-    float sum = 0.0f;
-    for (size_t i = 0; i < ds; i++)
-      sum +=
-          A[idx * ds +
-            i]; // write a for loop that will cause the thread to iterate across
-                // a row, keeeping a running sum, and write the result to sums
-    sums[idx] = sum;
+    __shared__ float sdata[block_size];
+    int tid = threadIdx.x;
+    sdata[tid] = 0.0f;
+    int tidx = tid;
+    while (tidx < ds) {
+      sdata[tid] += A[idx * ds + tidx];
+      tidx += blockDim.x;
+    }
+
+    for (int i = blockDim.x / 2; i > 0; i >>= 1) {
+      __syncthreads();
+      if (tid < i) {
+        sdata[tid] += sdata[tid + i];
+      }
+    }
+    if (tid == 0) {
+      sums[idx] = sdata[0];
+    }
   }
 }
+
 // matrix column-sum kernel
 __global__ void column_sums(const float *A, float *sums, size_t ds) {
 
@@ -72,8 +80,7 @@ int main() {
   cudaMemcpy(d_A, h_A, DSIZE * DSIZE * sizeof(float), cudaMemcpyHostToDevice);
   cudaCheckErrors("cudaMemcpy H2D failure");
   // cuda processing sequence step 1 is complete
-  row_sums<<<(DSIZE + block_size - 1) / block_size, block_size>>>(d_A, d_sums,
-                                                                  DSIZE);
+  row_sums<<<DSIZE, block_size>>>(d_A, d_sums, DSIZE);
   cudaCheckErrors("kernel launch failure");
   // cuda processing sequence step 2 is complete
   //  copy vector sums from device to host:
