@@ -1,5 +1,0 @@
-if(EXISTS "/home/parallels/Desktop/Parallels Shared Folders/HPC/build/tests/test_runner[1]_tests.cmake")
-  include("/home/parallels/Desktop/Parallels Shared Folders/HPC/build/tests/test_runner[1]_tests.cmake")
-else()
-  add_test(test_runner_NOT_BUILT test_runner_NOT_BUILT)
-endif()
