@@ -67,8 +67,6 @@ find_package(MPI REQUIRED)
 add_subdirectory(3rdparty/googletest)
 include_directories(3rdparty)
 
-
-
 # hpc
 file(GLOB_RECURSE HPC_SOURCES src/*.cpp src/*.c src/*.cc)
 file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hpp include/*.hh)

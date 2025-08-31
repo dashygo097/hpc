@@ -3,6 +3,7 @@
 #include "hpc/constants.hh"
 #include "hpc/mmul_impl.hh"
 #include "hpc/pch.hh"
+#include "hpc/simd_impl.hh"
 #include "hpc/timer.hh"
 
 #ifdef ENABLE_OPENMP
