@@ -108,7 +108,7 @@ protected:
 
 #if defined(__APPLE__)
   void computeImplOpenMP() {
-    using simd_type = simd_float4;
+    using simd_type = simd_t<float>;
     c.assign(a, b, [](const simd_type &x, const simd_type &y) {
       auto temp = x + y - simd_type(1.0f);
       return temp * temp;
