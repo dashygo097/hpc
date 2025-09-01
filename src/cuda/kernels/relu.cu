@@ -1,7 +1,7 @@
 #include "hpc/cuda/kernels/relu/relu.cuh"
 
 namespace hpc::cuda {
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__
 __global__ void relu_fp32(float *output, const float *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
