@@ -29,7 +29,7 @@
 #include <mpi.h>
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__
 #include "./cuda/utils.cuh"
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
