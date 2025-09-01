@@ -8,7 +8,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB projects ./cuda-practice/*)
+file(GLOB projects ./startup/*)
 
 print_info("――――――――――――――――――APP SCOPE――――――――――――――――――" "0")
 
