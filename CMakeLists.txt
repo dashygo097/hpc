@@ -12,9 +12,7 @@ include(GoogleTest)
 enable_testing()
 
 # CUDA
-
 include(CheckLanguage)
-
 check_language(CUDA)
 
 if(CMAKE_CUDA_COMPILER)

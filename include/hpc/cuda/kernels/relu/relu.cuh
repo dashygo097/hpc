@@ -1,8 +1,5 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
-#endif
-
 namespace hpc::cuda {
 #ifdef ENABLE_CUDA
 
@@ -86,8 +83,6 @@ __global__ void relu_fp16x8(half *output, const half *input, size_t N) {
     HALF2(output + idx + 6) = out_reg_3;
   }
 }
-
-// Package into torch
 
 #endif
 } // namespace hpc::cuda

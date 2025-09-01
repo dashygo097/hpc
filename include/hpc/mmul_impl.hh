@@ -1,7 +1,5 @@
 #pragma once
 
-#include "./pch.hh"
-
 namespace hpc::serial {
 template <typename T>
 void naive_mmul(T *C, T *A, T *B, const size_t &M, const size_t &K,

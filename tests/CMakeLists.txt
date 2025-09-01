@@ -2,20 +2,22 @@ print_info("―――――――――――――――――TEST SCOPE――�
 
 set(EXECUTABLE_OUTPUT_PATH ../outputs/tests)
 
-file(GLOB_RECURSE TEST_FILES *.cpp *.c *.cc)
+file(GLOB_RECURSE SANITY_TEST_FILES *.cpp *.c *.cc)
 file(GLOB_RECURSE TEST_OPENMP_FILES OpenMP_*.cc OpenMP_*.cpp OpenMP_*.c)
 file(GLOB_RECURSE TEST_MPI_FILES MPI_*.cc MPI_*.cpp MPI_*.c)
 file(GLOB_RECURSE TEST_CUDA_FILES CUDA_*.cc CUDA_*.cpp CUDA_*.c)
 
-if (TEST_FILES)
-    add_executable(test_all ${TEST_FILES})
-    target_link_libraries(test_all
+list(REMOVE_ITEM SANITY_TEST_FILES ${TEST_OPENMP_FILES} ${TEST_MPI_FILES} ${TEST_CUDA_FILES})
+
+if (SANITY_TEST_FILES)
+    add_executable(test_sanity ${SANITY_TEST_FILES})
+    target_link_libraries(test_sanity
         PRIVATE
             gtest_main
             gtest
             hpc
     )
-    gtest_discover_tests(test_all
+    gtest_discover_tests(test_sanity
         EXTRA_ARGS --gtest_color=yes
         DISCOVERY_TIMEOUT 30
     )

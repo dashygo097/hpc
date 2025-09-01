@@ -16,7 +16,7 @@ GRAY='\033[1;90m'
 NC='\033[0m' 
 BOLD='\033[1m'
 DIM='\033[2m'
-SPACE='                                                                                       '
+SPACE='                                                             '
 
 show_header() {
   echo -e "${BLUE}"
