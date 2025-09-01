@@ -31,4 +31,6 @@
 
 #ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
+#include <torch/extension.h>
+#include <torch/types.h>
 #endif
