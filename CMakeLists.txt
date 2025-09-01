@@ -46,7 +46,6 @@ else()
     message(STATUS "CUDA support is disabled.")
 endif()
 
-
 # openmp
 if(APPLE)
   set(OPENMP_PATH "/opt/homebrew/opt/libomp")
@@ -58,9 +57,37 @@ if(APPLE)
 endif()
 
 
-
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
+
+# Pytorch
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"
+    OUTPUT_VARIABLE TORCH_CMAKE_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE TORCH_PYTHON_EXIT_CODE
+)
+
+if(NOT TORCH_PYTHON_EXIT_CODE EQUAL 0)
+    message(FATAL_ERROR "Failed to get PyTorch path from Python. Make sure PyTorch is installed.")
+endif()
+
+list(APPEND CMAKE_PREFIX_PATH ${TORCH_CMAKE_PATH})
+
+set(CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP ${CMAKE_FIND_LIBRARY_SUFFIXES})
+if(APPLE)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib" ".a" ${CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
+
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP})
+
+message(STATUS "PyTorch found at: ${TORCH_CMAKE_PATH}")
+message(STATUS "PyTorch version: ${Torch_VERSION}")
 
 
 # 3rdparty
@@ -77,7 +104,7 @@ target_include_directories(hpc PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
-target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX)
+target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
 
 if (HAS_CUDA)
   file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
@@ -148,6 +175,7 @@ print_info("[INFO] Openmp C version: ${OpenMP_C_VERSION}" "90")
 print_info("[INFO] Openmp CXX version: ${OpenMP_CXX_VERSION}" "90")
 print_info("[INFO] MPI C version: ${MPI_C_VERSION}" "90")
 print_info("[INFO] MPI CXX version: ${MPI_CXX_VERSION}" "90")
+print_info("[INFO] PyTorch version: ${Torch_VERSION}" "90")
 if (HAS_CUDA)
   print_info("[INFO] CUDA compiler: ${CMAKE_CUDA_COMPILER}" "90")
 else()
