@@ -15,6 +15,10 @@ enable_testing()
 include(CheckLanguage)
 check_language(CUDA)
 
+if (APPLE)
+  message(STATUS "Building on macOS")
+endif()
+
 if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
     set(HAS_CUDA TRUE)
