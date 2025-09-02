@@ -1,4 +1,6 @@
+#ifdef __CUDACC__
 #include "hpc/cuda/kernels/relu/relu.cuh"
+#endif
 
 namespace hpc::cuda {
 #ifdef __CUDACC__

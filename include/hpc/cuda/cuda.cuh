@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__
 #include "./kernels/gemm/gemm.cuh"
 #include "./kernels/reduce/reduce.cuh"
 #include "./kernels/relu/relu.cuh"

@@ -1,6 +1,6 @@
 #pragma once
 
 namespace hpc::cuda {
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__
 #endif
 } // namespace hpc::cuda

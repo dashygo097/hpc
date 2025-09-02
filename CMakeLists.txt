@@ -58,12 +58,12 @@ if(APPLE)
   set(OpenMP_omp_LIBRARY "${OPENMP_PATH}/lib/libomp.dylib")
 endif()
 
-
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 
 # Pytorch
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
+find_package(pybind11 REQUIRED)
 
 execute_process(
     COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"

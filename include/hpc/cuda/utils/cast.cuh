@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__
 #define INT2(value) (reinterpret_cast<int2 *>(&(value))[0])
 #define INT4(value) (reinterpret_cast<int4 *>(&(value))[0])
 #define FLOAT2(value) (reinterpret_cast<float2 *>(&(value))[0])
