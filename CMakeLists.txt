@@ -63,7 +63,6 @@ find_package(MPI REQUIRED)
 
 # Pytorch
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
-find_package(pybind11 REQUIRED)
 
 execute_process(
     COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"
@@ -93,8 +92,9 @@ message(STATUS "PyTorch version: ${Torch_VERSION}")
 
 
 # 3rdparty
-add_subdirectory(3rdparty/googletest)
 include_directories(3rdparty)
+add_subdirectory(3rdparty/googletest)
+add_subdirectory(3rdparty/pybind11)
 
 # hpc
 file(GLOB_RECURSE HPC_SOURCES src/*.cpp src/*.c src/*.cc)
