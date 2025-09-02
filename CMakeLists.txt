@@ -106,7 +106,7 @@ target_include_directories(hpc PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
-target_link_libraries(hpc PUBLIC OpenMP::OpenMP_CXX MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
+target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
 
 if (HAS_CUDA)
   file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
