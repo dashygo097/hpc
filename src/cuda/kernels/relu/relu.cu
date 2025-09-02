@@ -1,4 +1,5 @@
 #include "hpc/cuda/cast.cuh"
+#include "hpc/cuda/kernels/relu/relu.cuh"
 
 namespace hpc::cuda {
 __global__ void relu_fp32(float *output, const float *input, size_t N) {
