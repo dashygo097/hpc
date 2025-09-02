@@ -28,13 +28,3 @@
 #ifdef ENABLE_MPI
 #include <mpi.h>
 #endif
-
-#ifdef __CUDACC__
-#include "./cuda/utils.cuh"
-#include <cuda_bf16.h>
-#include <cuda_fp16.h>
-#include <cuda_fp8.h>
-#include <cuda_runtime.h>
-#include <torch/extension.h>
-#include <torch/types.h>
-#endif

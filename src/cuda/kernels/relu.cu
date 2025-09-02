@@ -1,9 +1,6 @@
-#ifdef __CUDACC__
-#include "hpc/cuda/kernels/relu/relu.cuh"
-#endif
+#include "hpc/cuda/cast.cuh"
 
 namespace hpc::cuda {
-#ifdef __CUDACC__
 __global__ void relu_fp32(float *output, const float *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
@@ -84,5 +81,4 @@ __global__ void relu_fp16x8(half *output, const half *input, size_t N) {
     HALF2(output + idx + 6) = out_reg_3;
   }
 }
-#endif
 } // namespace hpc::cuda

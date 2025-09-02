@@ -17,7 +17,3 @@
 #ifdef ENABLE_SIMD
 #include "hpc/simd_impl.hh"
 #endif
-
-#ifdef __CUDACC__
-#include "hpc/cuda/cuda.cuh"
-#endif

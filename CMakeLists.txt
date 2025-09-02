@@ -100,8 +100,10 @@ add_subdirectory(3rdparty/pybind11)
 # HPC lib
 file(GLOB_RECURSE HPC_SOURCES src/*.cpp src/*.c src/*.cc)
 file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hpp include/*.hh)
+file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
+file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
 
-add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS})
+add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS} ${HPC_CUDA_HEADERS} ${HPC_CUDA_SOURCES})
 target_include_directories(hpc PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -113,16 +115,12 @@ endif()
 target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
 
 if (HAS_CUDA)
-  file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
-  file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
-  target_link_libraries(hpc PUBLIC ${HPC_CUDA_SOURCES})
-  
   set_target_properties(hpc PROPERTIES 
       CUDA_SEPARABLE_COMPILATION ON
-      CUDA_ARCHITECTURES "native"
   )
   target_link_libraries(hpc PUBLIC CUDA::cudart)
 endif()
+
 
 # Accelerate
 if (IS_APPLE)

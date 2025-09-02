@@ -24,7 +24,7 @@ foreach(project ${projects})
       file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
     endif()
 
-    file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hpp)
+    file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hpp ${project}/*.hh)
     # file(GLOB_RECURSE ${project}-obj ${project}/*.o)
 
     add_executable(${project-name} ${${project}-src} ${${project}-hdr})
