@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
-project(hpc LANGUAGES C CXX)
+project(hpc LANGUAGES C CXX CUDA)
+message(STATUS "CUDA Compiler: ${CMAKE_CUDA_COMPILER}")
+message(STATUS "CUDA Compiler ID: ${CMAKE_CUDA_COMPILER_ID}")
+message(STATUS "CUDA Compiler Version: ${CMAKE_CUDA_COMPILER_VERSION}")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -115,17 +118,15 @@ target_include_directories(hpc PUBLIC
 )
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
 
-if (IS_APPLE) 
-  target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
 target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
 
-if (HAS_CUDA)
-  set_target_properties(hpc PROPERTIES 
-      CUDA_SEPARABLE_COMPILATION ON
-  )
-  target_link_libraries(hpc PUBLIC CUDA::cudart)
-endif()
+# if (HAS_CUDA)
+#   set_target_properties(hpc PROPERTIES 
+#       CUDA_SEPARABLE_COMPILATION ON
+#   )
+#   target_link_libraries(hpc PUBLIC CUDA::cudart)
+# endif()
 
 
 # Accelerate
