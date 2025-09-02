@@ -1,5 +1,5 @@
 #include "hpc/cuda/cast.cuh"
-#include "hpc/cuda/kernels/relu/relu.cuh"
+#include "hpc/cuda/kernels/relu.cuh"
 #include <torch/extension.h>
 #include <torch/types.h>
 
@@ -98,40 +98,40 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
   }
 
 #define TORCH_BINDING_RELU(packed_type, th_type, element_type, n_elements)     \
-  void relu_##packed_type(torch::Tensor x, torch::Tensor y) {                  \
-    CHECK_TORCH_TENSOR_DTYPE(x, (th_type))                                     \
-    CHECK_TORCH_TENSOR_DTYPE(y, (th_type))                                     \
-    const int ndim = x.dim();                                                  \
+  torch::Tensor relu_##packed_type(torch::Tensor input) {                      \
+    CHECK_TORCH_TENSOR_DTYPE(input, (th_type))                                 \
+    auto output = torch::empty_like(input);                                    \
+    const int ndim = input.dim();                                              \
     if (ndim != 2) {                                                           \
       int N = 1;                                                               \
       for (int i = 0; i < ndim; ++i) {                                         \
-        N *= x.size(i);                                                        \
+        N *= input.size(i);                                                    \
       }                                                                        \
       dim3 block(256 / (n_elements));                                          \
       dim3 grid((N + 256 - 1) / 256);                                          \
       relu_##packed_type##_kernel<<<grid, block>>>(                            \
-          reinterpret_cast<element_type *>(x.data_ptr()),                      \
-          reinterpret_cast<element_type *>(y.data_ptr()), N);                  \
+          reinterpret_cast<element_type *>(output.data_ptr()),                 \
+          reinterpret_cast<element_type *>(input.data_ptr()), N);              \
     } else {                                                                   \
-      const int S = x.size(0);                                                 \
-      const int K = x.size(1);                                                 \
+      const int S = input.size(0);                                             \
+      const int K = input.size(1);                                             \
       const int N = S * K;                                                     \
       if ((K / (n_elements)) <= 1024) {                                        \
         dim3 block(K / (n_elements));                                          \
         dim3 grid(S);                                                          \
         relu_##packed_type##_kernel<<<grid, block>>>(                          \
-            reinterpret_cast<element_type *>(x.data_ptr()),                    \
-            reinterpret_cast<element_type *>(y.data_ptr()), N);                \
+            reinterpret_cast<element_type *>(output.data_ptr()),               \
+            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
       } else {                                                                 \
         int N = 1;                                                             \
         for (int i = 0; i < ndim; ++i) {                                       \
-          N *= x.size(i);                                                      \
+          N *= input.size(i);                                                  \
         }                                                                      \
         dim3 block(256 / (n_elements));                                        \
         dim3 grid((N + 256 - 1) / 256);                                        \
         relu_##packed_type##_kernel<<<grid, block>>>(                          \
-            reinterpret_cast<element_type *>(x.data_ptr()),                    \
-            reinterpret_cast<element_type *>(y.data_ptr()), N);                \
+            reinterpret_cast<element_type *>(output.data_ptr()),               \
+            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
       }                                                                        \
     }                                                                          \
   }

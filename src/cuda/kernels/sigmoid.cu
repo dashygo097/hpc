@@ -1,5 +1,5 @@
 #include "hpc/cuda/cast.cuh"
-#include "hpc/cuda/kernels/sigmoid/sigmoid.cuh"
+#include "hpc/cuda/kernels/sigmoid.cuh"
 
 namespace hpc::cuda {
 __global__ void sigmoid_fp32_kernel(float *output, const float *input,

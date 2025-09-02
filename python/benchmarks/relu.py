@@ -1,15 +1,18 @@
+import os
 import time
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 from torch.utils.cpp_extension import load
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 
 torch.set_grad_enabled(False)
 
 lib = load(
     name="relu_lib",
-    sources=["./cuda/kernels/relu/relu.cu"], 
-    extra_include_paths=["../include"],
+    sources=[os.path.join(project_root, "src/cuda/kernels/relu.cu")],
+    extra_include_paths=[os.path.join(project_root, "include/hpc/cuda")],
     extra_cuda_cflags=[
         "-O3",
         "-U__CUDA_NO_HALF_OPERATORS__",
@@ -25,7 +28,7 @@ lib = load(
 
 
 def run_benchmark(
-    perf_func: callable,
+    perf_func: Callable,
     x: torch.Tensor,
     tag: str,
     out: Optional[torch.Tensor] = None,
@@ -75,16 +78,15 @@ for S, K in SKs:
     print(" " * 40 + f"S={S}, K={K}")
     x = torch.randn((S, K)).cuda().float().contiguous()
     y = torch.zeros_like(x).cuda().float().contiguous()
-    run_benchmark(lib.relu_fp32, x, "fp32", y)
-    run_benchmark(lib.relu_fp32x2, x, "fp32x2", y)
-    run_benchmark(lib.relu_fp32x4, x, "fp32x4", y)
+    run_benchmark(lib.relu_fp32, x, "fp32")
+    run_benchmark(lib.relu_fp32x2, x, "fp32x2")
+    run_benchmark(lib.relu_fp32x4, x, "fp32x4")
     run_benchmark(torch.relu, x, "fp32_th")
 
     print("-" * 85)
     x_f16 = x.half().contiguous()
-    y_f16 = y.half().contiguous()
-    run_benchmark(lib.relu_fp16, x_f16, "fp16", y_f16)
-    run_benchmark(lib.relu_fp16x2, x_f16, "fp16x2", y_f16)
-    run_benchmark(lib.relu_fp16x8, x_f16, "fp16x8", y_f16)
+    run_benchmark(lib.relu_fp16, x_f16, "fp16")
+    run_benchmark(lib.relu_fp16x2, x_f16, "fp16x2")
+    run_benchmark(lib.relu_fp16x8, x_f16, "fp16x8")
     run_benchmark(torch.relu, x_f16, "fp16_th")
     print("-" * 85)
