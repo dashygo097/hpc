@@ -19,16 +19,15 @@ foreach(project ${projects})
     get_filename_component(project-name ${project} NAME)
 
     if (HAS_CUDA)
-      file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc ${project}/*.cu)
+      file(GLOB_RECURSE ${project}-src ${project}/*.c ${project}/*.cc ${project}/*.cpp ${project}/*.cu)
+      file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hh ${project}/*.hpp ${project}/*.cuh)
     else()
-      file(GLOB_RECURSE ${project}-src ${project}/*.cpp ${project}/*.c ${project}/*.cc)
+      file(GLOB_RECURSE ${project}-src ${project}/*.c ${project}/*.cc ${project}/*.cpp)
+      file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hh ${project}/*.hpp)
     endif()
 
-    file(GLOB_RECURSE ${project}-hdr ${project}/*.h ${project}/*.hpp ${project}/*.hh)
     # file(GLOB_RECURSE ${project}-obj ${project}/*.o)
-
     add_executable(${project-name} ${${project}-src} ${${project}-hdr})
-
     target_link_libraries(${project-name} PRIVATE hpc)
 
     print_info("[TRACE] Adding: ${project-name}" "0")

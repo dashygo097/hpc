@@ -98,17 +98,23 @@ add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(3rdparty/pybind11)
 
 # HPC lib
-file(GLOB_RECURSE HPC_SOURCES src/*.cpp src/*.c src/*.cc)
-file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hpp include/*.hh)
-file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
-file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
+file(GLOB_RECURSE HPC_SOURCES src/*.c src/*.cc src/*.cpp)
+file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hh include/*.hpp)
 
-add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS} ${HPC_CUDA_HEADERS} ${HPC_CUDA_SOURCES})
+if (HAS_CUDA)
+  file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
+  file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
+  add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS} ${HPC_CUDA_HEADERS} ${HPC_CUDA_SOURCES})
+else()
+  add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS})
+endif()
+
 target_include_directories(hpc PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
+
 if (IS_APPLE) 
   target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
 endif()
