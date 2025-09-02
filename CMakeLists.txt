@@ -63,7 +63,7 @@ find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 
 # Pytorch
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 execute_process(
     COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"
@@ -113,10 +113,13 @@ target_include_directories(hpc PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+target_include_directories(hpc PUBLIC ${Python3_INCLUDE_DIRS})
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
 
 target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
-target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
+target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX)
+target_link_libraries(hpc PRIVATE Python3::Python "${TORCH_LIBRARIES}")
+
 
 # if (HAS_CUDA)
 #   set_target_properties(hpc PROPERTIES 

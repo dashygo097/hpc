@@ -2,10 +2,10 @@
 #include <cuda_fp16.h>
 
 namespace hpc::cuda {
-__global__ void relu_fp32(float *output, const float *input, size_t N);
-__global__ void relu_fp32x2(float *output, const float *input, size_t N);
-__global__ void relu_fp32x4(float *output, const float *input, size_t N);
-__global__ void relu_fp16(half *output, const half *input, size_t N);
-__global__ void relu_fp16x2(half *output, const half *input, size_t N);
-__global__ void relu_fp16x8(half *output, const half *input, size_t N);
+__global__ void relu_fp32_kernel(float *output, const float *input, size_t N);
+__global__ void relu_fp32x2_kernel(float *output, const float *input, size_t N);
+__global__ void relu_fp32x4_kernel(float *output, const float *input, size_t N);
+__global__ void relu_fp16_kernel(half *output, const half *input, size_t N);
+__global__ void relu_fp16x2_kernel(half *output, const half *input, size_t N);
+__global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N);
 } // namespace hpc::cuda
