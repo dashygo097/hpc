@@ -4,40 +4,41 @@ project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_C_COMPILER_LAUCHER ccache)
-set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+endif()
 
-# test
-include(GoogleTest)
-enable_testing()
+# Platform detection
+if(APPLE)
+    set(IS_APPLE TRUE)
+    message(STATUS "Building on macOS")
+elseif(WIN32)
+    set(IS_WINDOWS TRUE)
+    message(STATUS "Building on Windows")
+else()
+    set(IS_UNIX TRUE)
+    message(STATUS "Building on Unix-like system")
+endif()
+
 
 # CUDA
 include(CheckLanguage)
 check_language(CUDA)
 
-if (APPLE)
-  message(STATUS "Building on macOS")
-endif()
-
 if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
     set(HAS_CUDA TRUE)
 
-    if(WIN32)
-        message(STATUS "Building on Windows")
-    elseif(UNIX AND NOT APPLE)
-        message(STATUS "Building on Unix-like system")
-    endif()
-
     message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
-
-    find_package(CUDAToolkit REQUIRED)
-
-    message(STATUS "CUDA toolkit root: ${CUDA_TOOLKIT_ROOT_DIR}")
+    message(STATUS "CUDA toolkit: ${CUDAToolkit_VERSION}")
 
 else()
+  set(HAS_CUDA FALSE)
   message(WARNING "CUDA compiler not found; CUDA support will be disabled.")
-    set(HAS_CUDA FALSE)
 endif()
 
 if(HAS_CUDA)
@@ -48,8 +49,8 @@ else()
     message(STATUS "CUDA support is disabled.")
 endif()
 
-# openmp
-if(APPLE)
+# OpenMP
+if(IS_APPLE)
   set(OPENMP_PATH "/opt/homebrew/opt/libomp")
   set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_PATH}/include")
   set(OpenMP_CXX_FLAGS "${OpenMP_C_FLAGS}")
@@ -93,10 +94,10 @@ message(STATUS "PyTorch version: ${Torch_VERSION}")
 
 # 3rdparty
 include_directories(3rdparty)
-add_subdirectory(3rdparty/googletest)
+add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(3rdparty/pybind11)
 
-# hpc
+# HPC lib
 file(GLOB_RECURSE HPC_SOURCES src/*.cpp src/*.c src/*.cc)
 file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hpp include/*.hh)
 
@@ -106,6 +107,9 @@ target_include_directories(hpc PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
+if (IS_APPLE) 
+  target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
+endif()
 target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX "${TORCH_LIBRARIES}")
 
 if (HAS_CUDA)
@@ -121,7 +125,7 @@ if (HAS_CUDA)
 endif()
 
 # Accelerate
-if(APPLE)
+if (IS_APPLE)
   add_compile_definitions(ACCELERATE_NEW_LAPACK ACCELERATE_LAPACK_ILP64)
   find_library(ACCELERATE_LIB Accelerate)
   target_link_libraries(hpc PUBLIC ${ACCELERATE_LIB})
@@ -171,7 +175,7 @@ function(make_preview_string LIST_VAR N)
   set(PREVIOUS_SCOPE_VAR "${preview}" PARENT_SCOPE)
 endfunction()
 
-# stastics
+# Stastics
 print_info("――――――――――――――――――LIB SCOPE――――――――――――――――――" "0")
 print_info("[INFO] Openmp C version: ${OpenMP_C_VERSION}" "90")
 print_info("[INFO] Openmp CXX version: ${OpenMP_CXX_VERSION}" "90")
@@ -203,6 +207,11 @@ make_preview_string(REL_HEADERS 3)
 print_info("[TRACE] Header files: ${PREVIOUS_SCOPE_VAR}" "94")
 make_preview_string(REL_SOURCES 3)
 print_info("[TRACE] Source files: ${PREVIOUS_SCOPE_VAR}" "96")
+
+
+# Testing
+include(GoogleTest)
+enable_testing()
 
 # Apps
 add_subdirectory(tests)
