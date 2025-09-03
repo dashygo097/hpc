@@ -1,8 +1,6 @@
 #include "hpc/cuda/binding.cuh"
 #include "hpc/cuda/cast.cuh"
 #include "hpc/cuda/kernels/relu.cuh"
-#include <torch/extension.h>
-#include <torch/types.h>
 
 namespace hpc::cuda {
 __global__ void relu_fp32_kernel(float *output, const float *input, size_t N) {

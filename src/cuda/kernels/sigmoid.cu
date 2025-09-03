@@ -10,7 +10,7 @@ __global__ void sigmoid_fp32_kernel(float *output, const float *input,
   if (idx < N) {
     float in_reg = input[idx];
     in_reg = fminf(fmaxf(in_reg, MIN_EXP_FP32), MAX_EXP_FP32);
-    in_reg = output[idx] = 1.0f / (1.0f + expf(-in_reg));
+    output[idx] = 1.0f / (1.0f + expf(-in_reg));
   }
 }
 __global__ void sigmoid_fp32x2_kernel(float *output, const float *input,
@@ -73,7 +73,7 @@ __global__ void sigmoid_fp16x8_kernel(half *output, const half *input,
   if (idx < N) {
     half2 in_reg_0 = HALF2(input + idx);
     in_reg_0.x = __hmin(__hmax(in_reg_0.x, MIN_EXP_FP16), MAX_EXP_FP16);
-    in_reg_o.y = __hmin(__hmax(in_reg_0.y, MIN_EXP_FP16), MAX_EXP_FP16);
+    in_reg_0.y = __hmin(__hmax(in_reg_0.y, MIN_EXP_FP16), MAX_EXP_FP16);
     half2 out_reg_0;
     out_reg_0.x = __hdiv(__float2half(1.0f),
                          __hadd(__float2half(1.0f), hexp(__hneg(in_reg_0.x))));

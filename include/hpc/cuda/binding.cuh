@@ -1,4 +1,6 @@
 #pragma once
+#include <torch/extension.h>
+#include <torch/types.h>
 
 #define STRINGFY(str) #str
 #define TORCH_BINDING_COMMON_EXTENSION(func)                                   \
