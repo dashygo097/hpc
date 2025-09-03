@@ -1,7 +1,3 @@
-import os
-import time
-from typing import Callable, Optional
-
 import torch
 from torch.utils.cpp_extension import load
 from utils import Benchmark
