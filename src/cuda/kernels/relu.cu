@@ -87,6 +87,8 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
   }
 }
 
+} // namespace hpc::cuda
+
 #define STRINGFY(str) #str
 #define TORCH_BINDING_COMMON_EXTENSION(func)                                   \
   m.def(STRINGFY(func), &func, STRINGFY(func));
@@ -109,7 +111,7 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
       }                                                                        \
       dim3 block(256 / (n_elements));                                          \
       dim3 grid((N + 256 - 1) / 256);                                          \
-      relu_##packed_type##_kernel<<<grid, block>>>(                            \
+      hpc::cuda::relu_##packed_type##_kernel<<<grid, block>>>(                 \
           reinterpret_cast<element_type *>(output.data_ptr()),                 \
           reinterpret_cast<element_type *>(input.data_ptr()), N);              \
     } else {                                                                   \
@@ -119,7 +121,7 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
       if ((K / (n_elements)) <= 1024) {                                        \
         dim3 block(K / (n_elements));                                          \
         dim3 grid(S);                                                          \
-        relu_##packed_type##_kernel<<<grid, block>>>(                          \
+        hpc::cuda::relu_##packed_type##_kernel<<<grid, block>>>(               \
             reinterpret_cast<element_type *>(output.data_ptr()),               \
             reinterpret_cast<element_type *>(input.data_ptr()), N);            \
       } else {                                                                 \
@@ -129,11 +131,12 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
         }                                                                      \
         dim3 block(256 / (n_elements));                                        \
         dim3 grid((N + 256 - 1) / 256);                                        \
-        relu_##packed_type##_kernel<<<grid, block>>>(                          \
+        hpc::cuda::relu_##packed_type##_kernel<<<grid, block>>>(               \
             reinterpret_cast<element_type *>(output.data_ptr()),               \
             reinterpret_cast<element_type *>(input.data_ptr()), N);            \
       }                                                                        \
     }                                                                          \
+    return output;                                                             \
   }
 
 TORCH_BINDING_RELU(fp32, torch::kFloat32, float, 1)
@@ -151,5 +154,3 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   TORCH_BINDING_COMMON_EXTENSION(relu_fp16x2)
   TORCH_BINDING_COMMON_EXTENSION(relu_fp16x8)
 }
-
-} // namespace hpc::cuda
