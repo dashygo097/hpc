@@ -1,3 +1,4 @@
+#include "hpc/cuda/binding.cuh"
 #include "hpc/cuda/cast.cuh"
 #include "hpc/cuda/constants.cuh"
 #include "hpc/cuda/kernels/sigmoid.cuh"
@@ -7,7 +8,9 @@ __global__ void sigmoid_fp32_kernel(float *output, const float *input,
                                     size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
-    output[idx] = input[idx];
+    float in_reg = input[idx];
+    in_reg = fminf(fmaxf(in_reg, MIN_EXP_FP32), MAX_EXP_FP32);
+    in_reg = output[idx] = 1.0f / (1.0f + expf(-in_reg));
   }
 }
 __global__ void sigmoid_fp32x2_kernel(float *output, const float *input,
@@ -15,9 +18,11 @@ __global__ void sigmoid_fp32x2_kernel(float *output, const float *input,
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
   if (idx < N) {
     float2 in_reg = FLOAT2(input + idx);
+    in_reg.x = fminf(fmaxf(in_reg.x, MIN_EXP_FP32), MAX_EXP_FP32);
+    in_reg.y = fminf(fmaxf(in_reg.y, MIN_EXP_FP32), MAX_EXP_FP32);
     float2 out_reg;
-    out_reg.x = in_reg.x;
-    out_reg.y = in_reg.y;
+    out_reg.x = 1.0f / (1.0f + expf(-in_reg.x));
+    out_reg.y = 1.0f / (1.0f + expf(-in_reg.y));
     FLOAT2(output + idx) = out_reg;
   }
 }
@@ -26,18 +31,25 @@ __global__ void sigmoid_fp32x4_kernel(float *output, const float *input,
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 4;
   if (idx < N) {
     float4 in_reg = FLOAT4(input + idx);
+    in_reg.x = fminf(fmaxf(in_reg.x, MIN_EXP_FP32), MAX_EXP_FP32);
+    in_reg.y = fminf(fmaxf(in_reg.y, MIN_EXP_FP32), MAX_EXP_FP32);
+    in_reg.z = fminf(fmaxf(in_reg.z, MIN_EXP_FP32), MAX_EXP_FP32);
+    in_reg.w = fminf(fmaxf(in_reg.w, MIN_EXP_FP32), MAX_EXP_FP32);
     float4 out_reg;
-    out_reg.x = in_reg.x;
-    out_reg.y = in_reg.y;
-    out_reg.z = in_reg.z;
-    out_reg.w = in_reg.w;
+    out_reg.x = 1.0f / (1.0f + expf(-in_reg.x));
+    out_reg.y = 1.0f / (1.0f + expf(-in_reg.y));
+    out_reg.z = 1.0f / (1.0f + expf(-in_reg.z));
+    out_reg.w = 1.0f / (1.0f + expf(-in_reg.w));
     FLOAT4(output + idx) = out_reg;
   }
 }
 __global__ void sigmoid_fp16_kernel(half *output, const half *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
-    output[idx] = input[idx];
+    half in_reg = input[idx];
+    in_reg = __hmin(__hmax(in_reg, MIN_EXP_FP16), MAX_EXP_FP16);
+    output[idx] = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg))));
   }
 }
 __global__ void sigmoid_fp16x2_kernel(half *output, const half *input,
@@ -45,9 +57,13 @@ __global__ void sigmoid_fp16x2_kernel(half *output, const half *input,
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
   if (idx < N) {
     half2 in_reg = HALF2(input + idx);
+    in_reg.x = __hmin(__hmax(in_reg.x, MIN_EXP_FP16), MAX_EXP_FP16);
+    in_reg.y = __hmin(__hmax(in_reg.y, MIN_EXP_FP16), MAX_EXP_FP16);
     half2 out_reg;
-    out_reg.x = in_reg.x;
-    out_reg.y = in_reg.y;
+    out_reg.x = __hdiv(__float2half(1.0f),
+                       __hadd(__float2half(1.0f), hexp(__hneg(in_reg.x))));
+    out_reg.y = __hdiv(__float2half(1.0f),
+                       __hadd(__float2half(1.0f), hexp(__hneg(in_reg.y))));
     HALF2(output + idx) = out_reg;
   }
 }
@@ -56,31 +72,103 @@ __global__ void sigmoid_fp16x8_kernel(half *output, const half *input,
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 8;
   if (idx < N) {
     half2 in_reg_0 = HALF2(input + idx);
+    in_reg_0.x = __hmin(__hmax(in_reg_0.x, MIN_EXP_FP16), MAX_EXP_FP16);
+    in_reg_o.y = __hmin(__hmax(in_reg_0.y, MIN_EXP_FP16), MAX_EXP_FP16);
     half2 out_reg_0;
-    out_reg_0.x = in_reg_0.x;
-    out_reg_0.y = in_reg_0.y;
+    out_reg_0.x = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_0.x))));
+    out_reg_0.y = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_0.y))));
     HALF2(output + idx) = out_reg_0;
   }
   if ((idx + 2) < N) {
     half2 in_reg_1 = HALF2(input + idx + 2);
+    in_reg_1.x = __hmin(__hmax(in_reg_1.x, MIN_EXP_FP16), MAX_EXP_FP16);
+    in_reg_1.y = __hmin(__hmax(in_reg_1.y, MIN_EXP_FP16), MAX_EXP_FP16);
     half2 out_reg_1;
-    out_reg_1.x = in_reg_1.x;
-    out_reg_1.y = in_reg_1.y;
+    out_reg_1.x = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_1.x))));
+    out_reg_1.y = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_1.y))));
     HALF2(output + idx + 2) = out_reg_1;
   }
   if ((idx + 4) < N) {
     half2 in_reg_2 = HALF2(input + idx + 4);
+    in_reg_2.x = __hmin(__hmax(in_reg_2.x, MIN_EXP_FP16), MAX_EXP_FP16);
+    in_reg_2.y = __hmin(__hmax(in_reg_2.y, MIN_EXP_FP16), MAX_EXP_FP16);
     half2 out_reg_2;
-    out_reg_2.x = in_reg_2.x;
-    out_reg_2.y = in_reg_2.y;
+    out_reg_2.x = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_2.x))));
+    out_reg_2.y = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_2.y))));
     HALF2(output + idx + 4) = out_reg_2;
   }
   if ((idx + 6) < N) {
     half2 in_reg_3 = HALF2(input + idx + 6);
+    in_reg_3.x = __hmin(__hmax(in_reg_3.x, MIN_EXP_FP16), MAX_EXP_FP16);
+    in_reg_3.y = __hmin(__hmax(in_reg_3.y, MIN_EXP_FP16), MAX_EXP_FP16);
     half2 out_reg_3;
-    out_reg_3.x = in_reg_3.x;
-    out_reg_3.y = in_reg_3.y;
+    out_reg_3.x = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_3.x))));
+    out_reg_3.y = __hdiv(__float2half(1.0f),
+                         __hadd(__float2half(1.0f), hexp(__hneg(in_reg_3.y))));
     HALF2(output + idx + 6) = out_reg_3;
   }
 }
 } // namespace hpc::cuda
+
+#define TORCH_BINDING_SIGMOID(packed_type, th_type, element_type, n_elements)  \
+  torch::Tensor sigmoid_##packed_type(torch::Tensor input) {                   \
+    CHECK_TORCH_TENSOR_DTYPE(input, (th_type))                                 \
+    auto output = torch::empty_like(input);                                    \
+    const int ndim = input.dim();                                              \
+    if (ndim != 2) {                                                           \
+      int N = 1;                                                               \
+      for (int i = 0; i < ndim; ++i) {                                         \
+        N *= input.size(i);                                                    \
+      }                                                                        \
+      dim3 block(256 / (n_elements));                                          \
+      dim3 grid((N + 256 - 1) / 256);                                          \
+      hpc::cuda::sigmoid_##packed_type##_kernel<<<grid, block>>>(              \
+          reinterpret_cast<element_type *>(output.data_ptr()),                 \
+          reinterpret_cast<element_type *>(input.data_ptr()), N);              \
+    } else {                                                                   \
+      const int S = input.size(0);                                             \
+      const int K = input.size(1);                                             \
+      const int N = S * K;                                                     \
+      if ((K / (n_elements)) <= 1024) {                                        \
+        dim3 block(K / (n_elements));                                          \
+        dim3 grid(S);                                                          \
+        hpc::cuda::sigmoid_##packed_type##_kernel<<<grid, block>>>(            \
+            reinterpret_cast<element_type *>(output.data_ptr()),               \
+            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
+      } else {                                                                 \
+        int N = 1;                                                             \
+        for (int i = 0; i < ndim; ++i) {                                       \
+          N *= input.size(i);                                                  \
+        }                                                                      \
+        dim3 block(256 / (n_elements));                                        \
+        dim3 grid((N + 256 - 1) / 256);                                        \
+        hpc::cuda::sigmoid_##packed_type##_kernel<<<grid, block>>>(            \
+            reinterpret_cast<element_type *>(output.data_ptr()),               \
+            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
+      }                                                                        \
+    }                                                                          \
+    return output;                                                             \
+  }
+
+TORCH_BINDING_SIGMOID(fp32, torch::kFloat32, float, 1)
+TORCH_BINDING_SIGMOID(fp32x2, torch::kFloat32, float, 2)
+TORCH_BINDING_SIGMOID(fp32x4, torch::kFloat32, float, 4)
+TORCH_BINDING_SIGMOID(fp16, torch::kHalf, half, 1)
+TORCH_BINDING_SIGMOID(fp16x2, torch::kHalf, half, 2)
+TORCH_BINDING_SIGMOID(fp16x8, torch::kHalf, half, 8)
+
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp32)
+  TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp32x2)
+  TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp32x4)
+  TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp16)
+  TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp16x2)
+  TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp16x8)
+}

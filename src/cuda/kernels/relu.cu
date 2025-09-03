@@ -1,3 +1,4 @@
+#include "hpc/cuda/binding.cuh"
 #include "hpc/cuda/cast.cuh"
 #include "hpc/cuda/kernels/relu.cuh"
 #include <torch/extension.h>
@@ -88,16 +89,6 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
 }
 
 } // namespace hpc::cuda
-
-#define STRINGFY(str) #str
-#define TORCH_BINDING_COMMON_EXTENSION(func)                                   \
-  m.def(STRINGFY(func), &func, STRINGFY(func));
-
-#define CHECK_TORCH_TENSOR_DTYPE(T, th_type)                                   \
-  if (((T).options().dtype() != (th_type))) {                                  \
-    std::cout << "Tensor Info:" << (T).options() << std::endl;                 \
-    throw std::runtime_error("values must be " #th_type);                      \
-  }
 
 #define TORCH_BINDING_RELU(packed_type, th_type, element_type, n_elements)     \
   torch::Tensor relu_##packed_type(torch::Tensor input) {                      \
