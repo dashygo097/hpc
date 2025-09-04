@@ -21,6 +21,9 @@
 
 #elif defined(__ARM_NEON)
 #include <arm_neon.h>
+
+#elif defined(__AVX2__)
+#include <immintrin.h>
 #endif
 
 #endif

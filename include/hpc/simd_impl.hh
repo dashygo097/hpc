@@ -248,6 +248,9 @@ template <> struct neon_traits<int, 8> {
   }
 };
 
+#elif defined(__AVX2__)
+
 #endif
+
 #endif
 } // namespace hpc
