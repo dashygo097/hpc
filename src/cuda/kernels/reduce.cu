@@ -1,6 +1,5 @@
 #include "hpc/cuda/binding.cuh"
 #include "hpc/cuda/cast.cuh"
-#include "hpc/cuda/constants.cuh"
 #include "hpc/cuda/kernels/reduce.cuh"
 
 namespace hpc::cuda {
@@ -24,7 +23,7 @@ __device__ __forceinline__ half warpReduceSum_fp16(half val) {
 
 template <const size_t kThreadNum = CNUM_THREADS,
           const size_t kWarpSize = CWARP_SIZE>
-__global__ void block_reduce_sum_fp32_kernel(float output, const float *input,
+__global__ void block_reduce_sum_fp32_kernel(float *output, const float *input,
                                              size_t N) {
   size_t tid = threadIdx.x;
   size_t idx = blockIdx.x * kThreadNum + tid;
@@ -84,7 +83,7 @@ __global__ void block_reduce_sum_fp32x4_kernel(float *output, float *input,
 
 template <const size_t kThreadNum = CNUM_THREADS,
           const size_t kWarpSize = CWARP_SIZE>
-__global__ void block_reduce_sum_fp16_kernel(half output, const half *input,
+__global__ void block_reduce_sum_fp16_kernel(half *output, const half *input,
                                              size_t N) {
   size_t tid = threadIdx.x;
   size_t idx = blockIdx.x * kThreadNum + tid;
