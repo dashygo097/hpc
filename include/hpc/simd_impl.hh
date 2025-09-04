@@ -1,8 +1,8 @@
 #pragma once
 
 namespace hpc {
-template <typename T, size_t Width = SIMD_WIDTH> struct simd_type;
-template <typename T, size_t Width = SIMD_WIDTH> struct neon_traits;
+template <typename T, size_t Width> struct simd_type;
+template <typename T, size_t Width> struct neon_traits;
 
 #ifdef ENABLE_SIMD
 #if defined(__APPLE__)
@@ -47,7 +47,6 @@ template <> struct simd_type<int, 8> {
   using type = simd_int8;
   static constexpr size_t width = 8;
 };
-template <typename T> using simd_t = typename simd_type<T>::type;
 
 #elif defined(__ARM_NEON)
 template <> struct simd_type<float, 1> {
@@ -67,7 +66,7 @@ template <> struct neon_traits<float, 1> {
   static type div(type a, type b) { return a / b; }
 };
 
-template <> struct simd_type<float> {
+template <> struct simd_type<float, 4> {
   using type = float32x4_t;
   static constexpr size_t width = 4;
 };
@@ -248,8 +247,6 @@ template <> struct neon_traits<int, 8> {
     return {vcvtq_s32_f32(result0), vcvtq_s32_f32(result1)};
   }
 };
-
-template <typename T> using simd_t = typename simd_type<T>::type;
 
 #endif
 #endif

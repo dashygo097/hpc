@@ -10,15 +10,17 @@
 
 namespace hpc::openmp {
 #ifdef ENABLE_OPENMP
-template <typename T> class Vector {
+template <typename T, const size_t kBlockSize = BLOCK_SIZE,
+          const size_t kSimdWidth = SIMD_WIDTH>
+class Vector {
 public:
   using value_type = T;
 #ifdef ENABLE_SIMD
 #if defined(__APPLE__)
-  using simd_type = simd_t<T>;
+  using simd_t = typename simd_type<T, kSimdWidth>::type;
 #elif defined(__ARM_NEON)
-  using traits = neon_traits<T>;
-  using simd_type = typename traits::type;
+  using traits = neon_traits<T, kSimdWidth>;
+  using simd_t = typename traits::type;
 #endif
 #endif
 
@@ -28,14 +30,14 @@ public:
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = T{};
           }
@@ -52,14 +54,14 @@ public:
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = value;
           }
@@ -85,14 +87,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = other_data[i];
           }
@@ -122,14 +124,14 @@ public:
 
       T *__restrict__ this_data = _data.get();
       const T *__restrict__ other_data = other._data.get();
-      const size_t block_dim = BLOCK_DIM;
+      const size_t block_size = kBlockSize;
 
       if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
-          for (size_t block = 0; block < _size; block += block_dim) {
-            size_t end = std::min(block + block_dim, _size);
+          for (size_t block = 0; block < _size; block += block_size) {
+            size_t end = std::min(block + block_size, _size);
             for (size_t i = block; i < end; ++i) {
               this_data[i] = other_data[i];
             }
@@ -203,14 +205,14 @@ public:
 
     if (new_size > _size) {
       T *__restrict__ this_data = _data.get();
-      const size_t block_dim = BLOCK_DIM;
+      const size_t block_size = kBlockSize;
 
       if (new_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
-          for (size_t block = _size; block < new_size; block += block_dim) {
-            size_t end = std::min(block + block_dim, new_size);
+          for (size_t block = _size; block < new_size; block += block_size) {
+            size_t end = std::min(block + block_size, new_size);
             for (size_t i = block; i < end; ++i) {
               this_data[i] = value;
             }
@@ -228,14 +230,14 @@ public:
   void fill(const T &value) {
 #ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = T{};
           }
@@ -261,14 +263,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = func(vec1_data[i]);
           }
@@ -297,14 +299,14 @@ public:
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1.data();
     const T *__restrict__ vec2_data = vec2.data();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] = func(vec1_data[i], vec2_data[i]);
           }
@@ -325,14 +327,14 @@ public:
   Vector &operator+=(const T &value) {
 #ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] += value;
           }
@@ -355,14 +357,14 @@ public:
   Vector &operator*=(const T &value) {
 #ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] *= value;
           }
@@ -391,14 +393,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] += other_data[i];
           }
@@ -425,14 +427,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] -= other_data[i];
           }
@@ -458,14 +460,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             this_data[i] *= other_data[i];
           }
@@ -492,14 +494,14 @@ public:
 
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             if (other_data[i] == 0) {
               throw std::runtime_error("Division by zero in vector division.");
@@ -532,14 +534,14 @@ public:
     T result = T{};
     const T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel reduction(+ : result)
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           T local_result = T{};
           for (size_t i = block; i < end; ++i) {
             local_result += this_data[i] * other_data[i];
@@ -563,14 +565,14 @@ public:
 
     T result = T{};
     const T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel reduction(+ : result)
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           T local_result = T{};
           for (size_t i = block; i < end; ++i) {
             local_result += this_data[i];
@@ -596,14 +598,14 @@ private:
 
     T *__restrict__ new_ptr = new_data.get();
     const T *__restrict__ old_ptr = _data.get();
-    const size_t block_dim = BLOCK_DIM;
+    const size_t block_size = kBlockSize;
 
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_dim) {
-          size_t end = std::min(block + block_dim, _size);
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
             new_ptr[i] = std::move(old_ptr[i]);
           }
@@ -622,32 +624,32 @@ private:
 #ifdef ENABLE_SIMD
   void fill_simd(const T &value) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) = simd_type(value);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) = simd_t(value);
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = value;
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) = simd_type(value);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) = simd_t(value);
       }
-      if (_size % SIMD_WIDTH != 0) {
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = value;
         }
       }
@@ -658,26 +660,26 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v = traits::duplicate(value);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v = traits::duplicate(value);
             traits::store(this_data + i, v);
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = value;
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v = traits::duplicate(value);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v = traits::duplicate(value);
         traits::store(this_data + i, v);
       }
-      if (_size % SIMD_WIDTH != 0) {
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = value;
         }
       }
@@ -692,36 +694,36 @@ private:
 
   void add_simd(const T &value) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) += simd_type(value);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) += simd_t(value);
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v = *((simd_type *)(this_data + simd_size));
-          simd_type result = v + simd_type(value);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v = *((simd_t *)(this_data + simd_size));
+          simd_t result = v + simd_t(value);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) += simd_type(value);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) += simd_t(value);
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v = *((simd_type *)(this_data + simd_size));
-        simd_type result = v + simd_type(value);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v = *((simd_t *)(this_data + simd_size));
+        simd_t result = v + simd_t(value);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -732,31 +734,31 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v = traits::load(this_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v = traits::load(this_data + i);
             traits::store(this_data + i,
                           traits::add(v, traits::duplicate(value)));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v = traits::load(this_data + simd_size);
-          simd_type result = traits::add(v, traits::duplicate(value));
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v = traits::load(this_data + simd_size);
+          simd_t result = traits::add(v, traits::duplicate(value));
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v = traits::load(this_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v = traits::load(this_data + i);
         traits::store(this_data + i, traits::add(v, traits::duplicate(value)));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v = traits::load(this_data + simd_size);
-        simd_type result = traits::add(v, traits::duplicate(value));
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v = traits::load(this_data + simd_size);
+        simd_t result = traits::add(v, traits::duplicate(value));
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -771,36 +773,36 @@ private:
 
   void mul_simd(const T &value) {
     T *__restrict__ this_data = _data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) *= simd_type(value);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) *= simd_t(value);
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v = *((simd_type *)(this_data + simd_size));
-          simd_type result = v * simd_type(value);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v = *((simd_t *)(this_data + simd_size));
+          simd_t result = v * simd_t(value);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) *= simd_type(value);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) *= simd_t(value);
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v = *((simd_type *)(this_data + simd_size));
-        simd_type result = v * simd_type(value);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v = *((simd_t *)(this_data + simd_size));
+        simd_t result = v * simd_t(value);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -811,31 +813,31 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v = traits::load(this_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v = traits::load(this_data + i);
             traits::store(this_data + i,
                           traits::mul(v, traits::duplicate(value)));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v = traits::load(this_data + simd_size);
-          simd_type result = traits::mul(v, traits::duplicate(value));
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v = traits::load(this_data + simd_size);
+          simd_t result = traits::mul(v, traits::duplicate(value));
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v = traits::load(this_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v = traits::load(this_data + i);
         traits::store(this_data + i, traits::mul(v, traits::duplicate(value)));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v = traits::load(this_data + simd_size);
-        simd_type result = traits::mul(v, traits::duplicate(value));
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v = traits::load(this_data + simd_size);
+        simd_t result = traits::mul(v, traits::duplicate(value));
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -854,39 +856,39 @@ private:
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) += *((simd_type *)(other_data + i));
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) += *((simd_t *)(other_data + i));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = *((simd_type *)(this_data + simd_size));
-          simd_type v2 = *((simd_type *)(other_data + simd_size));
-          simd_type result = v1 + v2;
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = *((simd_t *)(this_data + simd_size));
+          simd_t v2 = *((simd_t *)(other_data + simd_size));
+          simd_t result = v1 + v2;
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) += *((simd_type *)(other_data + i));
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) += *((simd_t *)(other_data + i));
       }
 
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = *((simd_type *)(this_data + simd_size));
-        simd_type v2 = *((simd_type *)(other_data + simd_size));
-        simd_type result = v1 + v2;
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = *((simd_t *)(this_data + simd_size));
+        simd_t v2 = *((simd_t *)(other_data + simd_size));
+        simd_t result = v1 + v2;
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -896,34 +898,34 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v1 = traits::load(this_data + i);
-            simd_type v2 = traits::load(other_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v1 = traits::load(this_data + i);
+            simd_t v2 = traits::load(other_data + i);
             traits::store(this_data + i, traits::add(v1, v2));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = traits::load(this_data + simd_size);
-          simd_type v2 = traits::load(other_data + simd_size);
-          simd_type result = traits::add(v1, v2);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = traits::load(this_data + simd_size);
+          simd_t v2 = traits::load(other_data + simd_size);
+          simd_t result = traits::add(v1, v2);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v1 = traits::load(this_data + i);
-        simd_type v2 = traits::load(other_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v1 = traits::load(this_data + i);
+        simd_t v2 = traits::load(other_data + i);
         traits::store(this_data + i, traits::add(v1, v2));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = traits::load(this_data + simd_size);
-        simd_type v2 = traits::load(other_data + simd_size);
-        simd_type result = traits::add(v1, v2);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = traits::load(this_data + simd_size);
+        simd_t v2 = traits::load(other_data + simd_size);
+        simd_t result = traits::add(v1, v2);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -943,38 +945,38 @@ private:
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) -= *((simd_type *)(other_data + i));
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) -= *((simd_t *)(other_data + i));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = *((simd_type *)(this_data + simd_size));
-          simd_type v2 = *((simd_type *)(other_data + simd_size));
-          simd_type result = v1 - v2;
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = *((simd_t *)(this_data + simd_size));
+          simd_t v2 = *((simd_t *)(other_data + simd_size));
+          simd_t result = v1 - v2;
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) -= *((simd_type *)(other_data + i));
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) -= *((simd_t *)(other_data + i));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = *((simd_type *)(this_data + simd_size));
-        simd_type v2 = *((simd_type *)(other_data + simd_size));
-        simd_type result = v1 - v2;
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = *((simd_t *)(this_data + simd_size));
+        simd_t v2 = *((simd_t *)(other_data + simd_size));
+        simd_t result = v1 - v2;
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -985,34 +987,34 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v1 = traits::load(this_data + i);
-            simd_type v2 = traits::load(other_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v1 = traits::load(this_data + i);
+            simd_t v2 = traits::load(other_data + i);
             traits::store(this_data + i, traits::sub(v1, v2));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = traits::load(this_data + simd_size);
-          simd_type v2 = traits::load(other_data + simd_size);
-          simd_type result = traits::sub(v1, v2);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = traits::load(this_data + simd_size);
+          simd_t v2 = traits::load(other_data + simd_size);
+          simd_t result = traits::sub(v1, v2);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v1 = traits::load(this_data + i);
-        simd_type v2 = traits::load(other_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v1 = traits::load(this_data + i);
+        simd_t v2 = traits::load(other_data + i);
         traits::store(this_data + i, traits::sub(v1, v2));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = traits::load(this_data + simd_size);
-        simd_type v2 = traits::load(other_data + simd_size);
-        simd_type result = traits::sub(v1, v2);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = traits::load(this_data + simd_size);
+        simd_t v2 = traits::load(other_data + simd_size);
+        simd_t result = traits::sub(v1, v2);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -1032,38 +1034,38 @@ private:
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) /= *((simd_type *)(other_data + i));
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) /= *((simd_t *)(other_data + i));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = *((simd_type *)(this_data + simd_size));
-          simd_type v2 = *((simd_type *)(other_data + simd_size));
-          simd_type result = v1 / v2;
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = *((simd_t *)(this_data + simd_size));
+          simd_t v2 = *((simd_t *)(other_data + simd_size));
+          simd_t result = v1 / v2;
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) /= *((simd_type *)(other_data + i));
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) /= *((simd_t *)(other_data + i));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = *((simd_type *)(this_data + simd_size));
-        simd_type v2 = *((simd_type *)(other_data + simd_size));
-        simd_type result = v1 / v2;
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = *((simd_t *)(this_data + simd_size));
+        simd_t v2 = *((simd_t *)(other_data + simd_size));
+        simd_t result = v1 / v2;
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -1073,34 +1075,34 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v1 = traits::load(this_data + i);
-            simd_type v2 = traits::load(other_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v1 = traits::load(this_data + i);
+            simd_t v2 = traits::load(other_data + i);
             traits::store(this_data + i, traits::div(v1, v2));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = traits::load(this_data + simd_size);
-          simd_type v2 = traits::load(other_data + simd_size);
-          simd_type result = traits::div(v1, v2);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = traits::load(this_data + simd_size);
+          simd_t v2 = traits::load(other_data + simd_size);
+          simd_t result = traits::div(v1, v2);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v1 = traits::load(this_data + i);
-        simd_type v2 = traits::load(other_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v1 = traits::load(this_data + i);
+        simd_t v2 = traits::load(other_data + i);
         traits::store(this_data + i, traits::div(v1, v2));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = traits::load(this_data + simd_size);
-        simd_type v2 = traits::load(other_data + simd_size);
-        simd_type result = traits::div(v1, v2);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = traits::load(this_data + simd_size);
+        simd_t v2 = traits::load(other_data + simd_size);
+        simd_t result = traits::div(v1, v2);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -1120,38 +1122,38 @@ private:
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            *((simd_type *)(this_data + i)) *= *((simd_type *)(other_data + i));
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            *((simd_t *)(this_data + i)) *= *((simd_t *)(other_data + i));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = *((simd_type *)(this_data + simd_size));
-          simd_type v2 = *((simd_type *)(other_data + simd_size));
-          simd_type result = v1 * v2;
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = *((simd_t *)(this_data + simd_size));
+          simd_t v2 = *((simd_t *)(other_data + simd_size));
+          simd_t result = v1 * v2;
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        *((simd_type *)(this_data + i)) *= *((simd_type *)(other_data + i));
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        *((simd_t *)(this_data + i)) *= *((simd_t *)(other_data + i));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = *((simd_type *)(this_data + simd_size));
-        simd_type v2 = *((simd_type *)(other_data + simd_size));
-        simd_type result = v1 * v2;
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = *((simd_t *)(this_data + simd_size));
+        simd_t v2 = *((simd_t *)(other_data + simd_size));
+        simd_t result = v1 * v2;
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -1161,34 +1163,34 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v1 = traits::load(this_data + i);
-            simd_type v2 = traits::load(other_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v1 = traits::load(this_data + i);
+            simd_t v2 = traits::load(other_data + i);
             traits::store(this_data + i, traits::mul(v1, v2));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = traits::load(this_data + simd_size);
-          simd_type v2 = traits::load(other_data + simd_size);
-          simd_type result = traits::mul(v1, v2);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = traits::load(this_data + simd_size);
+          simd_t v2 = traits::load(other_data + simd_size);
+          simd_t result = traits::mul(v1, v2);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v1 = traits::load(this_data + i);
-        simd_type v2 = traits::load(other_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v1 = traits::load(this_data + i);
+        simd_t v2 = traits::load(other_data + i);
         traits::store(this_data + i, traits::mul(v1, v2));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = traits::load(this_data + simd_size);
-        simd_type v2 = traits::load(other_data + simd_size);
-        simd_type result = traits::mul(v1, v2);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = traits::load(this_data + simd_size);
+        simd_t v2 = traits::load(other_data + simd_size);
+        simd_t result = traits::mul(v1, v2);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -1209,38 +1211,38 @@ private:
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1._data.get();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type vi = *((simd_type *)(vec1_data + i));
-            *((simd_type *)(this_data + i)) = func(vi);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t vi = *((simd_t *)(vec1_data + i));
+            *((simd_t *)(this_data + i)) = func(vi);
           }
-          if (_size % SIMD_WIDTH != 0) {
-            simd_type vi = *((simd_type *)(vec1_data + simd_size));
-            simd_type result = func(vi);
-            for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+          if (_size % kSimdWidth != 0) {
+            simd_t vi = *((simd_t *)(vec1_data + simd_size));
+            simd_t result = func(vi);
+            for (size_t i = 0; i < _size % kSimdWidth; ++i) {
               *((this_data + simd_size + i)) = result[i];
             }
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type vi = *((simd_type *)(vec1_data + i));
-        *((simd_type *)(this_data + i)) = func(vi);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t vi = *((simd_t *)(vec1_data + i));
+        *((simd_t *)(this_data + i)) = func(vi);
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type vi = *((simd_type *)(vec1_data + simd_size));
-        simd_type result = func(vi);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t vi = *((simd_t *)(vec1_data + simd_size));
+        simd_t result = func(vi);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -1251,30 +1253,30 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type vi = traits::load(vec1_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t vi = traits::load(vec1_data + i);
             traits::store(this_data + i, func(vi));
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type vi = traits::load(vec1_data + simd_size);
-          simd_type result = func(vi);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t vi = traits::load(vec1_data + simd_size);
+          simd_t result = func(vi);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type vi = traits::load(vec1_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t vi = traits::load(vec1_data + i);
         traits::store(this_data + i, func(vi));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type vi = traits::load(vec1_data + simd_size);
-        simd_type result = func(vi);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t vi = traits::load(vec1_data + simd_size);
+        simd_t result = func(vi);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }
@@ -1296,42 +1298,42 @@ private:
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1.data();
     const T *__restrict__ vec2_data = vec2.data();
-    const size_t block_dim = BLOCK_DIM;
-    const size_t simd_size = _size - _size % SIMD_WIDTH;
+    const size_t block_size = kBlockSize;
+    const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
     if (_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v1 = *((simd_type *)(vec1_data + i));
-            simd_type v2 = *((simd_type *)(vec2_data + i));
-            *((simd_type *)(this_data + i)) = func(v1, v2);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v1 = *((simd_t *)(vec1_data + i));
+            simd_t v2 = *((simd_t *)(vec2_data + i));
+            *((simd_t *)(this_data + i)) = func(v1, v2);
           }
         }
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = *((simd_type *)(vec1_data + simd_size));
-          simd_type v2 = *((simd_type *)(vec2_data + simd_size));
-          simd_type result = func(v1, v2);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = *((simd_t *)(vec1_data + simd_size));
+          simd_t v2 = *((simd_t *)(vec2_data + simd_size));
+          simd_t result = func(v1, v2);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *((this_data + simd_size + i)) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v1 = *((simd_type *)(vec1_data + i));
-        simd_type v2 = *((simd_type *)(vec2_data + i));
-        *((simd_type *)(this_data + i)) = func(v1, v2);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v1 = *((simd_t *)(vec1_data + i));
+        simd_t v2 = *((simd_t *)(vec2_data + i));
+        *((simd_t *)(this_data + i)) = func(v1, v2);
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = *((simd_type *)(vec1_data + simd_size));
-        simd_type v2 = *((simd_type *)(vec2_data + simd_size));
-        simd_type result = func(v1, v2);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = *((simd_t *)(vec1_data + simd_size));
+        simd_t v2 = *((simd_t *)(vec2_data + simd_size));
+        simd_t result = func(v1, v2);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *((this_data + simd_size + i)) = result[i];
         }
       }
@@ -1341,35 +1343,35 @@ private:
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_dim) {
-          size_t i_end = std::min(block_idx + block_dim, simd_size);
-          for (size_t i = block_idx; i < i_end; i += SIMD_WIDTH) {
-            simd_type v1 = traits::load(vec1_data + i);
-            simd_type v2 = traits::load(vec2_data + i);
+        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
+          size_t i_end = std::min(block_idx + block_size, simd_size);
+          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
+            simd_t v1 = traits::load(vec1_data + i);
+            simd_t v2 = traits::load(vec2_data + i);
             traits::store(this_data + i, func(v1, v2));
           }
         }
 
-        if (_size % SIMD_WIDTH != 0) {
-          simd_type v1 = traits::load(vec1_data + simd_size);
-          simd_type v2 = traits::load(vec2_data + simd_size);
-          simd_type result = func(v1, v2);
-          for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+        if (_size % kSimdWidth != 0) {
+          simd_t v1 = traits::load(vec1_data + simd_size);
+          simd_t v2 = traits::load(vec2_data + simd_size);
+          simd_t result = func(v1, v2);
+          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
             *(this_data + simd_size + i) = result[i];
           }
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += SIMD_WIDTH) {
-        simd_type v1 = traits::load(vec1_data + i);
-        simd_type v2 = traits::load(vec2_data + i);
+      for (size_t i = 0; i < _size; i += kSimdWidth) {
+        simd_t v1 = traits::load(vec1_data + i);
+        simd_t v2 = traits::load(vec2_data + i);
         traits::store(this_data + i, func(v1, v2));
       }
-      if (_size % SIMD_WIDTH != 0) {
-        simd_type v1 = traits::load(vec1_data + simd_size);
-        simd_type v2 = traits::load(vec2_data + simd_size);
-        simd_type result = func(v1, v2);
-        for (size_t i = 0; i < _size % SIMD_WIDTH; ++i) {
+      if (_size % kSimdWidth != 0) {
+        simd_t v1 = traits::load(vec1_data + simd_size);
+        simd_t v2 = traits::load(vec2_data + simd_size);
+        simd_t result = func(v1, v2);
+        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
           *(this_data + simd_size + i) = result[i];
         }
       }

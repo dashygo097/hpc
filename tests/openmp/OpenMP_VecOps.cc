@@ -9,6 +9,7 @@
 #endif
 
 using namespace hpc;
+using simd_t = typename simd_type<float, 4>::type;
 const size_t DSIZE = 10000000;
 
 class OpenMPVectorTest : public ::testing::Test {
@@ -69,14 +70,13 @@ protected:
 #if defined(__APPLE__)
   void computeSIMDOpenMP() {
     size_t simd_count = DSIZE - (DSIZE % 4);
-    using simd_type = simd_float4;
 #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < simd_count; i += 4) {
-      simd_type va = *((simd_type *)(a_data + i));
-      simd_type vb = *((simd_type *)(b_data + i));
-      simd_type vr = va + vb - simd_type(1.0f);
+      simd_t va = *((simd_t *)(a_data + i));
+      simd_t vb = *((simd_t *)(b_data + i));
+      simd_t vr = va + vb - simd_t(1.0f);
       vr = vr * vr;
-      *((simd_type *)(c_data + i)) = vr;
+      *((simd_t *)(c_data + i)) = vr;
     }
 
     if (simd_count < DSIZE) {
@@ -91,9 +91,9 @@ protected:
     size_t simd_count = DSIZE - (DSIZE % 4);
 #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < simd_count; i += 4) {
-      float32x4_t va = vld1q_f32(a_data + i);
-      float32x4_t vb = vld1q_f32(b_data + i);
-      float32x4_t vr = vsubq_f32(vaddq_f32(va, vb), vdupq_n_f32(1.0f));
+      simd_t va = vld1q_f32(a_data + i);
+      simd_t vb = vld1q_f32(b_data + i);
+      simd_t vr = vsubq_f32(vaddq_f32(va, vb), vdupq_n_f32(1.0f));
       vr = vmulq_f32(vr, vr);
       vst1q_f32(c_data + i, vr);
     }
@@ -108,15 +108,14 @@ protected:
 
 #if defined(__APPLE__)
   void computeImplOpenMP() {
-    using simd_type = simd_t<float>;
-    c.assign(a, b, [](const simd_type &x, const simd_type &y) {
-      auto temp = x + y - simd_type(1.0f);
+    c.assign(a, b, [](const simd_t &x, const simd_t &y) {
+      auto temp = x + y - simd_t(1.0f);
       return temp * temp;
     });
   }
 #elif defined(__ARM_NEON)
   void computeImplOpenMP() {
-    c.assign(a, b, [](const float32x4_t &x, const float32x4_t &y) {
+    c.assign(a, b, [](const simd_t &x, const simd_t &y) {
       auto temp = vsubq_f32(vaddq_f32(x, y), vdupq_n_f32(1.0f));
       return vmulq_f32(temp, temp);
     });
