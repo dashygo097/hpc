@@ -11,7 +11,7 @@ constexpr size_t SIMD_WIDTH = 4;
 
 // CUDA constants
 constexpr size_t CWARP_SIZE = 32;
-constexpr size_t CTHREADS_NUM = 256;
+constexpr size_t CNUM_THREADS = 256;
 
 static_assert(BLOCK_SIZE % SIMD_WIDTH == 0,
               "BLOCK_SIZE must be a multiple of SIMD_WIDTH");
