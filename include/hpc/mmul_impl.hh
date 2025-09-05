@@ -101,9 +101,9 @@ void naive_mmul_simd_1xk_impl(T *C, const T *A, const T *B, size_t M, size_t K,
     }
   }
 
-#elif __defined(__ARM_NEON)
-  using neon_traits = neon_traits<T, kSimdWidth>;
-  using simd_t = typename neon_traits::type;
+#elif defined(__ARM_NEON)
+  using traits = neon_traits<T, kSimdWidth>;
+  using simd_t = typename traits::type;
   size_t N_simd = N - N % kSimdWidth;
   size_t is_remain = N % kSimdWidth;
 
@@ -116,11 +116,11 @@ void naive_mmul_simd_1xk_impl(T *C, const T *A, const T *B, size_t M, size_t K,
     for (size_t k = 0; k < K; ++k) {
       T a_ik = A[i * K + k];
       for (size_t j = 0; j < N; j += kSimdWidth) {
-        simd_t a_ik_vec = neon_traits::duplicate(a_ik);
-        simd_t b_kj = trait::load(B + k * N + j);
-        simd_t c_ij = trait::load(C + i * N + j);
-        trait::store(C + i * N + j,
-                     trait::add(c_ij, traits::mul(a_ik_vec, b_kj)));
+        simd_t a_ik_vec = traits::duplicate(a_ik);
+        simd_t b_kj = traits::load(B + k * N + j);
+        simd_t c_ij = traits::load(C + i * N + j);
+        traits::store(C + i * N + j,
+                     traits::add(c_ij, traits::mul(a_ik_vec, b_kj)));
       }
       if (is_remain) {
         for (size_t j = N_simd; j < N; ++j) {
