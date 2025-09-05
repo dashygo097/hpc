@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef ENABLE_OPENMP
-#include <memory>
+#include "../../constants.hh"
 #endif
 
 #ifdef ENABLE_SIMD
@@ -376,7 +376,7 @@ public:
       }
     }
 #else
-    return mul_simd(value);
+    mul_simd(value);
 #endif
 
     return *this;
@@ -687,7 +687,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `fill` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -766,7 +766,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `+=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -844,7 +844,7 @@ private:
     }
 #else
     std::cerr << "Not Implement SIMD for `*=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -933,7 +933,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `+=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1022,7 +1022,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `-=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1110,7 +1110,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `*=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1197,7 +1197,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `/=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1283,7 +1283,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `assign` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1378,7 +1378,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `assign` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }

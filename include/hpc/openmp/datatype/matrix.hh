@@ -602,7 +602,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `fill` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -681,7 +681,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `+=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -759,7 +759,7 @@ private:
     }
 #else
     std::cerr << "Not Implement SIMD for `*=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -849,7 +849,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `+=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -939,7 +939,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `-=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1027,7 +1027,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `*=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1114,7 +1114,7 @@ private:
 
 #else
     std::cerr << "Not Implement SIMD for `/=` function for "
-                 "non-Apple platforms."
+                 "this platform."
               << std::endl;
 #endif
   }
@@ -1151,6 +1151,25 @@ Matrix<T> tiled_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
                   mat1.cols(), mat2.cols(), kGemmTileSize);
   return result;
 }
+
+#ifdef ENABLE_SIMD
+template <typename T, const size_t kSimdWidth = SIMD_WIDTH>
+Matrix<T> naive_mmul_simd_1xk(const Matrix<T> &mat1, const Matrix<T> &mat2) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  naive_mmul_simd_1xk_impl<T, kSimdWidth>(result.data(), mat1.data(),
+                                          mat2.data(), mat1.rows(), mat1.cols(),
+                                          mat2.cols());
+  return result;
+}
+
+#endif
 
 #endif
 

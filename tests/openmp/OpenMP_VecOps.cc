@@ -2,11 +2,6 @@
 #define ENABLE_SIMD
 #include <gtest/gtest.h>
 #include <hpc.hh>
-#if defined(__APPLE__)
-#include <simd/simd.h>
-#elif defined(__ARM_NEON)
-#include <arm_neon.h>
-#endif
 
 using namespace hpc;
 using simd_t = typename simd_type<float, 4>::type;

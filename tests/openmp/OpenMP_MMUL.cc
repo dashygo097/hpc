@@ -1,7 +1,5 @@
 #define ENABLE_OPENMP
-#if defined(__APPLE__)
-#include <Accelerate/Accelerate.h>
-#endif
+#define ENABLE_SIMD
 #include <gtest/gtest.h>
 #include <hpc.hh>
 
@@ -95,6 +93,10 @@ protected:
 
   void computeOpenMPNaive() { c = openmp::naive_mmul<float>(a, b); }
 
+  void computeOpenMPNaiveSimd() {
+    c = openmp::naive_mmul_simd_1xk<float>(a, b);
+  }
+
   float *a_serial;
   float *b_serial;
   float *c_serial;
@@ -117,10 +119,18 @@ TEST_F(OpenMPMatrixTest, ParallelNaiveCorrectness) {
   reset();
 }
 
+TEST_F(OpenMPMatrixTest, ParallelNaiveSimdCorrectness) {
+  computeSerialNaive();
+  computeOpenMPNaiveSimd();
+  checkCorrectness(c_serial, c.data());
+  reset();
+}
+
 TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   // Warm-up
   computeSerialNaive();
   computeOpenMPNaive();
+  computeOpenMPNaiveSimd();
 #if defined(__APPLE__)
   computeAccelerate();
 #endif
@@ -129,6 +139,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
 
   ProgTimer timer_serial(Backend::SERIAL, "Serial Naive");
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP Naive");
+  ProgTimer timer_openmp_simd(Backend::OPENMP, "OpenMP Naive + SIMD");
 #if defined(__APPLE__)
   ProgTimer timer_accel(Backend::SERIAL, "Accelerate Lib");
 #endif
@@ -145,6 +156,12 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   timer_openmp.report();
   checkCorrectness(c_serial, c.data());
 
+  timer_openmp_simd.start();
+  computeOpenMPNaiveSimd();
+  timer_openmp_simd.stop();
+  timer_openmp_simd.report();
+  checkCorrectness(c_serial, c.data());
+
 #if defined(__APPLE__)
   timer_accel.start();
   computeAccelerate();
@@ -157,6 +174,11 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
             << timer_serial.elapsed_seconds() / timer_openmp.elapsed_seconds()
             << "x over serial;" << std::endl;
   ;
+
+  std::cout << "[INFO] OpenMP Naive + SIMD achieves speedup of "
+            << timer_serial.elapsed_seconds() /
+                   timer_openmp_simd.elapsed_seconds()
+            << "x over serial;" << std::endl;
 
 #if defined(__APPLE__)
   std::cout << "[INFO] Accelerate achieves speedup of "

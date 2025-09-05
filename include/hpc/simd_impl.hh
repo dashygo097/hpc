@@ -1,12 +1,31 @@
 #pragma once
 
+#ifdef ENABLE_SIMD
+#include "./pch.hh"
+#endif
+
+#ifdef ENABLE_SIMD
+
+#if defined(__APPLE__)
+#include <Accelerate/Accelerate.h>
+#include <simd/simd.h>
+
+#elif defined(__ARM_NEON)
+#include <arm_neon.h>
+
+#elif defined(__AVX2__)
+#include <immintrin.h>
+#endif
+
+#endif
+
 namespace hpc {
 template <typename T, size_t Width> struct simd_type;
 template <typename T, size_t Width> struct neon_traits;
 
 #ifdef ENABLE_SIMD
-#if defined(__APPLE__)
 
+#if defined(__APPLE__)
 template <> struct simd_type<float, 1> {
   using type = float;
   static constexpr size_t width = 1;
@@ -247,8 +266,6 @@ template <> struct neon_traits<int, 8> {
     return {vcvtq_s32_f32(result0), vcvtq_s32_f32(result1)};
   }
 };
-
-#elif defined(__AVX2__)
 
 #endif
 

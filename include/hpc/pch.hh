@@ -7,10 +7,12 @@
 #include <memory>
 #include <string>
 
-#include "./constants.hh"
-
 #ifdef ENABLE_OPENMP
 #include <omp.h>
+#endif
+
+#ifdef ENABLE_MPI
+#include <mpi.h>
 #endif
 
 #ifdef ENABLE_SIMD
@@ -26,8 +28,4 @@
 #include <immintrin.h>
 #endif
 
-#endif
-
-#ifdef ENABLE_MPI
-#include <mpi.h>
 #endif
