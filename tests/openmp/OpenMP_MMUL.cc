@@ -93,9 +93,11 @@ protected:
 
   void computeOpenMPNaive() { c = openmp::naive_mmul<float>(a, b); }
 
+#if defined(__APPLE) || defined(__ARM_NEON)
   void computeOpenMPNaiveSimd() {
     c = openmp::naive_mmul_simd_1xk<float>(a, b);
   }
+#endif
 
   float *a_serial;
   float *b_serial;
@@ -130,7 +132,9 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   // Warm-up
   computeSerialNaive();
   computeOpenMPNaive();
+#if defined(__APPLE__) || defined(__ARM_NEON)
   computeOpenMPNaiveSimd();
+#endif
 #if defined(__APPLE__)
   computeAccelerate();
 #endif
@@ -156,11 +160,13 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   timer_openmp.report();
   checkCorrectness(c_serial, c.data());
 
+#if defined(__APPLE__) || defined(__ARM_NEON)
   timer_openmp_simd.start();
   computeOpenMPNaiveSimd();
   timer_openmp_simd.stop();
   timer_openmp_simd.report();
   checkCorrectness(c_serial, c.data());
+#endif
 
 #if defined(__APPLE__)
   timer_accel.start();

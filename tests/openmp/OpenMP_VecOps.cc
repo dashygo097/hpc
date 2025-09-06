@@ -4,9 +4,7 @@
 #include <hpc.hh>
 
 using namespace hpc;
-#if defined(__APPLE__)
-using simd_t = typename simd_type<float, 4>::type;
-#elif defined(__ARM_NEON)
+#if defined(__APPLE__) || defined(__ARM_NEON)
 using simd_t = typename simd_type<float, 4>::type;
 #endif
 
