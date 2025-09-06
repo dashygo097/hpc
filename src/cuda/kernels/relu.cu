@@ -88,52 +88,12 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
 
 } // namespace hpc::cuda
 
-#define TORCH_BINDING_RELU(packed_type, th_type, element_type, n_elements)     \
-  torch::Tensor relu_##packed_type(torch::Tensor input) {                      \
-    CHECK_TORCH_TENSOR_DTYPE(input, (th_type))                                 \
-    auto output = torch::empty_like(input);                                    \
-    const int ndim = input.dim();                                              \
-    if (ndim != 2) {                                                           \
-      int N = 1;                                                               \
-      for (int i = 0; i < ndim; ++i) {                                         \
-        N *= input.size(i);                                                    \
-      }                                                                        \
-      dim3 block(256 / (n_elements));                                          \
-      dim3 grid((N + 256 - 1) / 256);                                          \
-      hpc::cuda::relu_##packed_type##_kernel<<<grid, block>>>(                 \
-          reinterpret_cast<element_type *>(output.data_ptr()),                 \
-          reinterpret_cast<element_type *>(input.data_ptr()), N);              \
-    } else {                                                                   \
-      const int S = input.size(0);                                             \
-      const int K = input.size(1);                                             \
-      const int N = S * K;                                                     \
-      if ((K / (n_elements)) <= 1024) {                                        \
-        dim3 block(K / (n_elements));                                          \
-        dim3 grid(S);                                                          \
-        hpc::cuda::relu_##packed_type##_kernel<<<grid, block>>>(               \
-            reinterpret_cast<element_type *>(output.data_ptr()),               \
-            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
-      } else {                                                                 \
-        int N = 1;                                                             \
-        for (int i = 0; i < ndim; ++i) {                                       \
-          N *= input.size(i);                                                  \
-        }                                                                      \
-        dim3 block(256 / (n_elements));                                        \
-        dim3 grid((N + 256 - 1) / 256);                                        \
-        hpc::cuda::relu_##packed_type##_kernel<<<grid, block>>>(               \
-            reinterpret_cast<element_type *>(output.data_ptr()),               \
-            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
-      }                                                                        \
-    }                                                                          \
-    return output;                                                             \
-  }
-
-TORCH_BINDING_RELU(fp32, torch::kFloat32, float, 1)
-TORCH_BINDING_RELU(fp32x2, torch::kFloat32, float, 2)
-TORCH_BINDING_RELU(fp32x4, torch::kFloat32, float, 4)
-TORCH_BINDING_RELU(fp16, torch::kHalf, half, 1)
-TORCH_BINDING_RELU(fp16x2, torch::kHalf, half, 2)
-TORCH_BINDING_RELU(fp16x8, torch::kHalf, half, 8)
+TORCH_BINDING_ACT(relu, fp32, torch::kFloat32, float, 1)
+TORCH_BINDING_ACT(relu, fp32x2, torch::kFloat32, float, 2)
+TORCH_BINDING_ACT(relu, fp32x4, torch::kFloat32, float, 4)
+TORCH_BINDING_ACT(relu, fp16, torch::kHalf, half, 1)
+TORCH_BINDING_ACT(relu, fp16x2, torch::kHalf, half, 2)
+TORCH_BINDING_ACT(relu, fp16x8, torch::kHalf, half, 8)
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   TORCH_BINDING_COMMON_EXTENSION(relu_fp32)
