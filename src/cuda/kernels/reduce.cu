@@ -3,7 +3,7 @@
 #include "hpc/cuda/kernels/reduce.cuh"
 
 namespace hpc::cuda {
-template <const size_t kWarpSize = CWARP_SIZE>
+template <const size_t kWarpSize>
 __device__ __forceinline__ float warpReduceSum_fp32(float val) {
 #pragma unroll
   for (size_t mask = kWarpSize >> 1; mask > 0; mask >>= 1) {
@@ -12,7 +12,7 @@ __device__ __forceinline__ float warpReduceSum_fp32(float val) {
   return val;
 }
 
-template <const size_t kWarpSize = CWARP_SIZE>
+template <const size_t kWarpSize>
 __device__ __forceinline__ half warpReduceSum_fp16(half val) {
 #pragma unroll
   for (size_t mask = kWarpSize >> 1; mask > 0; mask >>= 1) {
@@ -101,7 +101,7 @@ __global__ void block_reduce_sum_fp16_kernel(half *output, const half *input,
   }
   __syncthreads();
 
-  sum = (lid < NUM_WARPS) ? warp_sdara[lid] : 0.0f;
+  sum = (lid < NUM_WARPS) ? warp_sdara[lid] : __float2half(0.0f);
   if (wid == 0) {
     sum = warpReduceSum_fp16<kWarpSize>(sum);
   }
@@ -121,7 +121,7 @@ __global__ void block_reduce_sum_fp16x2_kernel(half *output, half *input,
 
   half2 in_reg = HALF2(input[idx]);
 
-  half sum = (idx < N) ? (in_reg.x + in_reg.y) : 0.0f;
+  half sum = (idx < N) ? (in_reg.x + in_reg.y) : __float2half(0.0f);
   size_t wid = tid / CWARP_SIZE;
   size_t lid = tid % CWARP_SIZE;
 
@@ -132,7 +132,7 @@ __global__ void block_reduce_sum_fp16x2_kernel(half *output, half *input,
   }
   __syncthreads();
 
-  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : 0.0f;
+  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : __float2half(0.0f);
   if (wid == 0) {
     sum = warpReduceSum_fp16<kWarpSize>(sum);
   }
