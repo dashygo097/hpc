@@ -8,6 +8,7 @@ find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
     set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
     message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
 endif()
 
@@ -32,6 +33,8 @@ if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
     find_package(CUDAToolkit REQUIRED)
     set(HAS_CUDA TRUE)
+
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
 
     message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
     message(STATUS "CUDA toolkit: ${CUDAToolkit_VERSION}")
@@ -105,6 +108,11 @@ if (HAS_CUDA)
   file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
   file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
   add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS} ${HPC_CUDA_HEADERS} ${HPC_CUDA_SOURCES})
+
+  set_target_properties(hpc PROPERTIES
+      CUDA_SEPARABLE_COMPILATION ON
+      CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  )
 else()
   add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS})
 endif()

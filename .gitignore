@@ -4,3 +4,5 @@ __pycache__/
 .vscode/
 .Trash-*/
 build/
+
+scripts/transcribe.sh

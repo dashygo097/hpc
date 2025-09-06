@@ -121,12 +121,14 @@ TEST_F(OpenMPMatrixTest, ParallelNaiveCorrectness) {
   reset();
 }
 
+#if defined(__APPLE__) || defined(__ARM_NEON)
 TEST_F(OpenMPMatrixTest, ParallelNaiveSimdCorrectness) {
   computeSerialNaive();
   computeOpenMPNaiveSimd();
   checkCorrectness(c_serial, c.data());
   reset();
 }
+#endif
 
 TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   // Warm-up
@@ -181,10 +183,12 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
             << "x over serial;" << std::endl;
   ;
 
+#if defined(__APPLE__) || defined(__ARM_NEON)
   std::cout << "[INFO] OpenMP Naive + SIMD achieves speedup of "
             << timer_serial.elapsed_seconds() /
                    timer_openmp_simd.elapsed_seconds()
             << "x over serial;" << std::endl;
+#endif
 
 #if defined(__APPLE__)
   std::cout << "[INFO] Accelerate achieves speedup of "
