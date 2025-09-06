@@ -90,7 +90,7 @@ __global__ void block_reduce_sum_fp16_kernel(half *output, const half *input,
   constexpr size_t NUM_WARPS = (kThreadNum + kWarpSize - 1) / kWarpSize;
   __shared__ half warp_sdata[NUM_WARPS];
 
-  half sum = (idx < N) ? input[idx] : 0.0f;
+  half sum = (idx < N) ? input[idx] : __float2half(0.0f);
   size_t wid = tid / CWARP_SIZE;
   size_t lid = tid % CWARP_SIZE;
 
