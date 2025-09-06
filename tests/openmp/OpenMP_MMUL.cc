@@ -75,7 +75,7 @@ protected:
     c.fill(0.0f);
   }
 
-  void computeSerialNaive() {
+  void computeBaseline() {
     serial::mmul_baseline<float>(c_serial, a_serial, b_serial, DSIZE, DSIZE,
                                  DSIZE);
   }
@@ -115,7 +115,7 @@ protected:
 };
 
 TEST_F(OpenMPMatrixTest, ParallelNaiveCorrectness) {
-  computeSerialNaive();
+  computeBaseline();
   computeOpenMPNaive();
   checkCorrectness(c_serial, c.data());
   reset();
@@ -123,7 +123,7 @@ TEST_F(OpenMPMatrixTest, ParallelNaiveCorrectness) {
 
 #if defined(__APPLE__) || defined(__ARM_NEON)
 TEST_F(OpenMPMatrixTest, ParallelNaiveSimdCorrectness) {
-  computeSerialNaive();
+  computeBaseline();
   computeOpenMPNaiveSimd();
   checkCorrectness(c_serial, c.data());
   reset();
@@ -132,7 +132,7 @@ TEST_F(OpenMPMatrixTest, ParallelNaiveSimdCorrectness) {
 
 TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   // Warm-up
-  computeSerialNaive();
+  computeBaseline();
   computeOpenMPNaive();
 #if defined(__APPLE__) || defined(__ARM_NEON)
   computeOpenMPNaiveSimd();
@@ -143,7 +143,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
 
   reset();
 
-  ProgTimer timer_serial(Backend::SERIAL, "Serial Naive");
+  ProgTimer timer_serial(Backend::SERIAL, "Baseline");
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP Naive");
   ProgTimer timer_openmp_simd(Backend::OPENMP, "OpenMP Naive + SIMD");
 #if defined(__APPLE__)
@@ -152,7 +152,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
 
   // Benchmark
   timer_serial.start();
-  computeSerialNaive();
+  computeBaseline();
   timer_serial.stop();
   timer_serial.report();
 
@@ -180,19 +180,19 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
 
   std::cout << "[INFO] OpenMP Naive achieves speedup of "
             << timer_serial.elapsed_seconds() / timer_openmp.elapsed_seconds()
-            << "x over serial;" << std::endl;
+            << "x over baseline;" << std::endl;
   ;
 
 #if defined(__APPLE__) || defined(__ARM_NEON)
   std::cout << "[INFO] OpenMP Naive + SIMD achieves speedup of "
             << timer_serial.elapsed_seconds() /
                    timer_openmp_simd.elapsed_seconds()
-            << "x over serial;" << std::endl;
+            << "x over baseline;" << std::endl;
 #endif
 
 #if defined(__APPLE__)
   std::cout << "[INFO] Accelerate achieves speedup of "
             << timer_serial.elapsed_seconds() / timer_accel.elapsed_seconds()
-            << "x over serial;" << std::endl;
+            << "x over baseline;" << std::endl;
 #endif
 }
