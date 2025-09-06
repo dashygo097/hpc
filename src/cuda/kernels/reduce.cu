@@ -41,7 +41,7 @@ __global__ void block_reduce_sum_fp32_kernel(float *output, const float *input,
   }
   __syncthreads();
 
-  sum = (lid < NUM_WARPS) ? warp_sdara[lid] : 0.0f;
+  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : 0.0f;
   if (wid == 0) {
     sum = warpReduceSum_fp32<kWarpSize>(sum);
   }
@@ -101,7 +101,7 @@ __global__ void block_reduce_sum_fp16_kernel(half *output, const half *input,
   }
   __syncthreads();
 
-  sum = (lid < NUM_WARPS) ? warp_sdara[lid] : __float2half(0.0f);
+  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : __float2half(0.0f);
   if (wid == 0) {
     sum = warpReduceSum_fp16<kWarpSize>(sum);
   }
