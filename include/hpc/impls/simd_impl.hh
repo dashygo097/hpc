@@ -4,8 +4,6 @@ namespace hpc {
 template <typename T, size_t Width> struct simd_type;
 template <typename T, size_t Width> struct neon_traits;
 
-#ifdef ENABLE_SIMD
-
 #if defined(__APPLE__)
 template <> struct simd_type<float, 1> {
   using type = float;
@@ -250,5 +248,4 @@ template <> struct neon_traits<int, 8> {
 
 #endif
 
-#endif
 } // namespace hpc
