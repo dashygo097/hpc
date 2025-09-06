@@ -32,7 +32,7 @@ for S, K in SKs:
     print(" " * 40 + f"S={S}, K={K}")
     x = torch.randn((S, K)).cuda().float().contiguous()
     benchmark.meval(
-        [lib.reduce_sum_fp32, lib.reduce_sum_fp32x4, torch.sum],
+        [lib.reduce_sum_fp32, torch.sum],
         ["fp32", "fp32_th"],
         [x],
     )
@@ -40,7 +40,7 @@ for S, K in SKs:
     print("-" * 85)
     x_f16 = x.half().contiguous()
     benchmark.meval(
-        [lib.reduce_sum_fp16, lib.reduce_sum_fp16, torch.sum],
+        [lib.reduce_sum_fp16, torch.sum],
         ["fp16", "fp16_th"],
         [x_f16],
     )
