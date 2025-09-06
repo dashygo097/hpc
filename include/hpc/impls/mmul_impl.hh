@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../pch.hh"
+
 #ifdef ENABLE_SIMD
 #include "./simd_impl.hh"
 #endif
@@ -81,8 +83,8 @@ void naive_mmul_simd_1xk_impl(T *C, const T *A, const T *B, size_t M, size_t K,
   size_t is_remain = N % kSimdWidth;
 
 #pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < M * N; ++i) {
-    C[i] = T{};
+  for (size_t i = 0; i < M * N; i += kSimdWidth) {
+    *((simd_t *)(C + i)) = simd_t{};
   }
 
 #pragma omp parallel for schedule(static)
@@ -108,8 +110,8 @@ void naive_mmul_simd_1xk_impl(T *C, const T *A, const T *B, size_t M, size_t K,
   size_t is_remain = N % kSimdWidth;
 
 #pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < M * N; ++i) {
-    C[i] = T{};
+  for (size_t i = 0; i < M * N; i += kSimdWidth) {
+    *(simd_t *)(C + i) = simd_t{};
   }
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M; ++i) {
@@ -120,7 +122,7 @@ void naive_mmul_simd_1xk_impl(T *C, const T *A, const T *B, size_t M, size_t K,
         simd_t b_kj = traits::load(B + k * N + j);
         simd_t c_ij = traits::load(C + i * N + j);
         traits::store(C + i * N + j,
-                     traits::add(c_ij, traits::mul(a_ik_vec, b_kj)));
+                      traits::add(c_ij, traits::mul(a_ik_vec, b_kj)));
       }
       if (is_remain) {
         for (size_t j = N_simd; j < N; ++j) {

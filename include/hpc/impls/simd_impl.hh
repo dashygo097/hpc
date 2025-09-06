@@ -1,24 +1,5 @@
 #pragma once
 
-#ifdef ENABLE_SIMD
-#include "./pch.hh"
-#endif
-
-#ifdef ENABLE_SIMD
-
-#if defined(__APPLE__)
-#include <Accelerate/Accelerate.h>
-#include <simd/simd.h>
-
-#elif defined(__ARM_NEON)
-#include <arm_neon.h>
-
-#elif defined(__AVX2__)
-#include <immintrin.h>
-#endif
-
-#endif
-
 namespace hpc {
 template <typename T, size_t Width> struct simd_type;
 template <typename T, size_t Width> struct neon_traits;

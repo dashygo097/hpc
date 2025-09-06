@@ -1,6 +1,4 @@
 #pragma once
 
-#ifdef ENABLE_OPENMP
-#include "./datatype/matrix.hh"
-#include "./datatype/vector.hh"
-#endif
+#include "./matrix.hh"
+#include "./vector.hh"

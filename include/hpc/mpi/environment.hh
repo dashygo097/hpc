@@ -1,11 +1,6 @@
 #pragma once
 
-#include <mpi.h>
-#ifdef ENABLE_MPI
-#endif
-
 namespace hpc::mpi {
-#ifdef ENABLE_MPI
 class MPIEnv {
 public:
   MPIEnv(int argc, char **argv) : _thread_support_level(MPI_THREAD_SINGLE) {
@@ -64,5 +59,4 @@ private:
 bool MPIEnv::_initialized = false;
 bool MPIEnv::_finalized = false;
 
-#endif
 } // namespace hpc::mpi

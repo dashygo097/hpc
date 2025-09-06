@@ -1,18 +1,16 @@
 #pragma once
 
-#ifdef ENABLE_OPENMP
-#include "../../constants.hh"
-#endif
+#include "../impls/mmul_impl.hh"
+#include "./vector.hh"
 
 #ifdef ENABLE_SIMD
-#include "../../simd_impl.hh"
+#include "../impls/simd_impl.hh"
 #endif
 
 namespace hpc::openmp {
-#ifdef ENABLE_OPENMP
 template <typename T, const size_t kBlockSize = BLOCK_SIZE,
           const size_t kSimdWidth = SIMD_WIDTH>
-class Vector {
+class Matrix {
 public:
   using value_type = T;
 #ifdef ENABLE_SIMD
@@ -24,15 +22,15 @@ public:
 #endif
 #endif
 
-  Vector() : _data(nullptr), _size(0), _capacity(0) {}
-
-  explicit Vector(size_t size) : _size(size), _capacity(size) {
+  Matrix() : _data(nullptr), _size(0), _rows(0), _cols(0), _capacity(0) {}
+  explicit Matrix(size_t rows, size_t cols)
+      : _size(rows * cols), _rows(rows), _cols(cols), _capacity(rows * cols) {
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
     const size_t block_size = kBlockSize;
 
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -50,13 +48,14 @@ public:
     }
   }
 
-  explicit Vector(size_t size, const T &value) : _size(size), _capacity(size) {
+  explicit Matrix(size_t rows, size_t cols, const T &value)
+      : _size(rows * cols), _rows(rows), _cols(cols), _capacity(rows * cols) {
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
     const size_t block_size = kBlockSize;
 
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -74,47 +73,45 @@ public:
     }
   }
 
-  Vector(std::initializer_list<T> init)
-      : _size(init.size()), _capacity(init.size()) {
-    _data = std::make_unique<T[]>(_capacity);
-    std::copy(init.begin(), init.end(), _data.get());
-  }
-
-  ~Vector() = default;
-
-  Vector(const Vector &other) : _size(other._size), _capacity(other._capacity) {
+  Matrix(std::initializer_list<T> init)
+      : _size(init.size()), _rows(1), _cols(init.size()),
+        _capacity(init.size()) {
     _data = std::make_unique<T[]>(_capacity);
 
     T *__restrict__ this_data = _data.get();
-    const T *__restrict__ other_data = other._data.get();
+    const T *__restrict__ init_data = init.begin();
     const size_t block_size = kBlockSize;
 
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
         for (size_t block = 0; block < _size; block += block_size) {
           size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
-            this_data[i] = other_data[i];
+            this_data[i] = init_data[i];
           }
         }
       }
     } else {
       for (size_t i = 0; i < _size; ++i) {
-        this_data[i] = other_data[i];
+        this_data[i] = init_data[i];
       }
     }
   }
 
-  Vector(Vector &&other) noexcept
-      : _data(std::move(other._data)), _size(other._size),
-        _capacity(other._capacity) {
+  ~Matrix() = default;
+
+  Matrix(Matrix &&other) noexcept
+      : _data(std::move(other._data)), _rows(other._rows), _cols(other._cols),
+        _size(other._size), _capacity(other._capacity) {
     other._size = 0;
+    other._rows = 0;
+    other._cols = 0;
     other._capacity = 0;
   }
 
-  Vector &operator=(const Vector &other) {
+  Matrix &operator=(const Matrix &other) {
     if (this != &other) {
       if (_capacity < other._size) {
         _data = std::make_unique<T[]>(other._capacity);
@@ -126,7 +123,7 @@ public:
       const T *__restrict__ other_data = other._data.get();
       const size_t block_size = kBlockSize;
 
-      if (_size > PARALLEL_THRESHOLD_1D) {
+      if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
@@ -146,10 +143,12 @@ public:
     return *this;
   }
 
-  Vector &operator=(Vector &&other) noexcept {
+  Matrix &operator=(Matrix &&other) noexcept {
     if (this != &other) {
       _data = std::move(other._data);
       _size = other._size;
+      _rows = other._rows;
+      _cols = other._cols;
       _capacity = other._capacity;
       other._size = 0;
       other._capacity = 0;
@@ -157,26 +156,69 @@ public:
     return *this;
   }
 
+  [[nodiscard]] size_t rows() const noexcept { return _rows; }
+  [[nodiscard]] size_t cols() const noexcept { return _cols; }
   [[nodiscard]] size_t size() const noexcept { return _size; }
   [[nodiscard]] size_t capacity() const noexcept { return _capacity; }
-  [[nodiscard]] bool empty() const noexcept { return _size == 0; }
 
   [[nodiscard]] T &operator[](size_t idx) noexcept { return _data[idx]; }
   [[nodiscard]] const T &operator[](size_t idx) const noexcept {
     return _data[idx];
   }
 
-  [[nodiscard]] T &at(size_t idx) {
-    if (idx >= _size) {
-      throw std::out_of_range("Index out of range in vector access.");
-    }
-    return _data[idx];
+  [[nodiscard]] T &at(size_t row, size_t col) noexcept {
+    return _data[row * _cols + col];
   }
-  [[nodiscard]] const T &at(size_t idx) const {
-    if (idx >= _size) {
-      throw std::out_of_range("Index out of range in vector access.");
+  [[nodiscard]] const T &at(size_t row, size_t col) const noexcept {
+    return _data[row * _cols + col];
+  }
+
+  [[nodiscard]] Vector<T> row(size_t row) const noexcept {
+    Vector<T> result(_cols);
+    T *__restrict__ result_data = result.data();
+    const T *__restrict__ this_data = _data.get() + row * _cols;
+    const size_t block_size = kBlockSize;
+    if (_cols > PARALLEL_THRESHOLD_2D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _cols; block += block_size) {
+          size_t end = std::min(block + block_size, _cols);
+          for (size_t i = block; i < end; ++i) {
+            result_data[i] = this_data[i];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _cols; ++i) {
+        result_data[i] = this_data[i];
+      }
     }
-    return _data[idx];
+    return result;
+  }
+
+  [[nodiscard]] Vector<T> col(size_t col) const noexcept {
+    Vector<T> result(_rows);
+    T *__restrict__ result_data = result.data();
+    const T *__restrict__ this_data = _data.get() + col;
+    const size_t block_size = kBlockSize;
+    if (_rows > PARALLEL_THRESHOLD_2D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _rows; block += block_size) {
+          size_t end = std::min(block + block_size, _rows);
+          for (size_t i = block; i < end; ++i) {
+            result_data[i] = this_data[i * _cols];
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _rows; ++i) {
+        result_data[i] = this_data[i * _cols];
+      }
+    }
+    return result;
   }
 
   [[nodiscard]] T *begin() noexcept { return _data.get(); }
@@ -187,6 +229,8 @@ public:
   [[nodiscard]] const T *data() const noexcept { return _data.get(); }
 
   void clear() noexcept {
+    _rows = 0;
+    _cols = 0;
     _size = 0;
     _capacity = 0;
     _data.reset();
@@ -198,20 +242,21 @@ public:
     }
   }
 
-  void resize(size_t new_size, const T &value = T{}) {
+  void resize(size_t new_rows, size_t new_cols, const T &value = T{}) {
+    size_t new_size = new_rows * new_cols;
     if (new_size > _capacity) {
       reallocate(new_size);
     }
-
     if (new_size > _size) {
       T *__restrict__ this_data = _data.get();
+      const size_t old_size = _size;
       const size_t block_size = kBlockSize;
+      if (new_size > PARALLEL_THRESHOLD_2D) {
 
-      if (new_size > PARALLEL_THRESHOLD_1D) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static)
-          for (size_t block = _size; block < new_size; block += block_size) {
+          for (size_t block = old_size; block < new_size; block += block_size) {
             size_t end = std::min(block + block_size, new_size);
             for (size_t i = block; i < end; ++i) {
               this_data[i] = value;
@@ -219,20 +264,126 @@ public:
           }
         }
       } else {
-        for (size_t i = _size; i < new_size; ++i) {
+        for (size_t i = old_size; i < new_size; ++i) {
           this_data[i] = value;
         }
       }
     }
-    _size = new_size;
   }
+
+  template <typename Func> Matrix &assign(const Matrix &mat1, Func &&func) {
+    if (_rows != mat1._rows && _cols != mat1._cols) {
+      throw std::runtime_error(
+          "Matrixes must be of the same size for assignment.");
+    }
+
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ mat1_data = mat1._data.get();
+    const size_t block_size = kBlockSize;
+
+    if (_size > PARALLEL_THRESHOLD_2D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = func(mat1_data[i]);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = func(mat1_data[i]);
+      }
+    }
+    return *this;
+  }
+
+  template <typename Func>
+  Matrix &assign(const Matrix &mat1, const Matrix &mat2, Func &&func) {
+    if (_rows != mat1._rows || _cols != mat1._cols || _rows != mat2._rows ||
+        _cols != mat2._cols) {
+      throw std::runtime_error(
+          "Matrixes must be of the same size for assignment.");
+    }
+    T *__restrict__ this_data = _data.get();
+    const T *__restrict__ mat1_data = mat1._data.get();
+    const T *__restrict__ mat2_data = mat2._data.get();
+    const size_t block_size = kBlockSize;
+    if (_size > PARALLEL_THRESHOLD_2D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] = func(mat1_data[i], mat2_data[i]);
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] = func(mat1_data[i], mat2_data[i]);
+      }
+    }
+    return *this;
+  }
+
+  Matrix &operator+=(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = kBlockSize;
+    if (_size > PARALLEL_THRESHOLD_2D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] += value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] += value;
+      }
+    }
+    return *this;
+  }
+
+  Matrix &operator-=(const T &value) { return *this += -value; }
+
+  Matrix &operator*=(const T &value) {
+    T *__restrict__ this_data = _data.get();
+    const size_t block_size = kBlockSize;
+    if (_size > PARALLEL_THRESHOLD_2D) {
+#pragma omp parallel
+      {
+#pragma omp for schedule(static)
+        for (size_t block = 0; block < _size; block += block_size) {
+          size_t end = std::min(block + block_size, _size);
+          for (size_t i = block; i < end; ++i) {
+            this_data[i] *= value;
+          }
+        }
+      }
+    } else {
+      for (size_t i = 0; i < _size; ++i) {
+        this_data[i] *= value;
+      }
+    }
+    return *this;
+  }
+
+  Matrix &operator/=(const T &value) { return *this *= (1 / value); }
 
   void fill(const T &value) {
 #ifndef ENABLE_SIMD
     T *__restrict__ this_data = _data.get();
     const size_t block_size = kBlockSize;
 
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -254,343 +405,104 @@ public:
 #endif
   }
 
-  template <typename Func> Vector &assign(const Vector &vec1, Func &&func) {
-#ifndef ENABLE_SIMD
-    if (_size != vec1._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
-    }
-
+  Matrix &operator+=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
-    const T *__restrict__ vec1_data = vec1._data.get();
     const size_t block_size = kBlockSize;
 
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
         for (size_t block = 0; block < _size; block += block_size) {
           size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
-            this_data[i] = func(vec1_data[i]);
+            this_data[i] += other._data[i];
           }
         }
       }
     } else {
       for (size_t i = 0; i < _size; ++i) {
-        this_data[i] = func(vec1_data[i]);
+        this_data[i] += other._data[i];
       }
     }
-#else
-    assign_unary_simd(vec1, func);
-#endif
 
     return *this;
   }
 
-  template <typename Func>
-  Vector &assign(const Vector &vec1, const Vector &vec2, Func &&func) {
-#ifndef ENABLE_SIMD
-    if (_size != vec1._size || _size != vec2._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
-    }
-
+  Matrix &operator-=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
-    const T *__restrict__ vec1_data = vec1.data();
-    const T *__restrict__ vec2_data = vec2.data();
     const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
         for (size_t block = 0; block < _size; block += block_size) {
           size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
-            this_data[i] = func(vec1_data[i], vec2_data[i]);
+            this_data[i] -= other._data[i];
           }
         }
       }
     } else {
       for (size_t i = 0; i < _size; ++i) {
-        this_data[i] = func(vec1_data[i], vec2_data[i]);
+        this_data[i] -= other._data[i];
       }
     }
-#else
-    assign_binary_simd(vec1, vec2, func);
-#endif
-
     return *this;
   }
 
-  Vector &operator+=(const T &value) {
-#ifndef ENABLE_SIMD
+  Matrix &operator*=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
     const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
         for (size_t block = 0; block < _size; block += block_size) {
           size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
-            this_data[i] += value;
+            this_data[i] *= other._data[i];
           }
         }
       }
     } else {
       for (size_t i = 0; i < _size; ++i) {
-        this_data[i] += value;
+        this_data[i] *= other._data[i];
       }
     }
-#else
-    add_simd(value);
-#endif
 
     return *this;
   }
 
-  Vector &operator-=(const T &value) { return *this += -value; }
-
-  Vector &operator*=(const T &value) {
-#ifndef ENABLE_SIMD
+  Matrix &operator/=(const Matrix &other) {
     T *__restrict__ this_data = _data.get();
     const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
         for (size_t block = 0; block < _size; block += block_size) {
           size_t end = std::min(block + block_size, _size);
           for (size_t i = block; i < end; ++i) {
-            this_data[i] *= value;
+            this_data[i] /= other._data[i];
           }
         }
       }
+
     } else {
       for (size_t i = 0; i < _size; ++i) {
-        this_data[i] *= value;
+        this_data[i] /= other._data[i];
       }
     }
-#else
-    mul_simd(value);
-#endif
 
     return *this;
-  }
-
-  Vector &operator/=(const T &value) { return *this *= (1 / value); }
-
-  Vector &operator+=(const Vector &other) {
-#ifndef ENABLE_SIMD
-    if (_size != other._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for addition.");
-    }
-
-    T *__restrict__ this_data = _data.get();
-    const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            this_data[i] += other_data[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        this_data[i] += other_data[i];
-      }
-    }
-#else
-    add_vec_simd(other);
-#endif
-
-    return *this;
-  }
-
-  Vector &operator-=(const Vector &other) {
-#ifndef ENABLE_SIMD
-    if (_size != other._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for subtraction.");
-    }
-
-    T *__restrict__ this_data = _data.get();
-    const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            this_data[i] -= other_data[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        this_data[i] -= other_data[i];
-      }
-    }
-#else
-    sub_vec_simd(other);
-#endif
-    return *this;
-  }
-
-  Vector &operator*=(const Vector &other) {
-#ifndef ENABLE_SIMD
-    if (_size != other._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for multiplication.");
-    }
-
-    T *__restrict__ this_data = _data.get();
-    const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            this_data[i] *= other_data[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        this_data[i] *= other_data[i];
-      }
-    }
-#else
-    mul_vec_simd(other);
-#endif
-
-    return *this;
-  }
-
-  Vector &operator/=(const Vector &other) {
-#ifndef ENABLE_SIMD
-    if (_size != other._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for division.");
-    }
-
-    T *__restrict__ this_data = _data.get();
-    const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          for (size_t i = block; i < end; ++i) {
-            if (other_data[i] == 0) {
-              throw std::runtime_error("Division by zero in vector division.");
-            }
-            this_data[i] /= other_data[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        if (other_data[i] == 0) {
-          throw std::runtime_error("Division by zero in vector division.");
-        }
-        this_data[i] /= other_data[i];
-      }
-    }
-#else
-    div_vec_simd(other);
-#endif
-
-    return *this;
-  }
-
-  T dot(const Vector &other) const {
-    if (_size != other._size) {
-      throw std::runtime_error("Vectors must be of the same size for dot "
-                               "product.");
-    }
-
-    T result = T{};
-    const T *__restrict__ this_data = _data.get();
-    const T *__restrict__ other_data = other._data.get();
-    const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel reduction(+ : result)
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          T local_result = T{};
-          for (size_t i = block; i < end; ++i) {
-            local_result += this_data[i] * other_data[i];
-          }
-          result += local_result;
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        result += this_data[i] * other_data[i];
-      }
-    }
-
-    return result;
-  }
-
-  T sum() const {
-    if (_size == 0) {
-      throw std::runtime_error("Cannot compute sum of an empty vector.");
-    }
-
-    T result = T{};
-    const T *__restrict__ this_data = _data.get();
-    const size_t block_size = kBlockSize;
-
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel reduction(+ : result)
-      {
-#pragma omp for schedule(static)
-        for (size_t block = 0; block < _size; block += block_size) {
-          size_t end = std::min(block + block_size, _size);
-          T local_result = T{};
-          for (size_t i = block; i < end; ++i) {
-            local_result += this_data[i];
-          }
-          result += local_result;
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; ++i) {
-        result += this_data[i];
-      }
-    }
-    return result;
   }
 
 private:
   std::unique_ptr<T[], std::default_delete<T[]>> _data;
   size_t _size;
+  size_t _rows;
+  size_t _cols;
   size_t _capacity;
 
   void reallocate(size_t new_capacity) {
@@ -600,7 +512,7 @@ private:
     const T *__restrict__ old_ptr = _data.get();
     const size_t block_size = kBlockSize;
 
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -628,7 +540,7 @@ private:
     const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -656,7 +568,7 @@ private:
     }
 
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -674,7 +586,7 @@ private:
         }
       }
     } else {
-      for (size_t i = 0; i < _size; i += kSimdWidth) {
+      for (size_t i = 0; i < simd_size; i += kSimdWidth) {
         simd_t v = traits::duplicate(value);
         traits::store(this_data + i, v);
       }
@@ -698,7 +610,7 @@ private:
     const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -730,7 +642,7 @@ private:
     }
 
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -777,7 +689,7 @@ private:
     const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -809,7 +721,7 @@ private:
     }
 
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -849,18 +761,19 @@ private:
 #endif
   }
 
-  void add_vec_simd(const Vector &other) {
-    if (_size != other._size) {
+  void add_vec_simd(const Matrix &other) {
+    if (_rows != other._rows && _cols != other._cols) {
       throw std::runtime_error(
-          "Vectors must be of the same size for addition.");
+          "Matrixs must be of the same size for addition.");
     }
+
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = kBlockSize;
     const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -894,7 +807,7 @@ private:
       }
     }
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -938,18 +851,19 @@ private:
 #endif
   }
 
-  void sub_vec_simd(const Vector &other) {
-    if (_size != other._size) {
+  void sub_vec_simd(const Matrix &other) {
+    if (_rows != other._rows && _cols != other._cols) {
       throw std::runtime_error(
-          "Vectors must be of the same size for subtraction.");
+          "Matrixs must be of the same size for addition.");
     }
+
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = kBlockSize;
     const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -983,7 +897,7 @@ private:
     }
 
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -1027,10 +941,10 @@ private:
 #endif
   }
 
-  void mul_vec_simd(const Vector &other) {
-    if (_size != other._size) {
+  void mul_vec_simd(const Matrix &other) {
+    if (_rows != other._rows && _cols != other._cols) {
       throw std::runtime_error(
-          "Vectors must be of the same size for multiplication.");
+          "Matrixs must be of the same size for division.");
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
@@ -1038,7 +952,7 @@ private:
     const size_t simd_size = _size - _size % kSimdWidth;
 
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -1071,7 +985,7 @@ private:
       }
     }
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -1115,17 +1029,17 @@ private:
 #endif
   }
 
-  void div_vec_simd(const Vector &other) {
-    if (_size != other._size) {
+  void div_vec_simd(const Matrix &other) {
+    if (_rows != other._rows && _cols != other._cols) {
       throw std::runtime_error(
-          "Vectors must be of the same size for division.");
+          "Matrixs must be of the same size for division.");
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ other_data = other._data.get();
     const size_t block_size = kBlockSize;
     const size_t simd_size = _size - _size % kSimdWidth;
 #if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -1158,7 +1072,7 @@ private:
       }
     }
 #elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
+    if (_size > PARALLEL_THRESHOLD_2D) {
 #pragma omp parallel
       {
 #pragma omp for schedule(static)
@@ -1202,189 +1116,56 @@ private:
 #endif
   }
 
-  template <typename Func>
-  void assign_unary_simd(const Vector &vec1, Func &&func) {
-    if (_size != vec1._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
-    }
-    T *__restrict__ this_data = _data.get();
-    const T *__restrict__ vec1_data = vec1._data.get();
-    const size_t block_size = kBlockSize;
-    const size_t simd_size = _size - _size % kSimdWidth;
-
-#if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
-          size_t i_end = std::min(block_idx + block_size, simd_size);
-          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
-            simd_t vi = *((simd_t *)(vec1_data + i));
-            *((simd_t *)(this_data + i)) = func(vi);
-          }
-          if (_size % kSimdWidth != 0) {
-            simd_t vi = *((simd_t *)(vec1_data + simd_size));
-            simd_t result = func(vi);
-            for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-              *((this_data + simd_size + i)) = result[i];
-            }
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; i += kSimdWidth) {
-        simd_t vi = *((simd_t *)(vec1_data + i));
-        *((simd_t *)(this_data + i)) = func(vi);
-      }
-      if (_size % kSimdWidth != 0) {
-        simd_t vi = *((simd_t *)(vec1_data + simd_size));
-        simd_t result = func(vi);
-        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-          *((this_data + simd_size + i)) = result[i];
-        }
-      }
-    }
-
-#elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
-          size_t i_end = std::min(block_idx + block_size, simd_size);
-          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
-            simd_t vi = traits::load(vec1_data + i);
-            traits::store(this_data + i, func(vi));
-          }
-        }
-        if (_size % kSimdWidth != 0) {
-          simd_t vi = traits::load(vec1_data + simd_size);
-          simd_t result = func(vi);
-          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-            *(this_data + simd_size + i) = result[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; i += kSimdWidth) {
-        simd_t vi = traits::load(vec1_data + i);
-        traits::store(this_data + i, func(vi));
-      }
-      if (_size % kSimdWidth != 0) {
-        simd_t vi = traits::load(vec1_data + simd_size);
-        simd_t result = func(vi);
-        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-          *(this_data + simd_size + i) = result[i];
-        }
-      }
-    }
-
-#else
-    std::cerr << "Not Implement SIMD for `assign` function for "
-                 "this platform."
-              << std::endl;
-#endif
-  }
-
-  template <typename Func>
-  void assign_binary_simd(const Vector &vec1, const Vector &vec2, Func &&func) {
-    if (_size != vec1._size || _size != vec2._size) {
-      throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
-    }
-    T *__restrict__ this_data = _data.get();
-    const T *__restrict__ vec1_data = vec1.data();
-    const T *__restrict__ vec2_data = vec2.data();
-    const size_t block_size = kBlockSize;
-    const size_t simd_size = _size - _size % kSimdWidth;
-
-#if defined(__APPLE__)
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
-          size_t i_end = std::min(block_idx + block_size, simd_size);
-          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
-            simd_t v1 = *((simd_t *)(vec1_data + i));
-            simd_t v2 = *((simd_t *)(vec2_data + i));
-            *((simd_t *)(this_data + i)) = func(v1, v2);
-          }
-        }
-        if (_size % kSimdWidth != 0) {
-          simd_t v1 = *((simd_t *)(vec1_data + simd_size));
-          simd_t v2 = *((simd_t *)(vec2_data + simd_size));
-          simd_t result = func(v1, v2);
-          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-            *((this_data + simd_size + i)) = result[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; i += kSimdWidth) {
-        simd_t v1 = *((simd_t *)(vec1_data + i));
-        simd_t v2 = *((simd_t *)(vec2_data + i));
-        *((simd_t *)(this_data + i)) = func(v1, v2);
-      }
-      if (_size % kSimdWidth != 0) {
-        simd_t v1 = *((simd_t *)(vec1_data + simd_size));
-        simd_t v2 = *((simd_t *)(vec2_data + simd_size));
-        simd_t result = func(v1, v2);
-        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-          *((this_data + simd_size + i)) = result[i];
-        }
-      }
-    }
-#elif defined(__ARM_NEON)
-    if (_size > PARALLEL_THRESHOLD_1D) {
-#pragma omp parallel
-      {
-#pragma omp for schedule(static)
-        for (size_t block_idx = 0; block_idx < _size; block_idx += block_size) {
-          size_t i_end = std::min(block_idx + block_size, simd_size);
-          for (size_t i = block_idx; i < i_end; i += kSimdWidth) {
-            simd_t v1 = traits::load(vec1_data + i);
-            simd_t v2 = traits::load(vec2_data + i);
-            traits::store(this_data + i, func(v1, v2));
-          }
-        }
-
-        if (_size % kSimdWidth != 0) {
-          simd_t v1 = traits::load(vec1_data + simd_size);
-          simd_t v2 = traits::load(vec2_data + simd_size);
-          simd_t result = func(v1, v2);
-          for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-            *(this_data + simd_size + i) = result[i];
-          }
-        }
-      }
-    } else {
-      for (size_t i = 0; i < _size; i += kSimdWidth) {
-        simd_t v1 = traits::load(vec1_data + i);
-        simd_t v2 = traits::load(vec2_data + i);
-        traits::store(this_data + i, func(v1, v2));
-      }
-      if (_size % kSimdWidth != 0) {
-        simd_t v1 = traits::load(vec1_data + simd_size);
-        simd_t v2 = traits::load(vec2_data + simd_size);
-        simd_t result = func(v1, v2);
-        for (size_t i = 0; i < _size % kSimdWidth; ++i) {
-          *(this_data + simd_size + i) = result[i];
-        }
-      }
-    }
-
-#else
-    std::cerr << "Not Implement SIMD for `assign` function for "
-                 "this platform."
-              << std::endl;
-#endif
-  }
-
 #endif
 };
 
+template <typename T>
+Matrix<T> naive_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  naive_mmul_impl(result.data(), mat1.data(), mat2.data(), mat1.rows(),
+                  mat1.cols(), mat2.cols());
+  return result;
+}
+
+template <typename T, const size_t kGemmTileSize = GEMM_TILE_SIZE>
+Matrix<T> tiled_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  tiled_mmul_impl(result.data(), mat1.data(), mat2.data(), mat1.rows(),
+                  mat1.cols(), mat2.cols(), kGemmTileSize);
+  return result;
+}
+
+#ifdef ENABLE_SIMD
+template <typename T, const size_t kSimdWidth = SIMD_WIDTH>
+Matrix<T> naive_mmul_simd_1xk(const Matrix<T> &mat1, const Matrix<T> &mat2) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  naive_mmul_simd_1xk_impl<T, kSimdWidth>(result.data(), mat1.data(),
+                                          mat2.data(), mat1.rows(), mat1.cols(),
+                                          mat2.cols());
+  return result;
+}
+
 #endif
+
 } // namespace hpc::openmp

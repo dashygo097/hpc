@@ -1,10 +1,6 @@
 #pragma once
 
-#ifdef ENABLE_MPI
-#endif
-
 namespace hpc::mpi {
-#ifdef ENABLE_MPI
 class MPICommunicator {
 public:
   MPICommunicator(MPI_Comm communicator = MPI_COMM_WORLD,
@@ -68,5 +64,4 @@ private:
   std::string _name;
   bool _comm_owned;
 };
-#endif
 } // namespace hpc::mpi
