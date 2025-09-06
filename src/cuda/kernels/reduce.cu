@@ -3,141 +3,74 @@
 #include "hpc/cuda/kernels/reduce.cuh"
 
 namespace hpc::cuda {
-template <const size_t kWarpSize>
-__device__ __forceinline__ float warpReduceSum_fp32(float val) {
-#pragma unroll
-  for (size_t mask = kWarpSize >> 1; mask > 0; mask >>= 1) {
-    val += __shfl_down_sync(0xffffffff, val, mask);
-  }
-  return val;
-}
 
 template <const size_t kWarpSize>
-__device__ __forceinline__ half warpReduceSum_fp16(half val) {
-#pragma unroll
-  for (size_t mask = kWarpSize >> 1; mask > 0; mask >>= 1) {
-    val = __hadd(__shfl_down_sync(0xffffffff, val, mask), val);
-  }
-  return val;
-}
-
-template <const size_t kThreadNum = CNUM_THREADS,
-          const size_t kWarpSize = CWARP_SIZE>
-__global__ void block_reduce_sum_fp32_kernel(float *output, const float *input,
-                                             size_t N) {
+__global__ void reduce_sum_fp32_kernel(float *output, const float *input,
+                                       size_t N) {
+  __shared__ float sdata[blockDim.x / kWarpSize];
   size_t tid = threadIdx.x;
-  size_t idx = blockIdx.x * kThreadNum + tid;
-  constexpr size_t NUM_WARPS = (kThreadNum + kWarpSize - 1) / kWarpSize;
-  __shared__ float warp_sdata[NUM_WARPS];
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t lane = tid % kWarpSize;
+  size_t wid = tid / kWarpSize;
+  size_t mask = 0xffffffff;
 
-  float sum = (idx < N) ? input[idx] : 0.0f;
-  size_t wid = tid / CWARP_SIZE;
-  size_t lid = tid % CWARP_SIZE;
+  float sum = 0.0f;
+  while (idx < N) {
+    sum += input[idx];
+    idx += blockDim.x * gridDim.x;
+  }
 
-  sum = warpReduceSum_fp32<kWarpSize>(sum);
-
-  if (lid == 0) {
-    warp_sdata[wid] = sum;
+  for (size_t offset = kWarpSize / 2; offset > 0; offset >>= 1) {
+    sum += __shfl_down_sync(mask, sum, offset);
+  }
+  if (lane == 0) {
+    sdata[wid] = sum;
   }
   __syncthreads();
 
-  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : 0.0f;
   if (wid == 0) {
-    sum = warpReduceSum_fp32<kWarpSize>(sum);
-  }
-  if (tid == 0) {
-    atomicAdd(output, sum);
+    sum = (tid < blockDim.x / kWarpSize) ? sdata[lane] : 0.0f;
+    for (size_t offset = kWarpSize / 2; offset > 0; offset >>= 1) {
+      sum += __shfl_down_sync(mask, sum, offset);
+    }
+    if (tid == 0) {
+      atomicAdd(output, sum);
+    }
   }
 }
 
-template <const size_t kThreadNum = CNUM_THREADS / 4,
-          const size_t kWarpSize = CWARP_SIZE>
-__global__ void block_reduce_sum_fp32x4_kernel(float *output, float *input,
-                                               size_t N) {
+template <const size_t kWarpSize>
+__global__ void reduce_sum_fp16_kernel(half *output, const half *input,
+                                       size_t N) {
+  __shared__ half sdata[blockDim.x / kWarpSize];
   size_t tid = threadIdx.x;
-  size_t idx = blockIdx.x * kThreadNum + tid;
-  constexpr size_t NUM_WARPS = (kThreadNum + kWarpSize - 1) / kWarpSize;
-  __shared__ float warp_sdata[NUM_WARPS];
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t lane = tid % kWarpSize;
+  size_t wid = tid / kWarpSize;
+  size_t mask = 0xffffffff;
+  half sum = __float2half(0.0f);
 
-  float4 in_reg = FLOAT4(input[idx]);
+  while (idx < N) {
+    sum += input[idx];
+    idx += blockDim.x * gridDim.x;
+  };
 
-  float sum = (idx < N) ? (in_reg.x + in_reg.y + in_reg.z + in_reg.w) : 0.0f;
-  size_t wid = tid / CWARP_SIZE;
-  size_t lid = tid % CWARP_SIZE;
-
-  sum = warpReduceSum_fp32<kWarpSize>(sum);
-
-  if (tid == 0) {
-    warp_sdata[wid] = sum;
+  for (size_t offset = kWarpSize / 2; offset > 0; offset >>= 1) {
+    sum += __shfl_down_sync(mask, sum, offset);
+  }
+  if (lane == 0) {
+    sdata[wid] = sum;
   }
   __syncthreads();
 
-  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : 0.0f;
   if (wid == 0) {
-    sum = warpReduceSum_fp32<kWarpSize>(sum);
-  }
-  if (lid == 0) {
-    atomicAdd(output, sum);
-  }
-}
-
-template <const size_t kThreadNum = CNUM_THREADS,
-          const size_t kWarpSize = CWARP_SIZE>
-__global__ void block_reduce_sum_fp16_kernel(half *output, const half *input,
-                                             size_t N) {
-  size_t tid = threadIdx.x;
-  size_t idx = blockIdx.x * kThreadNum + tid;
-  constexpr size_t NUM_WARPS = (kThreadNum + kWarpSize - 1) / kWarpSize;
-  __shared__ half warp_sdata[NUM_WARPS];
-
-  half sum = (idx < N) ? input[idx] : __float2half(0.0f);
-  size_t wid = tid / CWARP_SIZE;
-  size_t lid = tid % CWARP_SIZE;
-
-  sum = warpReduceSum_fp16<kWarpSize>(sum);
-
-  if (lid == 0) {
-    warp_sdata[wid] = sum;
-  }
-  __syncthreads();
-
-  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : __float2half(0.0f);
-  if (wid == 0) {
-    sum = warpReduceSum_fp16<kWarpSize>(sum);
-  }
-  if (tid == 0) {
-    atomicAdd(output, sum);
-  }
-}
-
-template <const size_t kThreadNum = CNUM_THREADS / 2,
-          const size_t kWarpSize = CWARP_SIZE>
-__global__ void block_reduce_sum_fp16x2_kernel(half *output, half *input,
-                                               size_t N) {
-  size_t tid = threadIdx.x;
-  size_t idx = blockIdx.x * kThreadNum + tid;
-  constexpr size_t NUM_WARPS = (kThreadNum + kWarpSize - 1) / kWarpSize;
-  __shared__ half warp_sdata[NUM_WARPS];
-
-  half2 in_reg = HALF2(input[idx]);
-
-  half sum = (idx < N) ? (in_reg.x + in_reg.y) : __float2half(0.0f);
-  size_t wid = tid / CWARP_SIZE;
-  size_t lid = tid % CWARP_SIZE;
-
-  sum = warpReduceSum_fp16<kWarpSize>(sum);
-
-  if (tid == 0) {
-    warp_sdata[wid] = sum;
-  }
-  __syncthreads();
-
-  sum = (lid < NUM_WARPS) ? warp_sdata[lid] : __float2half(0.0f);
-  if (wid == 0) {
-    sum = warpReduceSum_fp16<kWarpSize>(sum);
-  }
-  if (lid == 0) {
-    atomicAdd(output, sum);
+    sum = (tid < blockDim.x / kWarpSize) ? sdata[lane] : __float2half(0.0f);
+    for (size_t offset = kWarpSize / 2; offset > 0; offset >>= 1) {
+      sum += __shfl_down_sync(mask, sum, offset);
+    }
+    if (tid == 0) {
+      atomicAdd(output, sum);
+    }
   }
 }
 

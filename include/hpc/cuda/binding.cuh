@@ -1,4 +1,6 @@
 #pragma once
+
+#include "../constants.hh"
 #include <torch/extension.h>
 #include <torch/types.h>
 
@@ -12,43 +14,47 @@
     throw std::runtime_error("values must be " #th_type);                      \
   }
 
-#define TORCH_BINDING_ACT(act_type, packed_type, th_type, element_type,        \
-                          n_elements)                                          \
-  torch::Tensor act_type##_##packed_type(torch::Tensor input) {                \
-    CHECK_TORCH_TENSOR_DTYPE(input, (th_type))                                 \
-    auto output = torch::empty_like(input);                                    \
-    const int ndim = input.dim();                                              \
-    if (ndim != 2) {                                                           \
-      int N = 1;                                                               \
-      for (int i = 0; i < ndim; ++i) {                                         \
-        N *= input.size(i);                                                    \
-      }                                                                        \
-      dim3 block(256 / (n_elements));                                          \
-      dim3 grid((N + 256 - 1) / 256);                                          \
-      hpc::cuda::act_type##_##packed_type##_kernel<<<grid, block>>>(           \
-          reinterpret_cast<element_type *>(output.data_ptr()),                 \
-          reinterpret_cast<element_type *>(input.data_ptr()), N);              \
-    } else {                                                                   \
-      const int S = input.size(0);                                             \
-      const int K = input.size(1);                                             \
-      const int N = S * K;                                                     \
-      if ((K / (n_elements)) <= 1024) {                                        \
-        dim3 block(K / (n_elements));                                          \
-        dim3 grid(S);                                                          \
-        hpc::cuda::act_type##_##packed_type##_kernel<<<grid, block>>>(         \
-            reinterpret_cast<element_type *>(output.data_ptr()),               \
-            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
-      } else {                                                                 \
-        int N = 1;                                                             \
-        for (int i = 0; i < ndim; ++i) {                                       \
-          N *= input.size(i);                                                  \
-        }                                                                      \
-        dim3 block(256 / (n_elements));                                        \
-        dim3 grid((N + 256 - 1) / 256);                                        \
-        hpc::cuda::act_type##_##packed_type##_kernel<<<grid, block>>>(         \
-            reinterpret_cast<element_type *>(output.data_ptr()),               \
-            reinterpret_cast<element_type *>(input.data_ptr()), N);            \
-      }                                                                        \
-    }                                                                          \
-    return output;                                                             \
+template <typename ElementType, const size_t NumElements,
+          const size_t kBlockSize = hpc::CBLOCK_SIZE>
+torch::Tensor act_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
+                          void (*kernel_func)(ElementType *,
+                                              const ElementType *, size_t)) {
+  CHECK_TORCH_TENSOR_DTYPE(input, expected_dtype);
+  auto output = torch::empty_like(input);
+  const int ndim = input.dim();
+
+  if (ndim != 2) {
+    int N = 1;
+    for (int i = 0; i < ndim; ++i) {
+      N *= input.size(i);
+    }
+    dim3 block(kBlockSize / NumElements);
+    dim3 grid((N + kBlockSize - 1) / kBlockSize);
+    kernel_func<<<grid, block>>>(
+        reinterpret_cast<ElementType *>(output.data_ptr()),
+        reinterpret_cast<ElementType *>(input.data_ptr()), N);
+  } else {
+    const int S = input.size(0);
+    const int K = input.size(1);
+    const int total_N = S * K;
+
+    if ((K / NumElements) <= 1024) {
+      dim3 block(K / NumElements);
+      dim3 grid(S);
+      kernel_func<<<grid, block>>>(
+          reinterpret_cast<ElementType *>(output.data_ptr()),
+          reinterpret_cast<ElementType *>(input.data_ptr()), total_N);
+    } else {
+      int N = 1;
+      for (int i = 0; i < ndim; ++i) {
+        N *= input.size(i);
+      }
+      dim3 block(kBlockSize / NumElements);
+      dim3 grid((N + kBlockSize - 1) / kBlockSize);
+      kernel_func<<<grid, block>>>(
+          reinterpret_cast<ElementType *>(output.data_ptr()),
+          reinterpret_cast<ElementType *>(input.data_ptr()), N);
+    }
   }
+  return output;
+}

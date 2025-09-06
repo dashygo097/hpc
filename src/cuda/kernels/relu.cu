@@ -86,14 +86,24 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
   }
 }
 
-} // namespace hpc::cuda
-
-TORCH_BINDING_ACT(relu, fp32, torch::kFloat32, float, 1)
-TORCH_BINDING_ACT(relu, fp32x2, torch::kFloat32, float, 2)
-TORCH_BINDING_ACT(relu, fp32x4, torch::kFloat32, float, 4)
-TORCH_BINDING_ACT(relu, fp16, torch::kHalf, half, 1)
-TORCH_BINDING_ACT(relu, fp16x2, torch::kHalf, half, 2)
-TORCH_BINDING_ACT(relu, fp16x8, torch::kHalf, half, 8)
+torch::Tensor relu_fp32(torch::Tensor input) {
+  return act_wrapper<float, 1>(input, torch::kFloat32, relu_fp32_kernel);
+}
+torch::Tensor relu_fp32x2(torch::Tensor input) {
+  return act_wrapper<float, 2>(input, torch::kFloat32, relu_fp32x2_kernel);
+}
+torch::Tensor relu_fp32x4(torch::Tensor input) {
+  return act_wrapper<float, 4>(input, torch::kFloat32, relu_fp32x4_kernel);
+}
+torch::Tensor relu_fp16(torch::Tensor input) {
+  return act_wrapper<half, 1>(input, torch::kHalf, relu_fp16_kernel);
+}
+torch::Tensor relu_fp16x2(torch::Tensor input) {
+  return act_wrapper<half, 2>(input, torch::kHalf, relu_fp16x2_kernel);
+}
+torch::Tensor relu_fp16x8(torch::Tensor input) {
+  return act_wrapper<half, 8>(input, torch::kHalf, relu_fp16x8_kernel);
+}
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   TORCH_BINDING_COMMON_EXTENSION(relu_fp32)
@@ -103,3 +113,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   TORCH_BINDING_COMMON_EXTENSION(relu_fp16x2)
   TORCH_BINDING_COMMON_EXTENSION(relu_fp16x8)
 }
+
+} // namespace hpc::cuda

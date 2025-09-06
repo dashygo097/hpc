@@ -115,14 +115,25 @@ __global__ void sigmoid_fp16x8_kernel(half *output, const half *input,
     HALF2(output + idx + 6) = out_reg_3;
   }
 }
-} // namespace hpc::cuda
 
-TORCH_BINDING_ACT(sigmoid, fp32, torch::kFloat32, float, 1)
-TORCH_BINDING_ACT(sigmoid, fp32x2, torch::kFloat32, float, 2)
-TORCH_BINDING_ACT(sigmoid, fp32x4, torch::kFloat32, float, 4)
-TORCH_BINDING_ACT(sigmoid, fp16, torch::kHalf, half, 1)
-TORCH_BINDING_ACT(sigmoid, fp16x2, torch::kHalf, half, 2)
-TORCH_BINDING_ACT(sigmoid, fp16x8, torch::kHalf, half, 8)
+torch::Tensor sigmoid_fp32(torch::Tensor input) {
+  return act_wrapper<float, 1>(input, torch::kFloat32, sigmoid_fp32_kernel);
+}
+torch::Tensor sigmoid_fp32x2(torch::Tensor input) {
+  return act_wrapper<float, 2>(input, torch::kFloat32, sigmoid_fp32x2_kernel);
+}
+torch::Tensor sigmoid_fp32x4(torch::Tensor input) {
+  return act_wrapper<float, 4>(input, torch::kFloat32, sigmoid_fp32x4_kernel);
+}
+torch::Tensor sigmoid_fp16(torch::Tensor input) {
+  return act_wrapper<half, 1>(input, torch::kHalf, sigmoid_fp16_kernel);
+}
+torch::Tensor sigmoid_fp16x2(torch::Tensor input) {
+  return act_wrapper<half, 2>(input, torch::kHalf, sigmoid_fp16x2_kernel);
+}
+torch::Tensor sigmoid_fp16x8(torch::Tensor input) {
+  return act_wrapper<half, 8>(input, torch::kHalf, sigmoid_fp16x8_kernel);
+}
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp32)
@@ -132,3 +143,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp16x2)
   TORCH_BINDING_COMMON_EXTENSION(sigmoid_fp16x8)
 }
+
+} // namespace hpc::cuda
