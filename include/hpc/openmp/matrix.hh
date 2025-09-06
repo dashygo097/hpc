@@ -1129,8 +1129,8 @@ Matrix<T> naive_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
                              std::to_string(mat2.cols()) + ")");
   }
   Matrix<T> result(mat1.rows(), mat2.cols());
-  naive_mmul_impl(result.data(), mat1.data(), mat2.data(), mat1.rows(),
-                  mat1.cols(), mat2.cols());
+  naive_mmul_impl<T>(result.data(), mat1.data(), mat2.data(), mat1.rows(),
+                     mat1.cols(), mat2.cols());
   return result;
 }
 
@@ -1144,8 +1144,8 @@ Matrix<T> tiled_mmul(const Matrix<T> &mat1, const Matrix<T> &mat2) {
                              std::to_string(mat2.cols()) + ")");
   }
   Matrix<T> result(mat1.rows(), mat2.cols());
-  tiled_mmul_impl(result.data(), mat1.data(), mat2.data(), mat1.rows(),
-                  mat1.cols(), mat2.cols(), kGemmTileSize);
+  tiled_mmul_impl<T, kGemmTileSize>(result.data(), mat1.data(), mat2.data(),
+                                    mat1.rows(), mat1.cols(), mat2.cols());
   return result;
 }
 

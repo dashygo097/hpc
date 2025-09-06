@@ -76,8 +76,8 @@ protected:
   }
 
   void computeSerialNaive() {
-    serial::naive_mmul<float>(c_serial, a_serial, b_serial, DSIZE, DSIZE,
-                              DSIZE);
+    serial::mmul_baseline<float>(c_serial, a_serial, b_serial, DSIZE, DSIZE,
+                                 DSIZE);
   }
 
 #if defined(__APPLE__)

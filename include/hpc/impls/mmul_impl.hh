@@ -8,8 +8,8 @@
 
 namespace hpc::serial {
 template <typename T>
-void naive_mmul(T *C, T *A, T *B, const size_t &M, const size_t &K,
-                const size_t &N) {
+void mmul_baseline(T *C, T *A, T *B, const size_t &M, const size_t &K,
+                   const size_t &N) {
   for (size_t i = 0; i < M; ++i) {
     for (size_t j = 0; j < N; ++j) {
       T sum = T{};
@@ -42,10 +42,9 @@ void naive_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
   }
 }
 
-template <typename T>
+template <typename T, const size_t kTileSize>
 void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
-                     const size_t &K, const size_t &N,
-                     const size_t &tile_size) {
+                     const size_t &K, const size_t &N) {
 
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M * N; ++i) {
@@ -53,12 +52,12 @@ void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
   }
 
 #pragma omp parallel for schedule(static)
-  for (size_t ii = 0; ii < M; ii += tile_size) {
-    for (size_t jj = 0; jj < N; jj += tile_size) {
-      for (size_t kk = 0; kk < K; kk += tile_size) {
-        size_t i_end = std::min(ii + tile_size, M);
-        size_t j_end = std::min(jj + tile_size, N);
-        size_t k_end = std::min(kk + tile_size, K);
+  for (size_t ii = 0; ii < M; ii += kTileSize) {
+    for (size_t jj = 0; jj < N; jj += kTileSize) {
+      for (size_t kk = 0; kk < K; kk += kTileSize) {
+        size_t i_end = std::min(ii + kTileSize, M);
+        size_t j_end = std::min(jj + kTileSize, N);
+        size_t k_end = std::min(kk + kTileSize, K);
         for (size_t i = ii; i < i_end; ++i) {
           for (size_t k = kk; k < k_end; ++k) {
             T a_ik = A[i * K + k];
@@ -74,7 +73,7 @@ void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
 
 #ifdef ENABLE_SIMD
 
-template <typename T, const size_t kSimdWidth = SIMD_WIDTH>
+template <typename T, const size_t kSimdWidth>
 void naive_mmul_simd_1xk_impl(T *C, const T *A, const T *B, size_t M, size_t K,
                               size_t N) {
 #if defined(__APPLE__)
