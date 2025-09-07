@@ -69,7 +69,8 @@ torch::Tensor reduce_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
   for (int i = 0; i < ndim - 1; ++i) {
     N *= input.size(i);
   }
-  auto output = torch::empty({N}, input.options());
+
+  auto output = torch::empty({1}, input.options());
 
   if (ndim != 2) {
     dim3 block(kBlockSize / NumElements);

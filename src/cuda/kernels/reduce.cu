@@ -86,10 +86,8 @@ torch::Tensor reduce_sum_fp16(torch::Tensor input) {
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  TORCH_BINDING_TEMPLATE_EXTENSION("reduce_sum_fp32",
-                                   reduce_sum_fp32<CBLOCK_SIZE>)
-  TORCH_BINDING_TEMPLATE_EXTENSION("reduce_sum_fp16",
-                                   reduce_sum_fp16<CBLOCK_SIZE>)
+  m.def("reduce_sum_fp32", &reduce_sum_fp32<CBLOCK_SIZE>, "reduce_sum_fp32");
+  m.def("reduce_sum_fp16", &reduce_sum_fp16<CBLOCK_SIZE>, "reduce_sum_fp16");
 }
 
 } // namespace hpc::cuda
