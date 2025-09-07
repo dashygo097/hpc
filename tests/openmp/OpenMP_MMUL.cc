@@ -92,6 +92,7 @@ protected:
 #endif
 
   void computeOpenMPNaive() { c = openmp::naive_mmul<float>(a, b); }
+  void computeOpenMPTiled() { c = openmp::tiled_mmul<float>(a, b); }
 
 #if defined(__APPLE) || defined(__ARM_NEON)
   void computeOpenMPNaiveSimd() {
@@ -121,6 +122,13 @@ TEST_F(OpenMPMatrixTest, ParallelNaiveCorrectness) {
   reset();
 }
 
+TEST_F(OpenMPMatrixTest, ParallelTiledCorrectness) {
+  computeBaseline();
+  computeOpenMPTiled();
+  checkCorrectness(c_serial, c.data());
+  reset();
+}
+
 #if defined(__APPLE__) || defined(__ARM_NEON)
 TEST_F(OpenMPMatrixTest, ParallelNaiveSimdCorrectness) {
   computeBaseline();
@@ -134,6 +142,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   // Warm-up
   computeBaseline();
   computeOpenMPNaive();
+  computeOpenMPTiled();
 #if defined(__APPLE__) || defined(__ARM_NEON)
   computeOpenMPNaiveSimd();
 #endif
@@ -145,6 +154,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
 
   ProgTimer timer_serial(Backend::SERIAL, "Baseline");
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP Naive");
+  ProgTimer timer_openmp_tiled(Backend::OPENMP, "OpenMP Tiled");
   ProgTimer timer_openmp_simd(Backend::OPENMP, "OpenMP Naive + SIMD");
 #if defined(__APPLE__)
   ProgTimer timer_accel(Backend::SERIAL, "Accelerate Lib");
@@ -160,6 +170,12 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   computeOpenMPNaive();
   timer_openmp.stop();
   timer_openmp.report();
+  checkCorrectness(c_serial, c.data());
+
+  timer_openmp_tiled.start();
+  computeOpenMPTiled();
+  timer_openmp_tiled.stop();
+  timer_openmp_tiled.report();
   checkCorrectness(c_serial, c.data());
 
 #if defined(__APPLE__) || defined(__ARM_NEON)
@@ -182,6 +198,11 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
             << timer_serial.elapsed_seconds() / timer_openmp.elapsed_seconds()
             << "x over baseline;" << std::endl;
   ;
+
+  std::cout << "[INFO] OpenMP Tiled achieves speedup of "
+            << timer_serial.elapsed_seconds() /
+                   timer_openmp_tiled.elapsed_seconds()
+            << "x over baseline;" << std::endl;
 
 #if defined(__APPLE__) || defined(__ARM_NEON)
   std::cout << "[INFO] OpenMP Naive + SIMD achieves speedup of "
