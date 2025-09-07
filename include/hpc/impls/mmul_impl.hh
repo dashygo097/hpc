@@ -53,11 +53,11 @@ void tiled_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
 
 #pragma omp parallel for schedule(static)
   for (size_t ii = 0; ii < M; ii += kTileSize) {
-    for (size_t jj = 0; jj < N; jj += kTileSize) {
-      for (size_t kk = 0; kk < K; kk += kTileSize) {
+    for (size_t kk = 0; kk < K; kk += kTileSize) {
+      for (size_t jj = 0; jj < N; jj += kTileSize) {
         size_t i_end = std::min(ii + kTileSize, M);
-        size_t j_end = std::min(jj + kTileSize, N);
         size_t k_end = std::min(kk + kTileSize, K);
+        size_t j_end = std::min(jj + kTileSize, N);
         for (size_t i = ii; i < i_end; ++i) {
           for (size_t k = kk; k < k_end; ++k) {
             T a_ik = A[i * K + k];
