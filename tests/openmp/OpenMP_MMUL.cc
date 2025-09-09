@@ -95,8 +95,8 @@ protected:
   void computeOpenMPTiled() { c = openmp::tiled_mmul<float>(a, b); }
 
 #if defined(__APPLE) || defined(__ARM_NEON)
-  void computeOpenMPNaiveSimd() {
-    c = openmp::naive_mmul_simd_1xk<float>(a, b);
+  void computeOpenMPTiledSimd() {
+    c = openmp::tiled_mmul_simd_1xk<float>(a, b);
   }
 #endif
 
@@ -132,7 +132,7 @@ TEST_F(OpenMPMatrixTest, ParallelTiledCorrectness) {
 #if defined(__APPLE__) || defined(__ARM_NEON)
 TEST_F(OpenMPMatrixTest, ParallelNaiveSimdCorrectness) {
   computeBaseline();
-  computeOpenMPNaiveSimd();
+  computeOpenMPTiledSimd();
   checkCorrectness(c_serial, c.data());
   reset();
 }
@@ -144,7 +144,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   computeOpenMPNaive();
   computeOpenMPTiled();
 #if defined(__APPLE__) || defined(__ARM_NEON)
-  computeOpenMPNaiveSimd();
+  computeOpenMPTiledSimd();
 #endif
 #if defined(__APPLE__)
   computeAccelerate();
@@ -180,7 +180,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
 
 #if defined(__APPLE__) || defined(__ARM_NEON)
   timer_openmp_simd.start();
-  computeOpenMPNaiveSimd();
+  computeOpenMPTiledSimd();
   timer_openmp_simd.stop();
   timer_openmp_simd.report();
   checkCorrectness(c_serial, c.data());
@@ -205,7 +205,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
             << "x over baseline;" << std::endl;
 
 #if defined(__APPLE__) || defined(__ARM_NEON)
-  std::cout << "[INFO] OpenMP Naive + SIMD achieves speedup of "
+  std::cout << "[INFO] OpenMP Tiled + SIMD achieves speedup of "
             << timer_serial.elapsed_seconds() /
                    timer_openmp_simd.elapsed_seconds()
             << "x over baseline;" << std::endl;

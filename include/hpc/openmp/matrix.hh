@@ -272,10 +272,10 @@ public:
     }
   }
 
-  template <typename Func> Matrix &assign(const Matrix &mat1, Func &&func) {
+  template <typename Func> Matrix &foreach (const Matrix &mat1, Func && func) {
     if (_rows != mat1._rows && _cols != mat1._cols) {
       throw std::runtime_error(
-          "Matrixes must be of the same size for assignment.");
+          "Matrixes must be of the same size for foreachment.");
     }
 
     T *__restrict__ this_data = _data.get();
@@ -302,11 +302,11 @@ public:
   }
 
   template <typename Func>
-  Matrix &assign(const Matrix &mat1, const Matrix &mat2, Func &&func) {
+  Matrix &foreach (const Matrix &mat1, const Matrix &mat2, Func && func) {
     if (_rows != mat1._rows || _cols != mat1._cols || _rows != mat2._rows ||
         _cols != mat2._cols) {
       throw std::runtime_error(
-          "Matrixes must be of the same size for assignment.");
+          "Matrixes must be of the same size for foreachment.");
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ mat1_data = mat1._data.get();
@@ -509,6 +509,22 @@ Matrix<T> naive_mmul_simd_1xk(const Matrix<T> &mat1, const Matrix<T> &mat2) {
   naive_mmul_simd_1xk_impl<T, kSimdWidth>(result.data(), mat1.data(),
                                           mat2.data(), mat1.rows(), mat1.cols(),
                                           mat2.cols());
+  return result;
+}
+template <typename T, const size_t kGemmTileSize = GEMM_TILE_SIZE,
+          const size_t kSimdWidth = SIMD_WIDTH>
+Matrix<T> tiled_mmul_simd_1xk(const Matrix<T> &mat1, const Matrix<T> &mat2) {
+  if (mat1.cols() != mat2.rows()) {
+    throw std::runtime_error("Matrix multiplication dimension mismatch: (" +
+                             std::to_string(mat1.rows()) + ", " +
+                             std::to_string(mat1.cols()) + ") x (" +
+                             std::to_string(mat2.rows()) + ", " +
+                             std::to_string(mat2.cols()) + ")");
+  }
+  Matrix<T> result(mat1.rows(), mat2.cols());
+  tiled_mmul_simd_1xk_impl<T, kGemmTileSize, kSimdWidth>(
+      result.data(), mat1.data(), mat2.data(), mat1.rows(), mat1.cols(),
+      mat2.cols());
   return result;
 }
 

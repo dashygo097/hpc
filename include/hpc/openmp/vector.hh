@@ -224,11 +224,11 @@ public:
     _size = new_size;
   }
 
-  template <typename Func> Vector &assign(const Vector &vec1, Func &&func) {
+  template <typename Func> Vector &foreach (const Vector &vec1, Func && func) {
 #ifndef ENABLE_SIMD
     if (_size != vec1._size) {
       throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
+          "Vectors must be of the same size for foreachment.");
     }
 
     T *__restrict__ this_data = _data.get();
@@ -252,18 +252,18 @@ public:
       }
     }
 #else
-    assign_unary_simd(vec1, func);
+    foreach_unary_simd(vec1, func);
 #endif
 
     return *this;
   }
 
   template <typename Func>
-  Vector &assign(const Vector &vec1, const Vector &vec2, Func &&func) {
+  Vector &foreach (const Vector &vec1, const Vector &vec2, Func && func) {
 #ifndef ENABLE_SIMD
     if (_size != vec1._size || _size != vec2._size) {
       throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
+          "Vectors must be of the same size for foreachment.");
     }
 
     T *__restrict__ this_data = _data.get();
@@ -288,7 +288,7 @@ public:
       }
     }
 #else
-    assign_binary_simd(vec1, vec2, func);
+    foreach_binary_simd(vec1, vec2, func);
 #endif
 
     return *this;
@@ -492,10 +492,10 @@ private:
 #ifdef ENABLE_SIMD
 
   template <typename Func>
-  void assign_unary_simd(const Vector &vec1, Func &&func) {
+  void foreach_unary_simd(const Vector &vec1, Func &&func) {
     if (_size != vec1._size) {
       throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
+          "Vectors must be of the same size for foreachment.");
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1._data.get();
@@ -571,17 +571,18 @@ private:
     }
 
 #else
-    std::cerr << "Not Implement SIMD for `assign` function for "
+    std::cerr << "Not Implement SIMD for `foreach` function for "
                  "this platform."
               << std::endl;
 #endif
   }
 
   template <typename Func>
-  void assign_binary_simd(const Vector &vec1, const Vector &vec2, Func &&func) {
+  void foreach_binary_simd(const Vector &vec1, const Vector &vec2,
+                           Func &&func) {
     if (_size != vec1._size || _size != vec2._size) {
       throw std::runtime_error(
-          "Vectors must be of the same size for assignment.");
+          "Vectors must be of the same size for foreachment.");
     }
     T *__restrict__ this_data = _data.get();
     const T *__restrict__ vec1_data = vec1.data();
@@ -666,7 +667,7 @@ private:
     }
 
 #else
-    std::cerr << "Not Implement SIMD for `assign` function for "
+    std::cerr << "Not Implement SIMD for `foreach` function for "
                  "this platform."
               << std::endl;
 #endif

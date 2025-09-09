@@ -5,7 +5,7 @@
 
 using namespace hpc;
 #if defined(__APPLE__) || defined(__ARM_NEON)
-using simd_t = typename simd_type<float, 4>::type;
+using simd_t = typename simd_type<float, SIMD_WIDTH>::type;
 #endif
 
 const size_t DSIZE = 10000000;
@@ -106,7 +106,7 @@ protected:
 
 #if defined(__APPLE__)
   void computeImplOpenMP() {
-    c.assign(a, b, [](const simd_t &x, const simd_t &y) {
+    c.foreach (a, b, [](const simd_t &x, const simd_t &y) {
       auto temp = x + y - simd_t(1.0f);
       return temp * temp;
     });
