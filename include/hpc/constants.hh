@@ -23,4 +23,5 @@ enum class Backend {
   OPENMPI,
   CUDA,
 };
+
 }; // namespace hpc

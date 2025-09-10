@@ -2,7 +2,15 @@
 
 #include "./constants.hh"
 
+#define __TICK(backend)                                                        \
+  static hpc::ProgTimer __timer_##backend(Backend::backend, #backend);         \
+  __timer_##backend.start();
+#define __TOCK(backend)                                                        \
+  __timer_##backend.stop();                                                    \
+  __timer_##backend.report();
+
 namespace hpc {
+
 class ProgTimer {
 public:
   explicit ProgTimer(Backend mode = Backend::SERIAL,
@@ -22,25 +30,29 @@ public:
 
   void start() {
     switch (backend) {
-    case Backend::SERIAL:
+    case Backend::SERIAL: {
       start_std = std::chrono::high_resolution_clock::now();
       break;
+    }
 #ifdef ENABLE_OPENMP
-    case Backend::OPENMP:
+    case Backend::OPENMP: {
       start_omp = omp_get_wtime();
       break;
+    }
 #endif
 #ifdef ENABLE_MPI
-    case Backend::OPENMPI:
+    case Backend::OPENMPI: {
       start_mpi = MPI_Wtime();
       break;
+    }
 #endif
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__
     case Backend::CUDA: {
       cudaEventCreate(&start_event);
       cudaEventCreate(&stop_event);
       cudaEventRecord(start_event);
       break;
+    }
 #else
     default:
       std::cerr << "Unsupported backend: " << static_cast<int>(backend)
@@ -48,74 +60,78 @@ public:
       throw std::runtime_error("Unsupported backend");
 #endif
     }
-    }
+  }
 
-    void stop() {
-      switch (backend) {
-      case Backend::SERIAL:
-        elapsed = std::chrono::duration<double>(
-                      std::chrono::high_resolution_clock::now() - start_std)
-                      .count();
-        break;
+  void stop() {
+    switch (backend) {
+    case Backend::SERIAL: {
+      elapsed = std::chrono::duration<double>(
+                    std::chrono::high_resolution_clock::now() - start_std)
+                    .count();
+      break;
+    }
 #ifdef ENABLE_OPENMP
-      case Backend::OPENMP:
-        elapsed = omp_get_wtime() - start_omp;
-        break;
+    case Backend::OPENMP: {
+      elapsed = omp_get_wtime() - start_omp;
+      break;
+    }
 #endif
 #ifdef ENABLE_MPI
-      case Backend::OPENMPI:
-        elapsed = MPI_Wtime() - start_mpi;
-        break;
+    case Backend::OPENMPI: {
+      elapsed = MPI_Wtime() - start_mpi;
+      break;
+    }
 #endif
-#ifdef ENABLE_CUDA
-      case Backend::CUDA: {
-        cudaEventRecord(stop_event);
-        cudaEventSynchronize(stop_event);
-        float ms = 0.0f;
-        cudaEventElapsedTime(&ms, start_event, stop_event);
-        elapsed = ms / 1000.0;
-        break;
-#else
-    default:
+#ifdef __CUDACC__
+    case Backend::CUDA: {
+      cudaEventRecord(stop_event);
+      cudaEventSynchronize(stop_event);
+      float ms = 0.0f;
+      cudaEventElapsedTime(&ms, start_event, stop_event);
+      elapsed = ms / 1000.0;
+      break;
+    }
+#endif
+    default: {
       std::cerr << "Unsupported backend: " << static_cast<int>(backend)
                 << std::endl;
       throw std::runtime_error("Unsupported backend");
+    }
+    }
+  }
+
+  double elapsed_seconds() const { return elapsed; }
+
+  void report() const {
+    std::cout << "[TIMER][" << label << "] " << elapsed << " sec\n";
+  }
+
+  ~ProgTimer() {
+#ifdef __CUDACC__
+    if (backend == Backend::CUDA) {
+      cudaEventDestroy(start_event);
+      cudaEventDestroy(stop_event);
+    }
 #endif
-      }
-      }
+  }
 
-      double elapsed_seconds() const { return elapsed; }
+private:
+  Backend backend;
+  std::string label;
+  double elapsed = 0.0;
 
-      void report() const {
-        std::cout << "[TIMER][" << label << "] " << elapsed << " sec\n";
-      }
-
-      ~ProgTimer() {
-#ifdef ENABLE_CUDA
-        if (backend == Backend::CUDA) {
-          cudaEventDestroy(start_event);
-          cudaEventDestroy(stop_event);
-        }
-#endif
-      }
-
-    private:
-      Backend backend;
-      std::string label;
-      double elapsed = 0.0;
-
-      // Backend-specific start times
-      std::chrono::high_resolution_clock::time_point start_std;
+  // Backend-specific start times
+  std::chrono::high_resolution_clock::time_point start_std;
 
 #ifdef ENABLE_OPENMP
-      double start_omp = 0.0;
+  double start_omp = 0.0;
 #endif
 #ifdef ENABLE_MPI
-      double start_mpi = 0.0;
+  double start_mpi = 0.0;
 #endif
 #ifdef ENABLE_CUDA
-      cudaEvent_t start_event = nullptr, stop_event = nullptr;
+  cudaEvent_t start_event = nullptr, stop_event = nullptr;
 #endif
-    };
+};
 
-  } // namespace hpc
+} // namespace hpc

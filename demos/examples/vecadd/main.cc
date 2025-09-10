@@ -10,19 +10,15 @@ int main() {
   float *a_data = (float *)malloc(DSIZE * sizeof(float));
   openmp::Vector<float> a(DSIZE);
 
-  ProgTimer timer_serial(Backend::SERIAL, "Serial");
-  timer_serial.start();
+  __TICK(SERIAL)
   for (size_t i = 0; i < DSIZE; ++i) {
     a_data[i] += 1.0f;
   }
-  timer_serial.stop();
-  timer_serial.report();
+  __TOCK(SERIAL)
 
-  ProgTimer timer_openmp(Backend::OPENMP, "OpenMP");
-  timer_openmp.start();
+  __TICK(OPENMP)
   a += 1.0f;
-  timer_openmp.stop();
-  timer_openmp.report();
+  __TOCK(OPENMP)
 
   for (size_t i = 0; i < 10; ++i) {
     std::cout << "a[" << i << "] = " << a[i] << ", a_data[" << i
