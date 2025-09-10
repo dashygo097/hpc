@@ -118,12 +118,12 @@ torch::Tensor relu_fp16x8(torch::Tensor input) {
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("relu_fp32", &relu_fp32<CBLOCK_SIZE>, "relu_fp32");
-  m.def("relu_fp32x2", &relu_fp32x2<CBLOCK_SIZE>, "relu_fp32x2");
-  m.def("relu_fp32x4", &relu_fp32x4<CBLOCK_SIZE>, "relu_fp32x4");
-  m.def("relu_fp16", &relu_fp16<CBLOCK_SIZE>, "relu_fp16");
-  m.def("relu_fp16x2", &relu_fp16x2<CBLOCK_SIZE>, "relu_fp16x2");
-  m.def("relu_fp16x8", &relu_fp16x8<CBLOCK_SIZE>, "relu_fp16x8");
+  m.def("relu_fp32", &relu_fp32<CBLOCK_SIZE_1D>, "relu_fp32");
+  m.def("relu_fp32x2", &relu_fp32x2<CBLOCK_SIZE_1D>, "relu_fp32x2");
+  m.def("relu_fp32x4", &relu_fp32x4<CBLOCK_SIZE_1D>, "relu_fp32x4");
+  m.def("relu_fp16", &relu_fp16<CBLOCK_SIZE_1D>, "relu_fp16");
+  m.def("relu_fp16x2", &relu_fp16x2<CBLOCK_SIZE_1D>, "relu_fp16x2");
+  m.def("relu_fp16x8", &relu_fp16x8<CBLOCK_SIZE_1D>, "relu_fp16x8");
 }
 
 } // namespace hpc::cuda

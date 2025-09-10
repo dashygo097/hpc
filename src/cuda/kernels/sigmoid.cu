@@ -148,12 +148,12 @@ torch::Tensor sigmoid_fp16x8(torch::Tensor input) {
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("sigmoid_fp32", &sigmoid_fp32<CBLOCK_SIZE>, "sigmoid_fp32");
-  m.def("sigmoid_fp32x2", &sigmoid_fp32x2<CBLOCK_SIZE>, "sigmoid_fp32x2");
-  m.def("sigmoid_fp32x4", &sigmoid_fp32x4<CBLOCK_SIZE>, "sigmoid_fp32x4");
-  m.def("sigmoid_fp16", &sigmoid_fp16<CBLOCK_SIZE>, "sigmoid_fp16");
-  m.def("sigmoid_fp16x2", &sigmoid_fp16x2<CBLOCK_SIZE>, "sigmoid_fp16x2");
-  m.def("sigmoid_fp16x8", &sigmoid_fp16x8<CBLOCK_SIZE>, "sigmoid_fp16x8");
+  m.def("sigmoid_fp32", &sigmoid_fp32<CBLOCK_SIZE_1D>, "sigmoid_fp32");
+  m.def("sigmoid_fp32x2", &sigmoid_fp32x2<CBLOCK_SIZE_1D>, "sigmoid_fp32x2");
+  m.def("sigmoid_fp32x4", &sigmoid_fp32x4<CBLOCK_SIZE_1D>, "sigmoid_fp32x4");
+  m.def("sigmoid_fp16", &sigmoid_fp16<CBLOCK_SIZE_1D>, "sigmoid_fp16");
+  m.def("sigmoid_fp16x2", &sigmoid_fp16x2<CBLOCK_SIZE_1D>, "sigmoid_fp16x2");
+  m.def("sigmoid_fp16x8", &sigmoid_fp16x8<CBLOCK_SIZE_1D>, "sigmoid_fp16x8");
 }
 
 } // namespace hpc::cuda
