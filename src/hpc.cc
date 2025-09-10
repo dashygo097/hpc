@@ -1,3 +1,3 @@
-#include "hpc/timer.hh"
+#include "hpc.hh"
 
 namespace hpc {} // namespace hpc

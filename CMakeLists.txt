@@ -94,11 +94,13 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP})
 message(STATUS "PyTorch found at: ${TORCH_CMAKE_PATH}")
 message(STATUS "PyTorch version: ${Torch_VERSION}")
 
-
 # 3rdparty
 include_directories(3rdparty)
 add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(3rdparty/pybind11)
+
+# optional: Google Benchmark
+# add_subdirectory(3rdparty/benchmark EXCLUDE_FROM_ALL)
 
 # HPC lib
 file(GLOB_RECURSE HPC_SOURCES src/*.c src/*.cc src/*.cpp)
