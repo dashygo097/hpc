@@ -1,5 +1,5 @@
 #include "hpc/cuda/binding.cuh"
-#inclue "hpc/cuda/kernels/relu.cuh"
+#include "hpc/cuda/kernels/relu.cuh"
 
 namespace hpc::cu {
 template <const size_t kBlockSize>

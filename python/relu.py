@@ -6,7 +6,7 @@ torch.set_grad_enabled(False)
 
 lib = load(
     name="relu_lib",
-    sources=["../src/cuda/extensions/relu.cu"],
+    sources=["../src/cuda/extensions/ext_relu.cu", "../src/cuda/kernels/relu.cu"],
     extra_include_paths=["../include"],
     extra_cuda_cflags=[
         "-O3",

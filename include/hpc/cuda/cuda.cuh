@@ -4,9 +4,6 @@
 #include "./runtime.cuh"
 #include "./launcher.cuh"
 
-#include "./kernels/gemm.cuh"
 #include "./kernels/reduce.cuh"
 #include "./kernels/relu.cuh"
 #include "./kernels/sigmoid.cuh"
-#include "./kernels/softmax.cuh"
-#include "./kernels/transpose.cuh"

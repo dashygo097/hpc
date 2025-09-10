@@ -6,7 +6,7 @@ torch.set_grad_enabled(False)
 
 lib = load(
     name="sigmoid_lib",
-    sources=["../src/cuda/extensions/sigmoid.cu"],
+    sources=["../src/cuda/extensions/ext_sigmoid.cu", "../src/cuda/kernels/sigmoid.cu"],
     extra_include_paths=["../include"],
     extra_cuda_cflags=[
         "-O3",
