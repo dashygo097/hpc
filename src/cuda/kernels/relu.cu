@@ -86,44 +86,4 @@ __global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
   }
 }
 
-template <const size_t kBlockSize>
-torch::Tensor relu_fp32(torch::Tensor input) {
-  return act_wrapper<float, 1, kBlockSize>(input, torch::kFloat32,
-                                           relu_fp32_kernel);
-}
-template <const size_t kBlockSize>
-torch::Tensor relu_fp32x2(torch::Tensor input) {
-  return act_wrapper<float, 2, kBlockSize>(input, torch::kFloat32,
-                                           relu_fp32x2_kernel);
-}
-template <const size_t kBlockSize>
-torch::Tensor relu_fp32x4(torch::Tensor input) {
-  return act_wrapper<float, 4, kBlockSize>(input, torch::kFloat32,
-                                           relu_fp32x4_kernel);
-}
-template <const size_t kBlockSize>
-torch::Tensor relu_fp16(torch::Tensor input) {
-  return act_wrapper<half, 1, kBlockSize>(input, torch::kHalf,
-                                          relu_fp16_kernel);
-}
-template <const size_t kBlockSize>
-torch::Tensor relu_fp16x2(torch::Tensor input) {
-  return act_wrapper<half, 2, kBlockSize>(input, torch::kHalf,
-                                          relu_fp16x2_kernel);
-}
-template <const size_t kBlockSize>
-torch::Tensor relu_fp16x8(torch::Tensor input) {
-  return act_wrapper<half, 8, kBlockSize>(input, torch::kHalf,
-                                          relu_fp16x8_kernel);
-}
-
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("relu_fp32", &relu_fp32<CBLOCK_SIZE_1D>, "relu_fp32");
-  m.def("relu_fp32x2", &relu_fp32x2<CBLOCK_SIZE_1D>, "relu_fp32x2");
-  m.def("relu_fp32x4", &relu_fp32x4<CBLOCK_SIZE_1D>, "relu_fp32x4");
-  m.def("relu_fp16", &relu_fp16<CBLOCK_SIZE_1D>, "relu_fp16");
-  m.def("relu_fp16x2", &relu_fp16x2<CBLOCK_SIZE_1D>, "relu_fp16x2");
-  m.def("relu_fp16x8", &relu_fp16x8<CBLOCK_SIZE_1D>, "relu_fp16x8");
-}
-
-} // namespace hpc::cuda
+} // namespace hpc::cu

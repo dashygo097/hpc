@@ -6,7 +6,7 @@ torch.set_grad_enabled(False)
 
 lib = load(
     name="reduce_lib",
-    sources=["../src/cuda/kernels/reduce.cu"],
+    sources=["../src/cuda/extensions/reduce.cu"],
     extra_include_paths=["../include"],
     extra_cuda_cflags=[
         "-O3",

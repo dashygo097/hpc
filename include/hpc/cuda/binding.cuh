@@ -99,4 +99,4 @@ torch::Tensor reduce_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
     }
   }
 }
-} // namespace hpc::cuda
+} // namespace hpc::cu

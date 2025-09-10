@@ -89,7 +89,8 @@ public:
     return *this;
   }
 
-  CudaKernelLauncher &autoConfig2D(int width, int height, int blockX = CBLOCK_SIZE_2D,
+  CudaKernelLauncher &autoConfig2D(int width, int height,
+                                   int blockX = CBLOCK_SIZE_2D,
                                    int blockY = CBLOCK_SIZE_2D) {
     config.blockSize = dim3(blockX, blockY, 1);
     config.gridSize =
@@ -165,4 +166,4 @@ private:
   bool eventsCreated;
 };
 
-} // namespace hpc::cuda
+} // namespace hpc::cu

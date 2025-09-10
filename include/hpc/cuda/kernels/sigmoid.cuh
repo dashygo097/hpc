@@ -12,4 +12,4 @@ __global__ void sigmoid_fp16x2_kernel(half *output, const half *input,
                                       size_t N);
 __global__ void sigmoid_fp16x8_kernel(half *output, const half *input,
                                       size_t N);
-} // namespace hpc::cuda
+} // namespace hpc::cu

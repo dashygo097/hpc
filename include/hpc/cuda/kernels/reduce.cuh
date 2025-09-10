@@ -11,4 +11,4 @@ template <const size_t kBlockSize = CBLOCK_SIZE_1D>
 __global__ void reduce_sum_fp16_kernel(half *output, const half *input,
                                        size_t N);
 
-} // namespace hpc::cuda
+} // namespace hpc::cu

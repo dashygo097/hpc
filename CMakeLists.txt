@@ -108,7 +108,7 @@ file(GLOB_RECURSE HPC_HEADERS include/*.h include/*.hh include/*.hpp)
 
 if (HAS_CUDA)
   file(GLOB_RECURSE HPC_CUDA_HEADERS include/hpc/cuda/*.cuh)
-  file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/*.cu)
+  file(GLOB_RECURSE HPC_CUDA_SOURCES src/cuda/kernels/*.cu)
   add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS} ${HPC_CUDA_HEADERS} ${HPC_CUDA_SOURCES})
 
   set_target_properties(hpc PROPERTIES
