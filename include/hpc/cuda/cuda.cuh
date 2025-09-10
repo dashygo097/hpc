@@ -2,6 +2,7 @@
 #include "./cast.cuh"
 #include "./constants.cuh"
 #include "./runtime.cuh"
+#include "./launcher.cuh"
 
 #include "./kernels/gemm.cuh"
 #include "./kernels/reduce.cuh"

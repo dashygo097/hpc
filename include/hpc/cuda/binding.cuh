@@ -18,7 +18,7 @@
 
 namespace hpc::cuda {
 template <typename ElementType, const size_t NumElements,
-          const size_t kBlockSize = hpc::CBLOCK_SIZE>
+          const size_t kBlockSize = hpc::CBLOCK_SIZE_1D>
 torch::Tensor act_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
                           void (*kernel_func)(ElementType *,
                                               const ElementType *, size_t)) {
@@ -41,7 +41,7 @@ torch::Tensor act_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
     const int K = input.size(1);
     const int total_N = S * K;
 
-    if ((K / NumElements) <= hpc::CBLOCK_SIZE_MAXIMUM) {
+    if ((K / NumElements) <= hpc::CBLOCK_SIZE_1D_MAXIMUM) {
       dim3 block(K / NumElements);
       dim3 grid(S);
       kernel_func<<<grid, block>>>(
@@ -59,7 +59,7 @@ torch::Tensor act_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
 }
 
 template <typename ElementType, const size_t NumElements,
-          const size_t kBlockSize = hpc::CBLOCK_SIZE>
+          const size_t kBlockSize = hpc::CBLOCK_SIZE_1D>
 torch::Tensor reduce_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
                              void (*kernel_func)(ElementType *,
                                                  const ElementType *, size_t)) {
@@ -84,7 +84,7 @@ torch::Tensor reduce_wrapper(torch::Tensor input, torch::Dtype expected_dtype,
     const int K = input.size(1);
     const int total_N = S * K;
 
-    if ((K / NumElements) <= hpc::CBLOCK_SIZE_MAXIMUM) {
+    if ((K / NumElements) <= hpc::CBLOCK_SIZE_1D_MAXIMUM) {
       dim3 block(K / NumElements);
       dim3 grid(S);
       kernel_func<<<grid, block>>>(

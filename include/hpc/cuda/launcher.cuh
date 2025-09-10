@@ -29,12 +29,28 @@
   } while (0)
 
 namespace hpc::cuda {
-class CudaKernelLauncher {
-private:
-  CudaKernelConfig config;
-  cudaEvent_t startEvent, stopEvent;
-  bool eventsCreated;
+template<typename T>
+static inline T* cudaMallocManaged(size_t count) {
+    T* ptr;
+    cudaCheckError(cudaMallocManaged(&ptr, count * sizeof(T)), "Allocate managed memory");
+    return ptr;
+}
 
+template<typename T>
+static inline T* cudaMallocDevice(size_t count) {
+    T* ptr;
+    cudaCheckError(cudaMalloc(&ptr, count * sizeof(T)), "Allocate device memory");
+    return ptr;
+}
+
+template<typename T>
+static inline T* cudaMallocHost(size_t count) {
+    T* ptr;
+    cudaCheckError(cudaMallocHost(&ptr, count * sizeof(T)), "Allocate pinned host memory");
+    return ptr;
+}
+
+class CudaKernelLauncher {
 public:
   CudaKernelLauncher() : eventsCreated(false) {
     config = cudaGetDefaultConfig();
@@ -163,5 +179,11 @@ public:
 
     return elapsedTime;
   }
+
+private:
+  CudaKernelConfig config;
+  cudaEvent_t startEvent, stopEvent;
+  bool eventsCreated;
 };
+
 } // namespace hpc::cuda

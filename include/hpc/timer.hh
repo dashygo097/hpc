@@ -129,7 +129,7 @@ private:
 #ifdef ENABLE_MPI
   double start_mpi = 0.0;
 #endif
-#ifdef ENABLE_CUDA
+#ifdef __CUDACC__ 
   cudaEvent_t start_event = nullptr, stop_event = nullptr;
 #endif
 };
