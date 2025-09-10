@@ -2,7 +2,7 @@
 #include "hpc/cuda/cast.cuh"
 #include "hpc/cuda/kernels/relu.cuh"
 
-namespace hpc::cuda {
+namespace hpc::cu {
 __global__ void relu_fp32_kernel(float *output, const float *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {

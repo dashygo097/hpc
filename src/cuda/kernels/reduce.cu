@@ -2,7 +2,7 @@
 #include "hpc/cuda/cast.cuh"
 #include "hpc/cuda/kernels/reduce.cuh"
 
-namespace hpc::cuda {
+namespace hpc::cu {
 
 template <const size_t kBlockSize>
 __global__ void reduce_sum_fp32_kernel(float *output, const float *input,

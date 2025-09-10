@@ -2,6 +2,18 @@
 
 #include "../constants.hh"
 
+#define cudaCheckErrors(msg) \
+    do { \
+        cudaError_t __err = cudaGetLastError(); \
+        if (__err != cudaSuccess) { \
+            fprintf(stderr, "Fatal error: %s (%s at %s:%d)\n", \
+                msg, cudaGetErrorString(__err), \
+                __FILE__, __LINE__); \
+            fprintf(stderr, "*** FAILED - ABORTING\n"); \
+            exit(1); \
+        } \
+    } while (0)
+
 #define cudaCheckError(call, msg)                                              \
   do {                                                                         \
     cudaError_t __err = call;                                                  \
@@ -11,6 +23,17 @@
       exit(1);                                                                 \
     }                                                                          \
   } while (0)
+
+#define cudaCheckErrorSoft(call, msg) \
+    ({ \
+        cudaError_t __err = call; \
+        if (__err != cudaSuccess) { \
+            fprintf(stderr, "CUDA warning: %s (%s at %s:%d)\n", \
+                msg, cudaGetErrorString(__err), \
+                __FILE__, __LINE__); \
+        } \
+        __err; \
+    })
 
 #define cudaCheckKernel(msg)                                                   \
   do {                                                                         \
@@ -28,8 +51,7 @@
     }                                                                          \
   } while (0)
 
-namespace hpc::cuda {
-
+namespace hpc::cu {
 typedef struct {
   dim3 gridSize;
   dim3 blockSize;
@@ -50,7 +72,7 @@ typedef struct {
 static inline CudaKernelConfig cudaGetDefaultConfig() {
   CudaKernelConfig config;
   config.gridSize = dim3(1, 1, 1);
-  config.blockSize = dim3(hpc::CBLOCK_SIZE, 1, 1);
+  config.blockSize = dim3(hpc::CBLOCK_SIZE_1D, 1, 1);
   config.sharedMemBytes = 0;
   config.stream = 0;
   config.synchronous = true;
@@ -62,7 +84,7 @@ static inline CudaKernelConfig cudaGetDefaultConfig() {
 }
 
 static inline CudaKernelConfig
-cudaAutoConfig1D(int numElements, int blockSize = hpc::CBLOCK_SIZE) {
+cudaAutoConfig1D(int numElements, int blockSize = CBLOCK_SIZE_1D) {
   CudaKernelConfig config = cudaGetDefaultConfig();
   config.blockSize = dim3(blockSize, 1, 1);
   config.gridSize = dim3((numElements + blockSize - 1) / blockSize, 1, 1);
@@ -70,8 +92,8 @@ cudaAutoConfig1D(int numElements, int blockSize = hpc::CBLOCK_SIZE) {
 }
 
 static inline CudaKernelConfig
-cudaAutoConfig2D(int width, int height, int blockX = sqrt(hpc::CBLOCK_SIZE),
-                 int blockY = sqrt(hpc::CBLOCK_SIZE) {
+cudaAutoConfig2D(int width, int height, int blockX = CBLOCK_SIZE_2D,
+                 int blockY = CBLOCK_SIZE_2D) {
   CudaKernelConfig config = cudaGetDefaultConfig();
   config.blockSize = dim3(blockX, blockY, 1);
   config.gridSize =
@@ -129,5 +151,4 @@ static inline T* cudaMallocHost(size_t count) {
                  "Allocate pinned host memory");
   return ptr;
 }
-
 } // namespace hpc::cuda

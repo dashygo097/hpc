@@ -2,7 +2,7 @@
 
 #include <cuda_fp16.h>
 
-namespace hpc::cuda {
+namespace hpc::cu {
 __global__ void relu_fp32_kernel(float *output, const float *input, size_t N);
 __global__ void relu_fp32x2_kernel(float *output, const float *input, size_t N);
 __global__ void relu_fp32x4_kernel(float *output, const float *input, size_t N);

@@ -16,7 +16,7 @@
     throw std::runtime_error("values must be " #th_type);                      \
   }
 
-namespace hpc::cuda {
+namespace hpc::cu {
 template <typename ElementType, const size_t NumElements,
           const size_t kBlockSize = hpc::CBLOCK_SIZE_1D>
 torch::Tensor act_wrapper(torch::Tensor input, torch::Dtype expected_dtype,

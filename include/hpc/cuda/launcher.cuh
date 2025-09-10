@@ -28,28 +28,7 @@
     cudaCheckKernel(#kernel);                                                  \
   } while (0)
 
-namespace hpc::cuda {
-template<typename T>
-static inline T* cudaMallocManaged(size_t count) {
-    T* ptr;
-    cudaCheckError(cudaMallocManaged(&ptr, count * sizeof(T)), "Allocate managed memory");
-    return ptr;
-}
-
-template<typename T>
-static inline T* cudaMallocDevice(size_t count) {
-    T* ptr;
-    cudaCheckError(cudaMalloc(&ptr, count * sizeof(T)), "Allocate device memory");
-    return ptr;
-}
-
-template<typename T>
-static inline T* cudaMallocHost(size_t count) {
-    T* ptr;
-    cudaCheckError(cudaMallocHost(&ptr, count * sizeof(T)), "Allocate pinned host memory");
-    return ptr;
-}
-
+namespace hpc::cu {
 class CudaKernelLauncher {
 public:
   CudaKernelLauncher() : eventsCreated(false) {
@@ -104,14 +83,14 @@ public:
   }
 
   CudaKernelLauncher &autoConfig1D(int numElements,
-                                   int blockSize = hpc::CBLOCK_SIZE_1D) {
+                                   int blockSize = CBLOCK_SIZE_1D) {
     config.blockSize = dim3(blockSize, 1, 1);
     config.gridSize = dim3((numElements + blockSize - 1) / blockSize, 1, 1);
     return *this;
   }
 
-  CudaKernelLauncher &autoConfig2D(int width, int height, int blockX = 16,
-                                   int blockY = 16) {
+  CudaKernelLauncher &autoConfig2D(int width, int height, int blockX = CBLOCK_SIZE_2D,
+                                   int blockY = CBLOCK_SIZE_2D) {
     config.blockSize = dim3(blockX, blockY, 1);
     config.gridSize =
         dim3((width + blockX - 1) / blockX, (height + blockY - 1) / blockY, 1);

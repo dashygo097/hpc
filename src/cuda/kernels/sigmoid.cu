@@ -3,7 +3,7 @@
 #include "hpc/cuda/constants.cuh"
 #include "hpc/cuda/kernels/sigmoid.cuh"
 
-namespace hpc::cuda {
+namespace hpc::cu {
 __global__ void sigmoid_fp32_kernel(float *output, const float *input,
                                     size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;

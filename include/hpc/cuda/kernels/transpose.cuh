@@ -1,3 +1,3 @@
 #pragma once
 
-namespace hpc::cuda {} // namespace hpc::cuda
+namespace hpc::cu {} // namespace hpc::cuda
