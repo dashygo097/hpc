@@ -15,7 +15,7 @@ int main() {
   cudaMemcpy(d_i, h_i, DSIZE * sizeof(float), cudaMemcpyHostToDevice);
   cudaCheckLast("Memory copy host to device"); 
 
-  CUDA_LAUNCH_1D(cu::relu_fp32x4_kernel, DSIZE / 4, 256, d_o, d_i, DSIZE);
+  CUDA_LAUNCH_1D(cu::relu_fp32x4_kernel, DSIZE / 4, CBLOCK_SIZE_1D, d_o, d_i, DSIZE);
   
   cudaMemcpy(h_o, d_o, DSIZE * sizeof(float), cudaMemcpyDeviceToHost);
   cudaCheckLast("Memory copy device to host");
