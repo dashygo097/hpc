@@ -7,3 +7,4 @@ __pycache__/
 build/
 
 scripts/transcribe.sh
+scripts/fetch_profile_logs.sh
