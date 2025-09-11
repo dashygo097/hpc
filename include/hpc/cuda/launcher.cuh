@@ -17,7 +17,7 @@
 #define CUDA_LAUNCH_STREAM(kernel, grid, block, stream, ...)                   \
   do {                                                                         \
     kernel<<<grid, block, 0, stream>>>(__VA_ARGS__);                           \
-    cudaCheckErrors(#kernel " launch");                                        \
+    cudaCheckError(#kernel " launch");                                        \
   } while (0)
 
 #define CUDA_LAUNCH_1D(kernel, numElements, blockSize, ...)                    \
@@ -130,7 +130,7 @@ public:
     kernel<<<config.gridSize, config.blockSize, config.sharedMemBytes,
              config.stream>>>(args...);
 
-    cudaCheckErrors("Kernel launch");
+    cudaCheckLast("Kernel launch");
 
     if (config.profileTime) {
       cudaCheckError(cudaEventRecord(stopEvent, config.stream),

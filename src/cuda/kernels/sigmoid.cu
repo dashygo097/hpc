@@ -4,7 +4,7 @@
 #include "hpc/cuda/kernels/sigmoid.cuh"
 
 namespace hpc::cu {
-__global__ void sigmoid_fp32_kernel(float *output, const float *input,
+__global__ void sigmoid_fp32_kernel(float *output, float *input,
                                     size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
@@ -13,7 +13,7 @@ __global__ void sigmoid_fp32_kernel(float *output, const float *input,
     output[idx] = 1.0f / (1.0f + expf(-in_reg));
   }
 }
-__global__ void sigmoid_fp32x2_kernel(float *output, const float *input,
+__global__ void sigmoid_fp32x2_kernel(float *output, float *input,
                                       size_t N) {
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
   if (idx < N) {
@@ -26,7 +26,7 @@ __global__ void sigmoid_fp32x2_kernel(float *output, const float *input,
     FLOAT2(output + idx) = out_reg;
   }
 }
-__global__ void sigmoid_fp32x4_kernel(float *output, const float *input,
+__global__ void sigmoid_fp32x4_kernel(float *output, float *input,
                                       size_t N) {
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 4;
   if (idx < N) {
@@ -43,7 +43,7 @@ __global__ void sigmoid_fp32x4_kernel(float *output, const float *input,
     FLOAT4(output + idx) = out_reg;
   }
 }
-__global__ void sigmoid_fp16_kernel(half *output, const half *input, size_t N) {
+__global__ void sigmoid_fp16_kernel(half *output, half *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
     half in_reg = input[idx];
@@ -52,7 +52,7 @@ __global__ void sigmoid_fp16_kernel(half *output, const half *input, size_t N) {
                          __hadd(__float2half(1.0f), hexp(__hneg(in_reg))));
   }
 }
-__global__ void sigmoid_fp16x2_kernel(half *output, const half *input,
+__global__ void sigmoid_fp16x2_kernel(half *output, half *input,
                                       size_t N) {
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
   if (idx < N) {
@@ -67,7 +67,7 @@ __global__ void sigmoid_fp16x2_kernel(half *output, const half *input,
     HALF2(output + idx) = out_reg;
   }
 }
-__global__ void sigmoid_fp16x8_kernel(half *output, const half *input,
+__global__ void sigmoid_fp16x8_kernel(half *output, half *input,
                                       size_t N) {
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 8;
   if (idx < N) {

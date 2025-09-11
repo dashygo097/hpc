@@ -4,7 +4,7 @@
 namespace hpc::cu {
 
 template <const size_t kBlockSize>
-__global__ void reduce_sum_fp32_kernel(float *output, const float *input,
+__global__ void reduce_sum_fp32_kernel(float *output, float *input,
                                        size_t N) {
   __shared__ float sdata[kBlockSize / CWARP_SIZE];
   size_t tid = threadIdx.x;
@@ -39,7 +39,7 @@ __global__ void reduce_sum_fp32_kernel(float *output, const float *input,
 }
 
 template <const size_t kBlockSize>
-__global__ void reduce_sum_fp16_kernel(half *output, const half *input,
+__global__ void reduce_sum_fp16_kernel(half *output, half *input,
                                        size_t N) {
   __shared__ half sdata[kBlockSize / CWARP_SIZE];
   size_t tid = threadIdx.x;

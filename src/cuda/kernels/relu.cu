@@ -3,14 +3,14 @@
 #include "hpc/cuda/kernels/relu.cuh"
 
 namespace hpc::cu {
-__global__ void relu_fp32_kernel(float *output, const float *input, size_t N) {
+__global__ void relu_fp32_kernel(float *output, float *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
     output[idx] = fmaxf(0.0f, input[idx]);
   }
 }
 
-__global__ void relu_fp32x2_kernel(float *output, const float *input,
+__global__ void relu_fp32x2_kernel(float *output, float *input,
                                    size_t N) {
   size_t idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
@@ -22,7 +22,7 @@ __global__ void relu_fp32x2_kernel(float *output, const float *input,
   }
 }
 
-__global__ void relu_fp32x4_kernel(float *output, const float *input,
+__global__ void relu_fp32x4_kernel(float *output, float *input,
                                    size_t N) {
   size_t idx = 4 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
@@ -36,14 +36,14 @@ __global__ void relu_fp32x4_kernel(float *output, const float *input,
   }
 }
 
-__global__ void relu_fp16_kernel(half *output, const half *input, size_t N) {
+__global__ void relu_fp16_kernel(half *output, half *input, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
     output[idx] = __hmax(__float2half(0.0f), input[idx]);
   }
 }
 
-__global__ void relu_fp16x2_kernel(half *output, const half *input, size_t N) {
+__global__ void relu_fp16x2_kernel(half *output, half *input, size_t N) {
   size_t idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
     half2 in_reg = HALF2(input + idx);
@@ -54,7 +54,7 @@ __global__ void relu_fp16x2_kernel(half *output, const half *input, size_t N) {
   }
 }
 
-__global__ void relu_fp16x8_kernel(half *output, const half *input, size_t N) {
+__global__ void relu_fp16x8_kernel(half *output, half *input, size_t N) {
   size_t idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
     half2 in_reg_0 = HALF2(input + idx);

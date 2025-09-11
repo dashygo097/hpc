@@ -2,7 +2,7 @@
 
 #include "../constants.hh"
 
-#define cudaCheckErrors(msg)                                                   \
+#define cudaCheckLast(msg)                                                   \
   do {                                                                         \
     cudaError_t __err = cudaGetLastError();                                    \
     if (__err != cudaSuccess) {                                                \
@@ -22,16 +22,6 @@
       exit(1);                                                                 \
     }                                                                          \
   } while (0)
-
-#define cudaCheckErrorSoft(call, msg)                                          \
-  ({                                                                           \
-    cudaError_t __err = call;                                                  \
-    if (__err != cudaSuccess) {                                                \
-      fprintf(stderr, "CUDA warning: %s (%s at %s:%d)\n", msg,                 \
-              cudaGetErrorString(__err), __FILE__, __LINE__);                  \
-    }                                                                          \
-    __err;                                                                     \
-  })
 
 #define cudaCheckKernel(msg)                                                   \
   do {                                                                         \
@@ -127,20 +117,20 @@ static inline int cudaGetOptimalBlockSize(const void *func) {
   return blockSize;
 }
 
-template <typename T> static inline T *cudaMallocManaged(size_t count) {
+template <typename T> static inline T *cudaMallocM(size_t count) {
   T *ptr;
   cudaCheckError(cudaMallocManaged(&ptr, count * sizeof(T)),
                  "Allocate managed memory");
   return ptr;
 }
 
-template <typename T> static inline T *cudaMallocDevice(size_t count) {
+template <typename T> static inline T *cudaMallocD(size_t count) {
   T *ptr;
   cudaCheckError(cudaMalloc(&ptr, count * sizeof(T)), "Allocate device memory");
   return ptr;
 }
 
-template <typename T> static inline T *cudaMallocHost(size_t count) {
+template <typename T> static inline T *cudaMallocH(size_t count) {
   T *ptr;
   cudaCheckError(cudaMallocHost(&ptr, count * sizeof(T)),
                  "Allocate pinned host memory");
