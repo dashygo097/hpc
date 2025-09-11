@@ -6,5 +6,4 @@ __pycache__/
 .Trash-*/
 build/
 
-scripts/transcribe.sh
-scripts/fetch_profile_logs.sh
+scripts/fetch_profile.sh
