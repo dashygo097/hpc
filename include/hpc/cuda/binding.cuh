@@ -77,9 +77,9 @@ torch::Tensor reduce_wrapper(torch::Tensor in, torch::Dtype expected_dtype,
 
   dim3 block(kBlockSize / NumElements);
   dim3 grid((N + kBlockSize - 1) / kBlockSize);
-  kernel_func<<<grid, block>>>(
-      reinterpret_cast<ElementType *>(out.data_ptr()),
-      reinterpret_cast<ElementType *>(in.data_ptr()), N);
+  kernel_func<<<grid, block>>>(reinterpret_cast<ElementType *>(out.data_ptr()),
+                               reinterpret_cast<ElementType *>(in.data_ptr()),
+                               N);
   return out;
 }
 
@@ -112,10 +112,10 @@ torch::Tensor dot_wrapper(torch::Tensor in1, torch::Tensor in2,
 
   dim3 block(kBlockSize / NumElements);
   dim3 grid((N + kBlockSize - 1) / kBlockSize);
-  kernel_func<<<grid, block>>>(
-      reinterpret_cast<ElementType *>(out.data_ptr()),
-      reinterpret_cast<ElementType *>(in1.data_ptr()),
-      reinterpret_cast<ElementType *>(in2.data_ptr()), N);
+  kernel_func<<<grid, block>>>(reinterpret_cast<ElementType *>(out.data_ptr()),
+                               reinterpret_cast<ElementType *>(in1.data_ptr()),
+                               reinterpret_cast<ElementType *>(in2.data_ptr()),
+                               N);
 
   return out;
 }
