@@ -1,6 +1,7 @@
 __pycache__/
 .DS_Store
 .cache/
+.profile/
 .vscode/
 .Trash-*/
 build/
