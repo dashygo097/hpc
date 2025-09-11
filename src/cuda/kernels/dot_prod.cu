@@ -40,13 +40,13 @@ __global__ void dot_prod_fp32_kernel(float *out, float *in1, float *in2,
 template <const size_t kBlockSize>
 __global__ void dot_prod_fp16_kernel(half *out, half *in1, half *in2,
                                      size_t N) {
-  __shared__ float sdata[kBlockSize / CWARP_SIZE];
+  __shared__ half sdata[kBlockSize / CWARP_SIZE];
   size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
   size_t lane = threadIdx.x % CWARP_SIZE;
   size_t wid = threadIdx.x / CWARP_SIZE;
   size_t mask = 0xffffffff;
 
-  float sum = __float2half(0.0f);
+  half sum = __float2half(0.0f);
   while (tid < N) {
     sum += __hmul(in1[tid], in2[tid]);
     tid += blockDim.x * gridDim.x;
