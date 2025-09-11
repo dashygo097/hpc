@@ -17,7 +17,7 @@
 #define CUDA_LAUNCH_STREAM(kernel, grid, block, stream, ...)                   \
   do {                                                                         \
     kernel<<<grid, block, 0, stream>>>(__VA_ARGS__);                           \
-    cudaCheckError(#kernel " launch");                                        \
+    cudaCheckError(#kernel " launch");                                         \
   } while (0)
 
 #define CUDA_LAUNCH_1D(kernel, numElements, blockSize, ...)                    \

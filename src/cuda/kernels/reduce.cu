@@ -4,8 +4,7 @@
 namespace hpc::cu {
 
 template <const size_t kBlockSize>
-__global__ void reduce_sum_fp32_kernel(float *out, float *in,
-                                       size_t N) {
+__global__ void reduce_sum_fp32_kernel(float *out, float *in, size_t N) {
   __shared__ float sdata[kBlockSize / CWARP_SIZE];
   size_t tid = threadIdx.x;
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -39,8 +38,7 @@ __global__ void reduce_sum_fp32_kernel(float *out, float *in,
 }
 
 template <const size_t kBlockSize>
-__global__ void reduce_sum_fp16_kernel(half *out, half *in,
-                                       size_t N) {
+__global__ void reduce_sum_fp16_kernel(half *out, half *in, size_t N) {
   __shared__ half sdata[kBlockSize / CWARP_SIZE];
   size_t tid = threadIdx.x;
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -74,11 +72,17 @@ __global__ void reduce_sum_fp16_kernel(half *out, half *in,
 }
 
 // function template instantiation
-template __global__ void reduce_sum_fp32_kernel<CBLOCK_SIZE_1D>(float* out, float* in, size_t N);
-template __global__ void reduce_sum_fp32_kernel<CBLOCK_SIZE_1D / 2>(float* out, float* in, size_t N);
-template __global__ void reduce_sum_fp32_kernel<CBLOCK_SIZE_1D / 4>(float* out, float* in, size_t N);
-template __global__ void reduce_sum_fp16_kernel<CBLOCK_SIZE_1D>(half* out, half* in, size_t N);
-template __global__ void reduce_sum_fp16_kernel<CBLOCK_SIZE_1D / 2>(half* out, half* in, size_t N);
-template __global__ void reduce_sum_fp16_kernel<CBLOCK_SIZE_1D / 4>(half* out, half* in, size_t N);
+template __global__ void
+reduce_sum_fp32_kernel<CBLOCK_SIZE_1D>(float *out, float *in, size_t N);
+template __global__ void
+reduce_sum_fp32_kernel<CBLOCK_SIZE_1D / 2>(float *out, float *in, size_t N);
+template __global__ void
+reduce_sum_fp32_kernel<CBLOCK_SIZE_1D / 4>(float *out, float *in, size_t N);
+template __global__ void
+reduce_sum_fp16_kernel<CBLOCK_SIZE_1D>(half *out, half *in, size_t N);
+template __global__ void
+reduce_sum_fp16_kernel<CBLOCK_SIZE_1D / 2>(half *out, half *in, size_t N);
+template __global__ void
+reduce_sum_fp16_kernel<CBLOCK_SIZE_1D / 4>(half *out, half *in, size_t N);
 
 } // namespace hpc::cu

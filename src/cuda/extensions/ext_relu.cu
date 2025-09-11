@@ -2,35 +2,26 @@
 #include "hpc/cuda/kernels/relu.cuh"
 
 namespace hpc::cu {
-template <const size_t kBlockSize>
-torch::Tensor relu_fp32(torch::Tensor input) {
-  return act_wrapper<float, 1, kBlockSize>(input, torch::kFloat32,
+template <const size_t kBlockSize> torch::Tensor relu_fp32(torch::Tensor in) {
+  return act_wrapper<float, 1, kBlockSize>(in, torch::kFloat32,
                                            relu_fp32_kernel);
 }
-template <const size_t kBlockSize>
-torch::Tensor relu_fp32x2(torch::Tensor input) {
-  return act_wrapper<float, 2, kBlockSize>(input, torch::kFloat32,
+template <const size_t kBlockSize> torch::Tensor relu_fp32x2(torch::Tensor in) {
+  return act_wrapper<float, 2, kBlockSize>(in, torch::kFloat32,
                                            relu_fp32x2_kernel);
 }
-template <const size_t kBlockSize>
-torch::Tensor relu_fp32x4(torch::Tensor input) {
-  return act_wrapper<float, 4, kBlockSize>(input, torch::kFloat32,
+template <const size_t kBlockSize> torch::Tensor relu_fp32x4(torch::Tensor in) {
+  return act_wrapper<float, 4, kBlockSize>(in, torch::kFloat32,
                                            relu_fp32x4_kernel);
 }
-template <const size_t kBlockSize>
-torch::Tensor relu_fp16(torch::Tensor input) {
-  return act_wrapper<half, 1, kBlockSize>(input, torch::kHalf,
-                                          relu_fp16_kernel);
+template <const size_t kBlockSize> torch::Tensor relu_fp16(torch::Tensor in) {
+  return act_wrapper<half, 1, kBlockSize>(in, torch::kHalf, relu_fp16_kernel);
 }
-template <const size_t kBlockSize>
-torch::Tensor relu_fp16x2(torch::Tensor input) {
-  return act_wrapper<half, 2, kBlockSize>(input, torch::kHalf,
-                                          relu_fp16x2_kernel);
+template <const size_t kBlockSize> torch::Tensor relu_fp16x2(torch::Tensor in) {
+  return act_wrapper<half, 2, kBlockSize>(in, torch::kHalf, relu_fp16x2_kernel);
 }
-template <const size_t kBlockSize>
-torch::Tensor relu_fp16x8(torch::Tensor input) {
-  return act_wrapper<half, 8, kBlockSize>(input, torch::kHalf,
-                                          relu_fp16x8_kernel);
+template <const size_t kBlockSize> torch::Tensor relu_fp16x8(torch::Tensor in) {
+  return act_wrapper<half, 8, kBlockSize>(in, torch::kHalf, relu_fp16x8_kernel);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

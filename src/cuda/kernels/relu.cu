@@ -10,8 +10,7 @@ __global__ void relu_fp32_kernel(float *out, float *in, size_t N) {
   }
 }
 
-__global__ void relu_fp32x2_kernel(float *out, float *in,
-                                   size_t N) {
+__global__ void relu_fp32x2_kernel(float *out, float *in, size_t N) {
   size_t idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
     float2 in_reg = FLOAT2(in + idx);
@@ -22,8 +21,7 @@ __global__ void relu_fp32x2_kernel(float *out, float *in,
   }
 }
 
-__global__ void relu_fp32x4_kernel(float *out, float *in,
-                                   size_t N) {
+__global__ void relu_fp32x4_kernel(float *out, float *in, size_t N) {
   size_t idx = 4 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
     float4 in_reg = FLOAT4(in + idx);

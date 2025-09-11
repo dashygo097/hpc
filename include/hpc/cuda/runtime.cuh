@@ -2,7 +2,7 @@
 
 #include "../constants.hh"
 
-#define cudaCheckLast(msg)                                                   \
+#define cudaCheckLast(msg)                                                     \
   do {                                                                         \
     cudaError_t __err = cudaGetLastError();                                    \
     if (__err != cudaSuccess) {                                                \
