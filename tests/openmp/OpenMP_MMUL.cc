@@ -155,7 +155,7 @@ TEST_F(OpenMPMatrixTest, PerformanceBenchmark) {
   ProgTimer timer_serial(Backend::SERIAL, "Baseline");
   ProgTimer timer_openmp(Backend::OPENMP, "OpenMP Naive");
   ProgTimer timer_openmp_tiled(Backend::OPENMP, "OpenMP Tiled");
-  ProgTimer timer_openmp_simd(Backend::OPENMP, "OpenMP Naive + SIMD");
+  ProgTimer timer_openmp_simd(Backend::OPENMP, "OpenMP Tiled + SIMD");
 #if defined(__APPLE__)
   ProgTimer timer_accel(Backend::SERIAL, "Accelerate Lib");
 #endif
