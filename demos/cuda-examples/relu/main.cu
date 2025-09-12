@@ -2,7 +2,7 @@
 
 using namespace hpc;
 
-const size_t DSIZE = 1000000;
+const size_t DSIZE = 10000000;
 
 int main() {
   float *h_o = cu::cudaMallocH<float>(DSIZE);
@@ -28,5 +28,8 @@ int main() {
       return -1;
     }
   }
+  std::cout << "Success" << std::endl;
+  
+
   return 0;
 }

@@ -4,6 +4,7 @@
 #include "./launcher.cuh"
 #include "./runtime.cuh"
 
-#include "./kernels/reduce.cuh"
 #include "./kernels/relu.cuh"
 #include "./kernels/sigmoid.cuh"
+#include "./kernels/reduce.cuh"
+#include "./kernels/dot_prod.cuh"

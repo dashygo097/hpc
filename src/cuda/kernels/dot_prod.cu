@@ -60,7 +60,7 @@ __global__ void dot_prod_fp16_kernel(half *out, half *in1, half *in2,
 
   __syncthreads();
   if (wid == 0) {
-    sum = (threadIdx.x < blockDim.x / CWARP_SIZE) ? sdata[lane] : 0.0f;
+    sum = (threadIdx.x < blockDim.x / CWARP_SIZE) ? sdata[lane] :  __float2half(0.0f);
     for (size_t offset = CWARP_SIZE / 2; offset > 0; offset >>= 1) {
       sum += __shfl_down_sync(mask, sum, offset);
     }
@@ -69,5 +69,19 @@ __global__ void dot_prod_fp16_kernel(half *out, half *in1, half *in2,
     }
   }
 }
+
+// function template instantiation
+template __global__ void
+dot_prod_fp32_kernel<CBLOCK_SIZE_1D>(float *out, float *in1, float* in2, size_t N);
+template __global__ void
+dot_prod_fp32_kernel<CBLOCK_SIZE_1D / 2>(float *out, float *in1, float* in2, size_t N);
+template __global__ void
+dot_prod_fp32_kernel<CBLOCK_SIZE_1D / 4>(float *out, float *in1, float* in2, size_t N);
+template __global__ void
+dot_prod_fp16_kernel<CBLOCK_SIZE_1D>(half *out, half *in1, half* in2, size_t N);
+template __global__ void
+dot_prod_fp16_kernel<CBLOCK_SIZE_1D / 2>(half *out, half *in1, half* in2, size_t N);
+template __global__ void
+dot_prod_fp16_kernel<CBLOCK_SIZE_1D / 4>(half *out, half *in1, half* in2, size_t N);
 
 } // namespace hpc::cu
