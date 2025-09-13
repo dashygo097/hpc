@@ -17,9 +17,41 @@ void __global__ sgemm_naive_kernel(float *C, float *A, float *B, size_t M,
 }
 
 template <const size_t kBlockSizeM, const size_t kBlockSizeK,
-          const size_t kBlockSizeN>
-void __global__ sgemm_sliced_kernel(float *C, float *A, float *B, size_t M,
-                                    size_t K, size_t N, float alpha,
-                                    float beta) {}
+          const size_t kBlockSizeN, const size_t kWarpSize>
+void __global__ sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
+                                  size_t K, size_t N, float alpha, float beta) {
+  __shared__ float As[kBlockSizeM][kBlockSizeK];
+  __shared__ float Bs[kBlockSizeK][kBlockSizeN];
+
+  size_t kblock_num = (K + kBlockSizeK - 1) / kBlockSizeK;
+
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (idx < N && idy < M) {
+    float value = 0.0f;
+    for (size_t block_idx = 0; block_idx < kblock_num; ++block_idx) {
+      if (block_idx * kBlockSizeK + threadIdx.x < K) {
+        As[threadIdx.y][threadIdx.x] =
+            A[idy * K + block_idx * kBlockSizeK + threadIdx.x];
+      } else {
+        As[threadIdx.y][threadIdx.x] = 0.0f;
+      }
+      if (block_idx * kBlockSizeK + threadIdx.y < K) {
+        Bs[threadIdx.y][threadIdx.x] =
+            B[(block_idx * kBlockSizeK + threadIdx.y) * N + idx];
+      } else {
+        Bs[threadIdx.y][threadIdx.x] = 0.0f;
+      }
+      __syncthreads();
+      for (size_t k = 0; n < kBlockSizeK; ++k) {
+        value += As[threadIdx.y][k] * Bs[k][threadIdx.x];
+      }
+      __syncthreads();
+    }
+
+    C[idy * N + idx] = alpha * value + beta * C[idy * N + idx];
+  }
+}
 
 } // namespace hpc::cu

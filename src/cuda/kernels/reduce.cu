@@ -84,5 +84,4 @@ template __global__ void
 reduce_sum_fp16_kernel<CBLOCK_SIZE_1D / 2>(half *out, half *in, size_t N);
 template __global__ void
 reduce_sum_fp16_kernel<CBLOCK_SIZE_1D / 4>(half *out, half *in, size_t N);
-
 } // namespace hpc::cu
