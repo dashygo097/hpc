@@ -1,4 +1,3 @@
 #include <hpc.hh>
 
-int main() { 
-}
+int main() {}
