@@ -15,6 +15,9 @@ constexpr size_t CBLOCK_SIZE_1D = 256;
 constexpr size_t CBLOCK_SIZE_1D_MAXIMUM = 1024;
 constexpr size_t CBLOCK_SIZE_2D = 16;
 constexpr size_t CBLOCK_SIZE_2D_MAXIMUM = 32;
+constexpr size_t CGEMM_SLICE_SIZE_M = 32;
+constexpr size_t CGEMM_SLICE_SIZE_N = 32;
+constexpr size_t CGEMM_SLICE_SIZE_K = 32;
 
 static_assert(BLOCK_SIZE % SIMD_WIDTH == 0,
               "BLOCK_SIZE must be a multiple of SIMD_WIDTH");
