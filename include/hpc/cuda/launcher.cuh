@@ -28,6 +28,15 @@
     cudaCheckKernel(#kernel);                                                  \
   } while (0)
 
+#define CUDA_LAUNCH_2D(kernel, numElements, blockX, blockY, ...)               \
+  do {                                                                         \
+    dim3 block(blockX, blockY);                                                \
+    dim3 grid((numElements.x + blockX - 1) / blockX,                           \
+              (numElements.y + blockY - 1) / blockY);                          \
+    kernel<<<grid, block>>>(__VA_ARGS__);                                      \
+    cudaCheckKernel(#kernel);                                                  \
+  } while (0)
+
 namespace hpc::cu {
 class CudaKernelLauncher {
 public:

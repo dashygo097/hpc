@@ -136,4 +136,21 @@ template <typename T> static inline T *cudaMallocH(size_t count) {
                  "Allocate pinned host memory");
   return ptr;
 }
+
+template <typename T>
+static inline T *cudaMemcpyH2D(T *dst, const T *src, size_t count) {
+  cudaCheckError(
+      cudaMemcpy(dst, src, count * sizeof(T), cudaMemcpyHostToDevice),
+      "Copy memory from host to device");
+  return dst;
+}
+
+template <typename T>
+static inline *cudaMemcpyD2H(T *dst, const T *src, size_t count) {
+  cudaCheckError(
+      cudaMemcpy(dst, src, count * sizeof(T), cudaMemcpyDeviceToHost),
+      "Copy memory from device to host");
+  return dst;
+}
+
 } // namespace hpc::cu
