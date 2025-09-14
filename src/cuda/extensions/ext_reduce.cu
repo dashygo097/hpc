@@ -1,4 +1,4 @@
-#include "hpc/cuda/binding.cuh"
+#include "hpc/cuda/bindings.cuh"
 #include "hpc/cuda/kernels/reduce.cuh"
 
 namespace hpc::cu {

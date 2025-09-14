@@ -1,6 +1,5 @@
 #include "hpc/cuda/binding.cuh"
 #include "hpc/cuda/cast.cuh"
-#include "hpc/cuda/constants.cuh"
 #include "hpc/cuda/kernels/sigmoid.cuh"
 
 namespace hpc::cu {
