@@ -25,27 +25,29 @@ void __global__ sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
 
   size_t kblock_num = (K + kBlockSizeK - 1) / kBlockSizeK;
 
-  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   size_t idy = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t tidy = threadIdx.y;
+  size_t tidx = threadIdx.x;
 
   if (idx < N && idy < M) {
     float value = 0.0f;
-    for (size_t block_idx = 0; block_idx < kblock_num; ++block_idx) {
+    for (size_t block_idx = 0; block_idx < (K + kBlockSizeK - 1) / kBlockSizeK;
+         ++block_idx) {
       if (block_idx * kBlockSizeK + threadIdx.x < K) {
-        As[threadIdx.y][threadIdx.x] =
-            A[idy * K + block_idx * kBlockSizeK + threadIdx.x];
+        As[tidy][tidx] = A[idy * K + block_idx * kBlockSizeK + threadIdx.x];
       } else {
-        As[threadIdx.y][threadIdx.x] = 0.0f;
+        As[tidy][tidx] = 0.0f;
       }
       if (block_idx * kBlockSizeK + threadIdx.y < K) {
-        Bs[threadIdx.y][threadIdx.x] =
-            B[(block_idx * kBlockSizeK + threadIdx.y) * N + idx];
+        Bs[tidy][tidx] = B[(block_idx * kBlockSizeK + threadIdx.y) * N + idx];
       } else {
-        Bs[threadIdx.y][threadIdx.x] = 0.0f;
+        Bs[tidy][tidx] = 0.0f;
       }
       __syncthreads();
+
       for (size_t k = 0; n < kBlockSizeK; ++k) {
-        value += As[threadIdx.y][k] * Bs[k][threadIdx.x];
+        value += As[tidy][k] * Bs[k][tidx];
       }
       __syncthreads();
     }
