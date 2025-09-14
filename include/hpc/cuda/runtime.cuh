@@ -146,7 +146,7 @@ static inline T *cudaMemcpyH2D(T *dst, const T *src, size_t count) {
 }
 
 template <typename T>
-static inline *cudaMemcpyD2H(T *dst, const T *src, size_t count) {
+static inline T *cudaMemcpyD2H(T *dst, const T *src, size_t count) {
   cudaCheckError(
       cudaMemcpy(dst, src, count * sizeof(T), cudaMemcpyDeviceToHost),
       "Copy memory from device to host");

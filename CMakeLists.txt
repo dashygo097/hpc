@@ -9,6 +9,7 @@ if(CCACHE_PROGRAM)
     set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
     set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
     set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(ENV{CCACHE_CUDA} "1")
     message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
 endif()
 
@@ -35,6 +36,7 @@ if(CMAKE_CUDA_COMPILER)
     set(HAS_CUDA TRUE)
 
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fPIC")
 
     message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
     message(STATUS "CUDA toolkit: ${CUDAToolkit_VERSION}")
@@ -125,18 +127,21 @@ target_include_directories(hpc PUBLIC
 )
 target_include_directories(hpc PUBLIC ${Python3_INCLUDE_DIRS})
 target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
+if(HAS_CUDA)
+    set_source_files_properties(${HPC_CUDA_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+endif()
 
 target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
 target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX)
 target_link_libraries(hpc PRIVATE Python3::Python "${TORCH_LIBRARIES}")
 
 
-# if (HAS_CUDA)
-#   set_target_properties(hpc PROPERTIES 
-#       CUDA_SEPARABLE_COMPILATION ON
-#   )
-#   target_link_libraries(hpc PUBLIC CUDA::cudart)
-# endif()
+if (HAS_CUDA)
+  set_target_properties(hpc PROPERTIES 
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON 
+  )
+endif()
 
 
 # Accelerate
@@ -231,4 +236,3 @@ enable_testing()
 # Apps
 add_subdirectory(tests)
 add_subdirectory(demos)
-

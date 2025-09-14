@@ -46,7 +46,7 @@ void __global__ sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
       }
       __syncthreads();
 
-      for (size_t k = 0; n < kBlockSizeK; ++k) {
+      for (size_t k = 0; k < kBlockSizeK; ++k) {
         value += As[tidy][k] * Bs[k][tidx];
       }
       __syncthreads();
