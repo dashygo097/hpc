@@ -1,6 +1,5 @@
-#include "./binding.cuh"
+#include "./bindings.cuh"
 #include "./cast.cuh"
-#include "./constants.cuh"
 #include "./launcher.cuh"
 #include "./runtime.cuh"
 
@@ -8,3 +7,5 @@
 #include "./kernels/sigmoid.cuh"
 #include "./kernels/reduce.cuh"
 #include "./kernels/dot_prod.cuh"
+#include "./kernels/elementwise.cuh"
+#include "./kernels/sgemm.cuh"
