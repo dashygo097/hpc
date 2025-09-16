@@ -8,11 +8,11 @@ __global__ void sgemm_naive_kernel(float *C, float *A, float *B, size_t M,
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (idy < M && idx < N) {
-    float value = 0.0f;
+    float c_val = 0.0f;
     for (size_t k = 0; k < K; ++k) {
-      value += A[idy * K + k] * B[k * N + idx];
+      c_val += A[idy * K + k] * B[k * N + idx];
     }
-    C[idy * N + idx] = alpha * value + beta * C[idy * N + idx];
+    C[idy * N + idx] = alpha * c_val + beta * C[idy * N + idx];
   }
 }
 
@@ -26,30 +26,44 @@ __global__ void sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
   size_t idx = blockIdx.x * kBlockSize + threadIdx.x;
   size_t tidy = threadIdx.y;
   size_t tidx = threadIdx.x;
+  
+  float c_val = 0.0f;
 
   if (idx < N && idy < M) {
-    float value = 0.0f;
     for (size_t block_idx = 0; block_idx < (K + kBlockSize - 1) / kBlockSize;
          ++block_idx) {
-      if (block_idx * kBlockSize + threadIdx.x < K) {
-        As[tidy][tidx] = A[idy * K + block_idx * kBlockSize + threadIdx.x];
+      size_t a_row = block_idx * kBlockSize + threadIdx.x;
+      if (a_row < K) {
+        As[tidy][tidx] = A[idy * K + a_row];
       } else {
         As[tidy][tidx] = 0.0f;
       }
-      if (block_idx * kBlockSize + threadIdx.y < K) {
-        Bs[tidy][tidx] = B[(block_idx * kBlockSize + threadIdx.y) * N + idx];
+
+      size_t b_row = block_idx * kBlockSize + threadIdx.y;
+      if (b_row < K) {
+        Bs[tidy][tidx] = B[b_row * N + idx];
       } else {
         Bs[tidy][tidx] = 0.0f;
-      }
+      } 
+
       __syncthreads();
 
+      #pragma unroll
       for (size_t k = 0; k < kBlockSize; ++k) {
-        value += As[tidy][k] * Bs[k][tidx];
+        c_val += As[tidy][k] * Bs[k][tidx];
       }
       __syncthreads();
     }
 
-    C[idy * N + idx] = alpha * value + beta * C[idy * N + idx];
+  }
+  
+  if (idx < N && idy < M) {
+    if (beta != 0.0f) {
+      c_val = alpha * c_val + beta * C[idy * N + idx];
+    } else {
+      c_val = alpha * c_val;
+    }
+    C[idy * N + idx] = c_val;
   }
 }
 
