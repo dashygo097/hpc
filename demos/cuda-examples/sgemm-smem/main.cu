@@ -32,7 +32,7 @@ int main() {
 
   cu::CudaKernelLauncher()
     .autoConfig2D(M, N, CBLOCK_SIZE_2D, CBLOCK_SIZE_2D)
-    .launch(cu::sgemm_naive_kernel,
+    .launch(cu::sgemm_smem_kernel<CBLOCK_SIZE_2D, CWARP_SIZE>,
             d_C, d_A, d_B, M, K, N, 1.0f, 0.0f);
 
   cu::cudaMemcpyD2H<float>(h_C, d_C, M * N);

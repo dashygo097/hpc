@@ -20,6 +20,12 @@
     cudaCheckError(#kernel " launch");                                         \
   } while (0)
 
+#define CUDA_LAUNCH_SHARED_STREAM(kernel, grid, block, shared, stream, ...)    \
+  do {                                                                         \
+    kernel<<<grid, block, shared, stream>>>(__VA_ARGS__);                      \
+    cudaCheckError(#kernel " launch");                                         \
+  } while (0)
+
 #define CUDA_LAUNCH_1D(kernel, numElements, blockSize, ...)                    \
   do {                                                                         \
     dim3 grid((numElements + blockSize - 1) / blockSize);                      \
@@ -30,9 +36,9 @@
 
 #define CUDA_LAUNCH_2D(kernel, numElements, blockX, blockY, ...)               \
   do {                                                                         \
-    dim3 block(blockX, blockY);                                                \
     dim3 grid((numElements + blockX - 1) / blockX,                           \
               (numElements + blockY - 1) / blockY);                          \
+    dim3 block(blockX, blockY);                                                \
     kernel<<<grid, block>>>(__VA_ARGS__);                                      \
     cudaCheckKernel(#kernel);                                                  \
   } while (0)

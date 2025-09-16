@@ -17,8 +17,13 @@ constexpr size_t CBLOCK_SIZE_2D = 16;
 constexpr size_t CBLOCK_SIZE_2D_MAXIMUM = 32;
 constexpr size_t CGEMM_SBLOCK_SIZE = 32;
 
+// Compile-time assertions
 static_assert(BLOCK_SIZE % SIMD_WIDTH == 0,
               "BLOCK_SIZE must be a multiple of SIMD_WIDTH");
+static_assert(CBLOCK_SIZE_1D <= CBLOCK_SIZE_1D_MAXIMUM,
+              "CBLOCK_SIZE_1D exceeds maximum");
+static_assert(CBLOCK_SIZE_2D <= CBLOCK_SIZE_2D_MAXIMUM,
+              "CBLOCK_SIZE_2D exceeds maximum");
 
 enum class Backend {
   SERIAL,
