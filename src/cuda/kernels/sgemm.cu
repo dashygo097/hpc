@@ -4,15 +4,15 @@ namespace hpc::cu {
 void __global__ sgemm_naive_kernel(float *C, float *A, float *B, size_t M,
                                    size_t K, size_t N, float alpha,
                                    float beta) {
-  size_t row = blockIdx.y * blockDim.y + threadIdx.y;
-  size_t col = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t idy = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (row < M && col < N) {
+  if (idy < M && idx < N) {
     float value = 0.0f;
     for (size_t k = 0; k < K; ++k) {
-      value += A[row * K + k] * B[k * N + col];
+      value += A[idy * K + k] * B[k * N + idx];
     }
-    C[row * N + col] = alpha * value + beta * C[row * N + col];
+    C[idy * N + idx] = alpha * value + beta * C[idy * N + idx];
   }
 }
 
