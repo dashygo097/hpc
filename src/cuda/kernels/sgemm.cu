@@ -9,6 +9,7 @@ __global__ void sgemm_naive_kernel(float *C, float *A, float *B, size_t M,
 
   if (idy < M && idx < N) {
     float c_val = 0.0f;
+    #pragma unroll
     for (size_t k = 0; k < K; ++k) {
       c_val += A[idy * K + k] * B[k * N + idx];
     }
@@ -32,9 +33,9 @@ __global__ void sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
   if (idx < N && idy < M) {
     for (size_t block_idx = 0; block_idx < (K + kBlockSize - 1) / kBlockSize;
          ++block_idx) {
-      size_t a_row = block_idx * kBlockSize + threadIdx.x;
-      if (a_row < K) {
-        As[tidy][tidx] = A[idy * K + a_row];
+      size_t a_col = block_idx * kBlockSize + threadIdx.x;
+      if (a_col < K) {
+        As[tidy][tidx] = A[idy * K + a_col];
       } else {
         As[tidy][tidx] = 0.0f;
       }
@@ -45,8 +46,8 @@ __global__ void sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
       } else {
         Bs[tidy][tidx] = 0.0f;
       } 
-
       __syncthreads();
+
 
       #pragma unroll
       for (size_t k = 0; k < kBlockSize; ++k) {
