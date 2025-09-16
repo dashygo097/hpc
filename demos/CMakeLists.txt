@@ -8,6 +8,10 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs)
+
 file(GLOB project ./examples/*)
 file(GLOB cuda-project ./cuda-examples/*)
 
@@ -15,7 +19,6 @@ print_info("――――――――――――――――――APP SCOPE―�
 
 foreach(exec ${project})
   if(IS_DIRECTORY ${exec})
-    set(EXECUTABLE_OUTPUT_PATH ../outputs/demos)
     math(EXPR index "${index} + 1" OUTPUT_FORMAT DECIMAL)
     get_filename_component(exec-name ${exec} NAME)
     file(GLOB_RECURSE ${exec}-src ${exec}/*.c ${exec}/*.cc ${exec}/*.cpp)
@@ -23,6 +26,12 @@ foreach(exec ${project})
 
     add_executable(${exec-name} ${${exec}-src} ${${exec}-hdr})
     target_link_libraries(${exec-name} PRIVATE hpc)
+    
+    set_target_properties(${exec-name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs/demos
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs/demos
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs/demos
+    )
 
     print_info("[TRACE] Adding: ${exec-name}" "0")
 
@@ -31,7 +40,6 @@ endforeach()
 
 foreach(exec ${cuda-project})
   if(IS_DIRECTORY ${exec} AND HAS_CUDA)
-    set(EXECUTABLE_OUTPUT_PATH ../outputs/cuda-demos)
     math(EXPR index "${index} + 1" OUTPUT_FORMAT DECIMAL)
     get_filename_component(exec-name ${exec} NAME)
 
@@ -40,6 +48,12 @@ foreach(exec ${cuda-project})
 
     add_executable(${exec-name} ${${exec}-src} ${${exec}-hdr})
     target_link_libraries(${exec-name} PRIVATE hpc)
+    
+    set_target_properties(${exec-name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs/cuda-demos
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs/cuda-demos
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/outputs/cuda-demos
+    )
 
     print_info("[TRACE] Adding: ${exec-name}" "0")
   endif()

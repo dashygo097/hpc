@@ -2,7 +2,7 @@
 
 using namespace hpc;
 
-const size_t DSIZE = 4096;
+const size_t DSIZE = 2048;
 
 int main() {
   float *h_A = cu::cudaMallocH<float>(DSIZE * DSIZE);
