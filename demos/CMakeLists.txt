@@ -31,7 +31,7 @@ endforeach()
 
 foreach(exec ${cuda-project})
   if(IS_DIRECTORY ${exec} AND HAS_CUDA)
-    set(EXECUTABLE_OUTPUT_PATH ../outputs/demos)
+    set(EXECUTABLE_OUTPUT_PATH ../outputs/cuda-demos)
     math(EXPR index "${index} + 1" OUTPUT_FORMAT DECIMAL)
     get_filename_component(exec-name ${exec} NAME)
 
