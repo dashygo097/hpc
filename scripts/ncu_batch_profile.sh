@@ -12,7 +12,7 @@ for exec_file in "$CUDA_EXEC_DIR"/*; do
         exec_name=$(basename "$exec_file")
         
         echo "Profiling $exec_name..."
-        sudo ncu --set full --target-processes all -o "$OUTPUT_DIR/$exec_name" "$exec_file"
+        sudo ncu --set full --target-processes all -f -o "$OUTPUT_DIR/$exec_name" "$exec_file"
         
         echo "Profile data for $exec_name saved in $OUTPUT_DIR/$exec_name.ncu-rep"
     fi
