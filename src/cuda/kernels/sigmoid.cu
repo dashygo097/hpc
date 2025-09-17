@@ -10,18 +10,7 @@ __global__ void sigmoid_fp32_kernel(float *out, float *in, size_t N) {
     out[idx] = 1.0f / (1.0f + expf(-in_reg));
   }
 }
-__global__ void sigmoid_fp32x2_kernel(float *out, float *in, size_t N) {
-  size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
-  if (idx < N) {
-    float2 in_reg = FLOAT2(in + idx);
-    in_reg.x = fminf(fmaxf(in_reg.x, MIN_EXP_FP32), MAX_EXP_FP32);
-    in_reg.y = fminf(fmaxf(in_reg.y, MIN_EXP_FP32), MAX_EXP_FP32);
-    float2 out_reg;
-    out_reg.x = 1.0f / (1.0f + expf(-in_reg.x));
-    out_reg.y = 1.0f / (1.0f + expf(-in_reg.y));
-    FLOAT2(out + idx) = out_reg;
-  }
-}
+
 __global__ void sigmoid_fp32x4_kernel(float *out, float *in, size_t N) {
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 4;
   if (idx < N) {
@@ -47,20 +36,7 @@ __global__ void sigmoid_fp16_kernel(half *out, half *in, size_t N) {
                       __hadd(__float2half(1.0f), hexp(__hneg(in_reg))));
   }
 }
-__global__ void sigmoid_fp16x2_kernel(half *out, half *in, size_t N) {
-  size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
-  if (idx < N) {
-    half2 in_reg = HALF2(in + idx);
-    in_reg.x = __hmin(__hmax(in_reg.x, MIN_EXP_FP16), MAX_EXP_FP16);
-    in_reg.y = __hmin(__hmax(in_reg.y, MIN_EXP_FP16), MAX_EXP_FP16);
-    half2 out_reg;
-    out_reg.x = __hdiv(__float2half(1.0f),
-                       __hadd(__float2half(1.0f), hexp(__hneg(in_reg.x))));
-    out_reg.y = __hdiv(__float2half(1.0f),
-                       __hadd(__float2half(1.0f), hexp(__hneg(in_reg.y))));
-    HALF2(out + idx) = out_reg;
-  }
-}
+
 __global__ void sigmoid_fp16x8_kernel(half *out, half *in, size_t N) {
   size_t idx = (blockIdx.x * blockDim.x + threadIdx.x) * 8;
   if (idx < N) {

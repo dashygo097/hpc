@@ -9,17 +9,6 @@ __global__ void relu_fp32_kernel(float *out, float *in, size_t N) {
   }
 }
 
-__global__ void relu_fp32x2_kernel(float *out, float *in, size_t N) {
-  size_t idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
-  if (idx < N) {
-    float2 in_reg = FLOAT2(in + idx);
-    float2 out_reg;
-    out_reg.x = fmaxf(0.0f, in_reg.x);
-    out_reg.y = fmaxf(0.0f, in_reg.y);
-    FLOAT2(out + idx) = out_reg;
-  }
-}
-
 __global__ void relu_fp32x4_kernel(float *out, float *in, size_t N) {
   size_t idx = 4 * (blockIdx.x * blockDim.x + threadIdx.x);
   if (idx < N) {
@@ -37,17 +26,6 @@ __global__ void relu_fp16_kernel(half *out, half *in, size_t N) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N) {
     out[idx] = __hmax(__float2half(0.0f), in[idx]);
-  }
-}
-
-__global__ void relu_fp16x2_kernel(half *out, half *in, size_t N) {
-  size_t idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
-  if (idx < N) {
-    half2 in_reg = HALF2(in + idx);
-    half2 out_reg;
-    out_reg.x = __hmax(__float2half(0.0f), in_reg.x);
-    out_reg.y = __hmax(__float2half(0.0f), in_reg.y);
-    HALF2(out + idx) = out_reg;
   }
 }
 
