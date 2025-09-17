@@ -113,7 +113,7 @@ protected:
   }
 #elif defined(__ARM_NEON)
   void computeImplOpenMP() {
-    c.assign(a, b, [](const simd_t &x, const simd_t &y) {
+    c.foreach(a, b, [](const simd_t &x, const simd_t &y) {
       auto temp = vsubq_f32(vaddq_f32(x, y), vdupq_n_f32(1.0f));
       return vmulq_f32(temp, temp);
     });
