@@ -23,7 +23,6 @@ void mmul_baseline(T *C, T *A, T *B, const size_t &M, const size_t &K,
 } // namespace hpc::serial
 
 namespace hpc::openmp {
-
 template <typename T>
 void naive_mmul_impl(T *C, const T *A, const T *B, const size_t &M,
                      const size_t &K, const size_t &N) {
