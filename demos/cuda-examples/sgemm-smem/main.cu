@@ -2,9 +2,9 @@
 
 using namespace hpc;
 
-const size_t M = 2048;
-const size_t K = 1024;
-const size_t N = 2048;
+const size_t M = 1024;
+const size_t K = 512; 
+const size_t N = 1024;
 
 int main() {
   float *h_A = cu::cudaMallocH<float>(M * K);

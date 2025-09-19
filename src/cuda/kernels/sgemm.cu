@@ -57,6 +57,13 @@ __global__ void sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
   }
 }
 
+template <const size_t kBlockSize, const size_t kTileSize, const size_t kWarpSize>
+__global__ void sgemm_tiled_kernel(float *C, float *A, float *B, size_t M, 
+                                    size_t K, size_t N, float alpha, float beta) {
+  __shared__ float As[kBlockSize][kTileSize];
+  __shared__ float Bs[kTileSize][kBlockSize];
+}
+
 template __global__ void sgemm_smem_kernel<CGEMM_SBLOCK_SIZE, CWARP_SIZE>(
     float *C, float *A, float *B, size_t M, size_t K, size_t N, float alpha,
     float beta);

@@ -9,3 +9,4 @@
 #include "./kernels/dot_prod.cuh"
 #include "./kernels/elementwise.cuh"
 #include "./kernels/sgemm.cuh"
+#include "./kernels/mat_transpose.cuh"

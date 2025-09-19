@@ -9,4 +9,8 @@ template <const size_t kBlockSize = CGEMM_SBLOCK_SIZE,
           const size_t kWarpSize = CWARP_SIZE>
 __global__ void sgemm_smem_kernel(float *C, float *A, float *B, size_t M,
                                   size_t K, size_t N, float alpha, float beta);
+template <const size_t kBlockSize = CGEMM_TBLOCK_SIZE, const size_t kTileSize = CGEMM_TILE_SIZE, 
+          const size_t kWarpSize = CWARP_SIZE>
+__global__ void sgemm_tiled_kernel(float *C, float *A, float *B, size_t M,
+                                    size_t K, size_t N, float alpha, float beta);
 } // namespace hpc::cu

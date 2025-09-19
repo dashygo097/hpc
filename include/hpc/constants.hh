@@ -16,6 +16,8 @@ constexpr size_t CBLOCK_SIZE_1D_MAXIMUM = 1024;
 constexpr size_t CBLOCK_SIZE_2D = 16;
 constexpr size_t CBLOCK_SIZE_2D_MAXIMUM = 32;
 constexpr size_t CGEMM_SBLOCK_SIZE = 32;
+constexpr size_t CGEMM_TBLOCK_SIZE = 128;
+constexpr size_t CGEMM_TILE_SIZE = 8;
 
 // Compile-time assertions
 static_assert(BLOCK_SIZE % SIMD_WIDTH == 0,
