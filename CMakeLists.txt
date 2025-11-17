@@ -6,39 +6,76 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(ENV{CCACHE_CUDA} "1")
-    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+  set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  set(ENV{CCACHE_CUDA} "1")
+  message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
 endif()
+
+# Colored printing
+function(print_info MSG COLOR)
+  if(CMAKE_COLOR_MAKEFILE)
+    execute_process(COMMAND printf "\\033[1;${COLOR}m${MSG}\\033[0m\n")
+  else()
+    message(STATUS "${MSG}")
+  endif()
+endfunction()
+
+function(make_paths_relative out_var)
+  set(result "")
+  foreach(path IN LISTS ${ARGV1})
+    file(RELATIVE_PATH rel "${CMAKE_SOURCE_DIR}" "${path}")
+    list(APPEND result "${rel}")
+  endforeach()
+  set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()
+
+function(make_preview_string LIST_VAR N)
+  set(preview "")
+
+  list(LENGTH ${LIST_VAR} list_length)
+
+  foreach(item IN LISTS ${LIST_VAR})
+    list(APPEND preview "${item}")
+    if("${preview}" MATCHES "^.*;.*;.*$")
+      break()
+    endif()
+  endforeach()
+
+  if(list_length GREATER N)
+    math(EXPR remaining_items "${list_length} - ${N}")
+    list(APPEND preview "; ...(+${remaining_items} more)")
+  endif()
+
+  set(PREVIOUS_SCOPE_VAR "${preview}" PARENT_SCOPE)
+endfunction()
 
 # Platform detection
 if(APPLE)
-    set(IS_APPLE TRUE)
-    message(STATUS "Building on macOS")
+  set(IS_APPLE TRUE)
+  message(STATUS "Building on macOS")
 elseif(UNIX)
-    set(IS_UNIX TRUE)
-    message(STATUS "Building on Unix-like system")
+  set(IS_UNIX TRUE)
+  message(STATUS "Building on Unix-like system")
 else() 
-    message(FATAL_ERROR "Unsupported platform")
+  message(FATAL_ERROR "Unsupported platform")
 endif()
-
 
 # CUDA
 include(CheckLanguage)
 check_language(CUDA)
 
 if(CMAKE_CUDA_COMPILER)
-    enable_language(CUDA)
-    find_package(CUDAToolkit REQUIRED)
-    set(HAS_CUDA TRUE)
+  enable_language(CUDA)
+  find_package(CUDAToolkit REQUIRED)
+  set(HAS_CUDA TRUE)
 
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fPIC")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fPIC")
 
-    message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
-    message(STATUS "CUDA toolkit: ${CUDAToolkit_VERSION}")
+  message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
+  message(STATUS "CUDA toolkit: ${CUDAToolkit_VERSION}")
 
 else()
   set(HAS_CUDA FALSE)
@@ -46,11 +83,11 @@ else()
 endif()
 
 if(HAS_CUDA)
-    if(NOT TARGET CUDA::cudart)
-        message(FATAL_ERROR "CUDA::cudart target not found — missing CUDA Toolkit?")
-    endif()
+  if(NOT TARGET CUDA::cudart)
+    message(FATAL_ERROR "CUDA::cudart target not found — missing CUDA Toolkit?")
+  endif()
 else()
-    message(STATUS "CUDA support is disabled.")
+  message(STATUS "CUDA support is disabled.")
 endif()
 
 # OpenMP
@@ -70,21 +107,21 @@ find_package(MPI REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 execute_process(
-    COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"
-    OUTPUT_VARIABLE TORCH_CMAKE_PATH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE TORCH_PYTHON_EXIT_CODE
+  COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"
+  OUTPUT_VARIABLE TORCH_CMAKE_PATH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  RESULT_VARIABLE TORCH_PYTHON_EXIT_CODE
 )
 
 if(NOT TORCH_PYTHON_EXIT_CODE EQUAL 0)
-    message(FATAL_ERROR "Failed to get PyTorch path from Python. Make sure PyTorch is installed.")
+  message(FATAL_ERROR "Failed to get PyTorch path from Python. Make sure PyTorch is installed.")
 endif()
 
 list(APPEND CMAKE_PREFIX_PATH ${TORCH_CMAKE_PATH})
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP ${CMAKE_FIND_LIBRARY_SUFFIXES})
 if(APPLE)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib" ".a" ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib" ".a" ${CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
 find_package(Torch REQUIRED)
@@ -116,83 +153,44 @@ if (HAS_CUDA)
       CUDA_SEPARABLE_COMPILATION ON
       CUDA_RESOLVE_DEVICE_SYMBOLS ON
   )
-else()
-  add_library(hpc ${HPC_SOURCES} ${HPC_HEADERS})
-endif()
+  target_include_directories(hpc PUBLIC 
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
+  )
+  target_include_directories(hpc PUBLIC ${Python3_INCLUDE_DIRS})
+  target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
+  set_source_files_properties(${HPC_CUDA_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
-target_include_directories(hpc PUBLIC 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_include_directories(hpc PUBLIC ${Python3_INCLUDE_DIRS})
-target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
-if(HAS_CUDA)
-    set_source_files_properties(${HPC_CUDA_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
-endif()
-
-target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
-target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX)
-target_link_libraries(hpc PRIVATE Python3::Python "${TORCH_LIBRARIES}")
-
-
-if (HAS_CUDA)
+  target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
+  target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX)
+  target_link_libraries(hpc PRIVATE Python3::Python "${TORCH_LIBRARIES}")
   set_target_properties(hpc PROPERTIES 
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_RESOLVE_DEVICE_SYMBOLS ON 
   )
-endif()
 
-
-# Accelerate
-if (IS_APPLE)
-  add_compile_definitions(ACCELERATE_NEW_LAPACK ACCELERATE_LAPACK_ILP64)
-  find_library(ACCELERATE_LIB Accelerate)
-  target_link_libraries(hpc PUBLIC ${ACCELERATE_LIB})
-endif()
-
-
-set_target_properties(hpc PROPERTIES
+  set_target_properties(hpc PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-)
+  )
 
-# Colored printing
-function(print_info MSG COLOR)
-  if(CMAKE_COLOR_MAKEFILE)
-    execute_process(COMMAND printf "\\033[1;${COLOR}m${MSG}\\033[0m\n")
-  else()
-    message(STATUS "${MSG}")
+else()
+  add_library(hpc INTERFACE)
+  target_include_directories(hpc INTERFACE 
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
+  )
+
+  target_link_libraries(hpc INTERFACE OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
+  target_link_libraries(hpc INTERFACE MPI::MPI_C MPI::MPI_CXX)
+  target_link_libraries(hpc INTERFACE Python3::Python "${TORCH_LIBRARIES}")
+
+  if (IS_APPLE)
+    add_compile_definitions(ACCELERATE_NEW_LAPACK ACCELERATE_LAPACK_ILP64)
+    find_library(ACCELERATE_LIB Accelerate)
+    target_link_libraries(hpc INTERFACE ${ACCELERATE_LIB})
   endif()
-endfunction()
-
-function(make_paths_relative out_var)
-    set(result "")
-    foreach(path IN LISTS ${ARGV1})
-        file(RELATIVE_PATH rel "${CMAKE_SOURCE_DIR}" "${path}")
-        list(APPEND result "${rel}")
-    endforeach()
-    set(${out_var} "${result}" PARENT_SCOPE)
-endfunction()
-
-function(make_preview_string LIST_VAR N)
-  set(preview "")
-
-  list(LENGTH ${LIST_VAR} list_length)
-
-  foreach(item IN LISTS ${LIST_VAR})
-    list(APPEND preview "${item}")
-    if("${preview}" MATCHES "^.*;.*;.*$")
-      break()
-    endif()
-  endforeach()
-
-  if(list_length GREATER N)
-    math(EXPR remaining_items "${list_length} - ${N}")
-    list(APPEND preview "; ...(+${remaining_items} more)")
-  endif()
-
-  set(PREVIOUS_SCOPE_VAR "${preview}" PARENT_SCOPE)
-endfunction()
+endif()
 
 # Stastics
 print_info("――――――――――――――――――LIB SCOPE――――――――――――――――――" "0")
