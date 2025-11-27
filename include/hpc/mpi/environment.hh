@@ -1,5 +1,8 @@
 #pragma once
 
+#include <iostream>
+#include <mpi.h>
+
 namespace hpc::mpi {
 class MPIEnv {
 public:

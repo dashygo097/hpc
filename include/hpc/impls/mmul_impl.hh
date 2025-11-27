@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../pch.hh"
+#include <iostream>
 
 #ifdef ENABLE_SIMD
 #include "./simd_impl.hh"

@@ -1,5 +1,13 @@
 #pragma once
 
+#include <cstddef>
+
+#if defined(__APPLE__)
+#include <simd/simd.h>
+#elif defined(__ARM_NEON)
+#include <arm_neon.h>
+#endif
+
 namespace hpc {
 template <typename T, size_t Width> struct simd_type;
 template <typename T, size_t Width> struct neon_traits;
