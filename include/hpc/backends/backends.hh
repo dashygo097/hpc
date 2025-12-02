@@ -1,8 +1,14 @@
 #pragma once
 
-#include "./cuda/cuda.hh"
-#include "./mpi/mpi.hh"
-#include "./simd/simd.hh"
+// SIMD
+#include "./simd/apple_simd_traits.hh"
+#include "./simd/arm_neon_traits.hh"
+#include "./simd/avx_traits.hh"
+#include "./simd/sse_traits.hh"
+
+// MPI
+
+// CUDA
 
 namespace hpc {
 enum class Backend {
