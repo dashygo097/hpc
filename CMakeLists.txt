@@ -19,83 +19,8 @@ include(CompilerSetup)
 # Build the main library
 include(Helpers)
 
-# CUDA
-include(CheckLanguage)
-check_language(CUDA)
-
-if(CMAKE_CUDA_COMPILER)
-  enable_language(CUDA)
-  find_package(CUDAToolkit REQUIRED)
-  set(HAS_CUDA TRUE)
-
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fPIC")
-
-  message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
-  message(STATUS "CUDA toolkit: ${CUDAToolkit_VERSION}")
-
-else()
-  set(HAS_CUDA FALSE)
-  message(WARNING "CUDA compiler not found; CUDA support will be disabled.")
-endif()
-
-if(HAS_CUDA)
-  if(NOT TARGET CUDA::cudart)
-    message(FATAL_ERROR "CUDA::cudart target not found — missing CUDA Toolkit?")
-  endif()
-else()
-  message(STATUS "CUDA support is disabled.")
-endif()
-
-# OpenMP
-if(APPLE)
-  set(OPENMP_PATH "/opt/homebrew/opt/libomp")
-  set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_PATH}/include")
-  set(OpenMP_CXX_FLAGS "${OpenMP_C_FLAGS}")
-  set(OpenMP_C_LIB_NAMES "omp")
-  set(OpenMP_CXX_LIB_NAMES "omp")
-  set(OpenMP_omp_LIBRARY "${OPENMP_PATH}/lib/libomp.dylib")
-endif()
-
-find_package(OpenMP REQUIRED)
-find_package(MPI REQUIRED)
-
-# Pytorch
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-
-execute_process(
-  COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.utils.cmake_prefix_path)"
-  OUTPUT_VARIABLE TORCH_CMAKE_PATH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  RESULT_VARIABLE TORCH_PYTHON_EXIT_CODE
-)
-
-if(NOT TORCH_PYTHON_EXIT_CODE EQUAL 0)
-  message(FATAL_ERROR "Failed to get PyTorch path from Python. Make sure PyTorch is installed.")
-endif()
-
-list(APPEND CMAKE_PREFIX_PATH ${TORCH_CMAKE_PATH})
-
-set(CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP ${CMAKE_FIND_LIBRARY_SUFFIXES})
-if(APPLE)
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib" ".a" ${CMAKE_FIND_LIBRARY_SUFFIXES})
-endif()
-
-find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-
-set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP})
-
-message(STATUS "PyTorch found at: ${TORCH_CMAKE_PATH}")
-message(STATUS "PyTorch version: ${Torch_VERSION}")
-
-# 3rdparty
-include_directories(3rdparty)
-add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
-add_subdirectory(3rdparty/pybind11)
-
-# optional: Google Benchmark
-# add_subdirectory(3rdparty/benchmark EXCLUDE_FROM_ALL)
+# Find all dependencies based on configuration
+include(Dependencies)
 
 # HPC lib
 file(GLOB_RECURSE HPC_SOURCES src/*.c src/*.cc src/*.cpp)

@@ -3,7 +3,6 @@
 # --- 3rdparty libraries (always included) ---
 include_directories(3rdparty)
 add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
-add_subdirectory(3rdparty/pybind11 EXCLUDE_FROM_ALL)
 
 # --- CUDA ---
 if(ENABLE_CUDA AND NOT IS_APPLE)
@@ -33,7 +32,7 @@ endif()
 
 # --- OpenMP ---
 if(ENABLE_OPENMP)
-  if(IS_APPLE)
+  if(APPLE)
     # macOS-specific OpenMP setup (Homebrew libomp)
     set(OPENMP_PATH "/opt/homebrew/opt/libomp" CACHE PATH "Path to OpenMP installation")
     if(EXISTS "${OPENMP_PATH}")
@@ -63,6 +62,11 @@ if(ENABLE_MPI)
   message(STATUS "MPI CXX version: ${MPI_CXX_VERSION}")
 else()
   set(HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
+endif()
+
+# --- Pybind11 ---
+if(ENABLE_PYBIND11) 
+  add_subdirectory(3rdparty/pybind11)
 endif()
 
 # --- PyTorch ---
