@@ -1,17 +1,7 @@
 #pragma once
 
-#ifdef SIMD_APPLE
-#include <simd/simd.h>
-#endif
-
-#ifdef SIMD_NEON
-#include <arm_neon.h>
-#endif
-
-#ifdef SIMD_AVX
-#include <immintrin.h>
-#endif
-
-#ifdef SIMD_SSE
-#include <xmmintrin.h>
-#endif
+// SIMD traits for different architectures
+#include "./apple_simd_traits.hh"
+#include "./arm_neon_traits.hh"
+#include "./avx_traits.hh"
+#include "./sse_traits.hh"
