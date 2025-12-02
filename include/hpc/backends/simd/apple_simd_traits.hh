@@ -8,6 +8,19 @@
 namespace hpc::simd {
 template <typename T, size_t Width> struct simd_traits;
 
+template <> struct simd_traits<float, 1> {
+  using type = float;
+  static constexpr size_t width = 1;
+
+  static type load(const float *ptr) { return ptr[0]; }
+  static type duplicate(float v) { return v; }
+  static void store(float *ptr, type v) { ptr[0] = v; }
+  static type add(type a, type b) { return a + b; }
+  static type sub(type a, type b) { return a - b; }
+  static type mul(type a, type b) { return a * b; }
+  static type div(type a, type b) { return a / b; }
+};
+
 template <> struct simd_traits<float, 2> {
   using type = simd_float2;
   static constexpr size_t width = 2;
@@ -32,6 +45,19 @@ template <> struct simd_traits<float, 4> {
   }
   static type duplicate(float v) { return simd_make_float4(v, v, v, v); }
   static void store(float *ptr, type v) { *(type *)(ptr) = v; }
+  static type add(type a, type b) { return a + b; }
+  static type sub(type a, type b) { return a - b; }
+  static type mul(type a, type b) { return a * b; }
+  static type div(type a, type b) { return a / b; }
+};
+
+template <> struct simd_traits<double, 1> {
+  using type = double;
+  static constexpr size_t width = 1;
+
+  static type load(const double *ptr) { return ptr[0]; }
+  static type duplicate(double v) { return v; }
+  static void store(double *ptr, type v) { ptr[0] = v; }
   static type add(type a, type b) { return a + b; }
   static type sub(type a, type b) { return a - b; }
   static type mul(type a, type b) { return a * b; }
@@ -65,6 +91,18 @@ template <> struct simd_traits<double, 4> {
   static type sub(type a, type b) { return a - b; }
   static type mul(type a, type b) { return a * b; }
   static type div(type a, type b) { return a / b; }
+};
+
+template <> struct simd_traits<int, 1> {
+  using type = int;
+  static constexpr size_t width = 1;
+
+  static type load(const int *ptr) { return ptr[0]; }
+  static type duplicate(int v) { return v; }
+  static void store(int *ptr, type v) { ptr[0] = v; }
+  static type add(type a, type b) { return a + b; }
+  static type sub(type a, type b) { return a - b; }
+  static type mul(type a, type b) { return a * b; }
 };
 
 template <> struct simd_traits<int, 2> {

@@ -2,7 +2,6 @@
 
 #include "./cuda/cuda.hh"
 #include "./mpi/mpi.hh"
-#include "./openmp/openmp.hh"
 #include "./simd/simd.hh"
 
 namespace hpc {
