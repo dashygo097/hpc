@@ -76,7 +76,7 @@ if(ENABLE_SIMD)
       
     if(HAS_APPLE_SIMD)
       set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
-      set(SIMD_TYPE "APPLE_SIMD" CACHE INTERNAL "SIMD implementation type")
+      set(SIMD_TYPE "Apple" CACHE INTERNAL "SIMD implementation type")
       message(STATUS "SIMD: Apple Silicon SIMD detected (M-series chip)")
     else()
       set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")

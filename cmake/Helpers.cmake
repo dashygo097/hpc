@@ -1,11 +1,7 @@
 # Utility functions for printing colored messages
 
 function(print_info MSG COLOR)
-  if(CMAKE_COLOR_MAKEFILE)
-    execute_process(COMMAND printf "\\033[1;${COLOR}m${MSG}\\033[0m\n")
-  else()
-    message(STATUS "${MSG}")
-  endif()
+  execute_process(COMMAND printf "\\033[1;${COLOR}m${MSG}\\033[0m")
 endfunction()
 
 function(make_paths_relative out_var)
