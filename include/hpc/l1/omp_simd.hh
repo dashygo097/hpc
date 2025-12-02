@@ -8,7 +8,7 @@ namespace hpc::l1 {
 namespace details {
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
-inline void vadd_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vadd_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
 
@@ -16,12 +16,12 @@ inline void vadd_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
   for (size_t block_idx = 0; block_idx < n; block_idx += TileSize) {
     size_t i_end = std::min(block_idx + TileSize, SimdWidth);
     for (size_t i = block_idx; i < i_end; i += SimdWidth) {
-      *((simd_t *)(dst + i)) += traits::duplicate(scaler);
+      *((simd_t *)(dst + i)) += traits::duplicate(scalar);
     }
   }
   if (n % SimdWidth != 0) {
     simd_t v = *((simd_t *)(dst + SimdWidth));
-    simd_t result = traits::add(v, traits::duplicate(scaler));
+    simd_t result = traits::add(v, traits::duplicate(scalar));
     for (size_t i = 0; i < n % SimdWidth; ++i) {
       *((dst + SimdWidth + i)) = result[i];
     }
@@ -52,7 +52,7 @@ inline void vadd_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
-inline void vsub_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vsub_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
 
@@ -60,12 +60,12 @@ inline void vsub_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
   for (size_t block_idx = 0; block_idx < n; block_idx += TileSize) {
     size_t i_end = std::min(block_idx + TileSize, SimdWidth);
     for (size_t i = block_idx; i < i_end; i += SimdWidth) {
-      *((simd_t *)(dst + i)) -= traits::duplicate(scaler);
+      *((simd_t *)(dst + i)) -= traits::duplicate(scalar);
     }
   }
   if (n % SimdWidth != 0) {
     simd_t v = *((simd_t *)(dst + SimdWidth));
-    simd_t result = traits::sub(v, traits::duplicate(scaler));
+    simd_t result = traits::sub(v, traits::duplicate(scalar));
     for (size_t i = 0; i < n % SimdWidth; ++i) {
       *((dst + SimdWidth + i)) = result[i];
     }
@@ -96,7 +96,7 @@ inline void vsub_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
-inline void vmul_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vmul_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
 
@@ -104,12 +104,12 @@ inline void vmul_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
   for (size_t block_idx = 0; block_idx < n; block_idx += TileSize) {
     size_t i_end = std::min(block_idx + TileSize, SimdWidth);
     for (size_t i = block_idx; i < i_end; i += SimdWidth) {
-      *((simd_t *)(dst + i)) *= traits::duplicate(scaler);
+      *((simd_t *)(dst + i)) *= traits::duplicate(scalar);
     }
   }
   if (n % SimdWidth != 0) {
     simd_t v = *((simd_t *)(dst + SimdWidth));
-    simd_t result = traits::mul(v, traits::duplicate(scaler));
+    simd_t result = traits::mul(v, traits::duplicate(scalar));
     for (size_t i = 0; i < n % SimdWidth; ++i) {
       *((dst + SimdWidth + i)) = result[i];
     }
@@ -140,7 +140,7 @@ inline void vmul_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
-inline void vdiv_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vdiv_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
 
@@ -148,12 +148,12 @@ inline void vdiv_omp_simd(T *__restrict__ dst, const T &scaler, size_t n) {
   for (size_t block_idx = 0; block_idx < n; block_idx += TileSize) {
     size_t i_end = std::min(block_idx + TileSize, SimdWidth);
     for (size_t i = block_idx; i < i_end; i += SimdWidth) {
-      *((simd_t *)(dst + i)) /= traits::duplicate(scaler);
+      *((simd_t *)(dst + i)) /= traits::duplicate(scalar);
     }
   }
   if (n % SimdWidth != 0) {
     simd_t v = *((simd_t *)(dst + SimdWidth));
-    simd_t result = traits::div(v, traits::duplicate(scaler));
+    simd_t result = traits::div(v, traits::duplicate(scalar));
     for (size_t i = 0; i < n % SimdWidth; ++i) {
       *((dst + SimdWidth + i)) = result[i];
     }

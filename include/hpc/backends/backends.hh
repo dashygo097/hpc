@@ -7,6 +7,8 @@
 #include "./simd/sse_traits.hh"
 
 // MPI
+#include "./mpi/comm.hh"
+#include "./mpi/env.hh"
 
 // CUDA
 

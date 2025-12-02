@@ -73,12 +73,12 @@ inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
 }
 
 template <typename T, const size_t TileSize>
-inline void vadd_omp(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vadd_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
   for (size_t block = 0; block < n; block += TileSize) {
     size_t end = std::min(block + TileSize, n);
     for (size_t i = block; i < end; ++i) {
-      dst[i] += scaler;
+      dst[i] += scalar;
     }
   }
 }
@@ -95,12 +95,12 @@ inline void vadd_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
 }
 
 template <typename T, const size_t TileSize>
-inline void vsub_omp(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vsub_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
   for (size_t block = 0; block < n; block += TileSize) {
     size_t end = std::min(block + TileSize, n);
     for (size_t i = block; i < end; ++i) {
-      dst[i] -= scaler;
+      dst[i] -= scalar;
     }
   }
 }
@@ -117,12 +117,12 @@ inline void vsub_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
 }
 
 template <typename T, const size_t TileSize>
-inline void vmul_omp(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vmul_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
   for (size_t block = 0; block < n; block += TileSize) {
     size_t end = std::min(block + TileSize, n);
     for (size_t i = block; i < end; ++i) {
-      dst[i] *= scaler;
+      dst[i] *= scalar;
     }
   }
 }
@@ -139,12 +139,12 @@ inline void vmul_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
 }
 
 template <typename T, const size_t TileSize>
-inline void vdiv_omp(T *__restrict__ dst, const T &scaler, size_t n) {
+inline void vdiv_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
   for (size_t block = 0; block < n; block += TileSize) {
     size_t end = std::min(block + TileSize, n);
     for (size_t i = block; i < end; ++i) {
-      dst[i] /= scaler;
+      dst[i] /= scalar;
     }
   }
 }
