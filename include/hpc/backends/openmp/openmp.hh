@@ -1,4 +1,4 @@
 #pragma once
 
-#if defined(ENABLE_OPENMP)
+#ifdef ENABLE_OPENMP
 #endif

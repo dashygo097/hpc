@@ -1,4 +1,4 @@
 #pragma once
 
-#if defined(ENABLE_CUDA)
+#ifdef ENABLE_CUDA
 #endif

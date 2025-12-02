@@ -1,4 +1,4 @@
 #pragma once
 
-#if defined(ENABLE_MPI) 
+#ifdef ENABLE_MPI
 #endif

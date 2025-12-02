@@ -8,16 +8,16 @@
 namespace hpc {
 enum class Backend {
   SEQUENTIAL,
-#if defined(ENABLE_SIMD)
+#ifdef ENABLE_SIMD
   SIMD,
 #endif
-#if defined(ENABLE_OPENMP)
+#ifdef ENABLE_OPENMP
   OPENMP,
 #endif
-#if defined(ENABLE_MPI)
+#ifdef ENABLE_MPI
   MPI,
 #endif
-#if defined(ENABLE_CUDA)
+#ifdef ENABLE_CUDA
   CUDA,
 #endif
 };
@@ -26,19 +26,19 @@ inline const char *backend_name(Backend b) {
   switch (b) {
   case Backend::SEQUENTIAL:
     return "Sequential";
-#if defined(ENABLE_SIMD) && defined(HAS_SIMD)
+#if ENABLE_SIMD
   case Backend::SIMD:
     return "SIMD";
 #endif
-#if defined(ENABLE_OPENMP) && defined(HAS_OPENMP)
+#if ENABLE_OPENMP
   case Backend::OPENMP:
     return "OpenMP";
 #endif
-#if defined(ENABLE_MPI) && defined(HAS_MPI)
+#if ENABLE_MPI
   case Backend::MPI:
     return "MPI";
 #endif
-#if defined(ENABLE_CUDA) && defined(HAS_CUDA)
+#if ENABLE_CUDA
   case Backend::CUDA:
     return "CUDA";
 #endif
