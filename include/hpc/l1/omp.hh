@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../../backends/backends.hh"
+#include "../backends/backends.hh"
 #include <algorithm>
 
 #ifdef ENABLE_OPENMP
-namespace hpc::op {
+namespace hpc::l1 {
 namespace details {
 
 template <typename T>
@@ -171,6 +171,18 @@ inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
   }
 }
 
+template <typename T, const size_t TileSize>
+inline void axpy_omp(T *__restrict__ y, const T *__restrict__ x, const T &a,
+                     size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t block = 0; block < n; block += TileSize) {
+    size_t end = std::min(block + TileSize, n);
+    for (size_t i = block; i < end; ++i) {
+      y[i] += a * x[i];
+    }
+  }
+}
+
 } // namespace details
-} // namespace hpc::op
+} // namespace hpc::l1
 #endif

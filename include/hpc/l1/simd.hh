@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../../backends/backends.hh"
+#include "../backends/backends.hh"
 
 #ifdef ENABLE_SIMD
-namespace hpc::op {
+namespace hpc::l1 {
 namespace details {
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vadd_simd(T *__restrict__ dst, const T *__restrict__ src,
                       size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
@@ -25,7 +25,7 @@ inline void vadd_simd(T *__restrict__ dst, const T *__restrict__ src,
   }
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vsub_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   const size_t simd_end = n - (n % SimdWidth);
@@ -39,7 +39,7 @@ inline void vsub_simd(T *__restrict__ dst, const T &scalar, size_t n) {
     dst[i] -= scalar;
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vsub_simd(T *__restrict__ dst, const T *__restrict__ src,
                       size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
@@ -54,7 +54,7 @@ inline void vsub_simd(T *__restrict__ dst, const T *__restrict__ src,
     dst[i] -= src[i];
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vmul_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   const size_t simd_end = n - (n % SimdWidth);
@@ -68,7 +68,7 @@ inline void vmul_simd(T *__restrict__ dst, const T &scalar, size_t n) {
     dst[i] *= scalar;
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vmul_simd(T *__restrict__ dst, const T *__restrict__ src,
                       size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
@@ -83,7 +83,7 @@ inline void vmul_simd(T *__restrict__ dst, const T *__restrict__ src,
     dst[i] *= src[i];
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vdiv_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   const size_t simd_end = n - (n % SimdWidth);
@@ -97,7 +97,7 @@ inline void vdiv_simd(T *__restrict__ dst, const T &scalar, size_t n) {
     dst[i] /= scalar;
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vdiv_simd(T *__restrict__ dst, const T *__restrict__ src,
                       size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
@@ -112,7 +112,7 @@ inline void vdiv_simd(T *__restrict__ dst, const T *__restrict__ src,
     dst[i] /= src[i];
 }
 
-template <typename T, size_t BlockSize, size_t SimdWidth>
+template <typename T, const size_t SimdWidth>
 inline void vfill_simd(T *__restrict__ dst, const T &value, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   const size_t simd_end = n - (n % SimdWidth);
@@ -124,6 +124,23 @@ inline void vfill_simd(T *__restrict__ dst, const T &value, size_t n) {
   for (size_t i = simd_end; i < n; ++i)
     dst[i] = value;
 }
+
+// l1
+template <typename T, const size_t SimdWidth>
+inline void axpy_simd(T *__restrict__ y, const T *__restrict__ x, const T &a,
+                      size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  const size_t simd_end = n - (n % SimdWidth);
+  const auto a_vec = traits::duplicate(a);
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    auto vy = traits::load(y + i);
+    auto vx = traits::load(x + i);
+    traits::store(y + i, traits::add(vy, traits::mul(a_vec, vx)));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    y[i] += a * x[i];
+}
+
 } // namespace details
-} // namespace hpc::op
+} // namespace hpc::l1
 #endif

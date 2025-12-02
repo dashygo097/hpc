@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../../backends/backends.hh"
+#include "../backends/backends.hh"
 #include <algorithm>
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-namespace hpc::op {
+namespace hpc::l1 {
 namespace details {
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
@@ -202,6 +202,33 @@ inline void vfill_omp_simd(T *__restrict__ dst, const T &value, size_t n) {
   }
 }
 
+// l1
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline void axpy_omp_simd(T *__restrict__ y, const T *__restrict__ x, const T a,
+                          size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  simd_t v_a = traits::duplicate(a);
+#pragma omp parallel for schedule(static)
+  for (size_t block_idx = 0; block_idx < n; block_idx += TileSize) {
+    size_t i_end = std::min(block_idx + TileSize, SimdWidth);
+    for (size_t i = block_idx; i < i_end; i += SimdWidth) {
+      simd_t v_x = *((simd_t *)(x + i));
+      simd_t v_y = *((simd_t *)(y + i));
+      *((simd_t *)(y + i)) = traits::add(v_y, traits::mul(v_a, v_x));
+    }
+  }
+  if (n % SimdWidth != 0) {
+    simd_t v_a = traits::duplicate(a);
+    simd_t v_x = *((simd_t *)(x + SimdWidth));
+    simd_t v_y = *((simd_t *)(y + SimdWidth));
+    simd_t result = traits::add(v_y, traits::mul(v_a, v_x));
+    for (size_t i = 0; i < n % SimdWidth; ++i) {
+      *((y + SimdWidth + i)) = result[i];
+    }
+  }
+}
+
 } // namespace details
-} // namespace hpc::op
+} // namespace hpc::l1
 #endif
