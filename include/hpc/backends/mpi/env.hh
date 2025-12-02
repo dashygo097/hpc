@@ -1,8 +1,11 @@
 #pragma once
 
+#ifdef ENABLE_MPI
 #include <iostream>
 #include <mpi.h>
+#endif
 
+#ifdef ENABLE_MPI
 namespace hpc::mpi {
 class MPIEnv {
 public:
@@ -63,3 +66,4 @@ bool MPIEnv::_initialized = false;
 bool MPIEnv::_finalized = false;
 
 } // namespace hpc::mpi
+#endif

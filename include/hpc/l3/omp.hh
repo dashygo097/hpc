@@ -6,26 +6,6 @@
 namespace hpc::l3 {
 namespace details {
 
-template <typename T>
-inline void naive_mmul_omp(T __restrict__ *C, const T __restrict__ *A,
-                           const T __restrict__ *B, const size_t &M,
-                           const size_t &K, const size_t &N) {
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < M * N; ++i) {
-    C[i] = T{};
-  }
-
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < M; ++i) {
-    for (size_t k = 0; k < K; ++k) {
-      T a_ik = A[i * K + k];
-      for (size_t j = 0; j < N; ++j) {
-        C[i * N + j] += a_ik * B[k * N + j];
-      }
-    }
-  }
-}
-
 template <typename T, const size_t TileSize, const size_t Alignment>
 void tiled_mmul_omp(T __restrict__ *C, const T __restrict__ *A,
                     const T __restrict__ *B, const size_t &M, const size_t &K,
@@ -41,6 +21,7 @@ void tiled_mmul_omp(T __restrict__ *C, const T __restrict__ *A,
     alignas(Alignment) T localA[TileSize * TileSize];
     alignas(Alignment) T localB[TileSize * TileSize];
     alignas(Alignment) T localC[TileSize * TileSize];
+
 #pragma omp for schedule(static)
     for (size_t ii = 0; ii < M; ii += TileSize) {
       for (size_t jj = 0; jj < N; jj += TileSize) {
@@ -107,29 +88,6 @@ void tiled_mmul_omp(T __restrict__ *C, const T __restrict__ *A,
   }
 }
 
-template <typename T>
-inline void naive_gemm_omp(T *__restrict__ C, const T *__restrict__ A,
-                           const T *__restrict__ B, const size_t &M,
-                           const size_t &K, const size_t &N, const T &alpha,
-                           const T &beta) {
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < M; ++i) {
-    for (size_t j = 0; j < N; ++j) {
-      C[i * N + j] *= beta;
-    }
-  }
-
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < M; ++i) {
-    for (size_t k = 0; k < K; ++k) {
-      T a_ik = A[i * K + k];
-      for (size_t j = 0; j < N; ++j) {
-        C[i * N + j] += alpha * a_ik * B[k * N + j];
-      }
-    }
-  }
-}
-
 template <typename T, const size_t TileSize, const size_t Alignment>
 inline void tiled_gemm_omp(T *__restrict__ C, const T *__restrict__ A,
                            const T *__restrict__ B, const size_t &M,
@@ -141,6 +99,7 @@ inline void tiled_gemm_omp(T *__restrict__ C, const T *__restrict__ A,
     alignas(Alignment) T localA[TileSize * TileSize];
     alignas(Alignment) T localB[TileSize * TileSize];
     alignas(Alignment) T localC[TileSize * TileSize];
+
 #pragma omp for schedule(static)
     for (size_t ii = 0; ii < M; ii += TileSize) {
       for (size_t jj = 0; jj < N; jj += TileSize) {

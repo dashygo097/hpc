@@ -1,8 +1,11 @@
 #pragma once
 
+#ifdef ENABLE_MPI
 #include <iostream>
 #include <mpi.h>
+#endif
 
+#ifdef ENABLE_MPI
 namespace hpc::mpi {
 class MPICommunicator {
 public:
@@ -68,3 +71,4 @@ private:
   bool _comm_owned;
 };
 } // namespace hpc::mpi
+#endif

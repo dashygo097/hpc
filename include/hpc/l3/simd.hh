@@ -4,6 +4,6 @@
 
 #ifdef ENABLE_SIMD
 namespace hpc::l3 {
-namespace details {}
+namespace details {} // namespace details
 } // namespace hpc::l3
 #endif

@@ -1,35 +1,158 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 
 namespace hpc::l3 {
 namespace details {
 
-template <typename T>
-inline void naive_mmul_seq(T *C, const T *A, const T *B, const size_t &M,
-                           const size_t &K, const size_t &N) {
-  for (size_t i = 0; i < M; ++i) {
-    for (size_t j = 0; j < N; ++j) {
-      T sum = T{};
-      for (size_t k = 0; k < K; ++k) {
-        sum += A[i * K + k] * B[k * N + j];
+template <typename T, const size_t TileSize, const size_t Alignment>
+void tiled_mmul_seq(T __restrict__ *C, const T __restrict__ *A,
+                    const T __restrict__ *B, const size_t &M, const size_t &K,
+                    const size_t &N) {
+  for (size_t i = 0; i < M * N; ++i) {
+    C[i] = T{};
+  }
+
+  // local buffer
+  alignas(Alignment) T localA[TileSize * TileSize];
+  alignas(Alignment) T localB[TileSize * TileSize];
+  alignas(Alignment) T localC[TileSize * TileSize];
+
+  for (size_t ii = 0; ii < M; ii += TileSize) {
+    for (size_t jj = 0; jj < N; jj += TileSize) {
+      size_t i_end = std::min(ii + TileSize, M);
+      size_t j_end = std::min(jj + TileSize, N);
+      size_t tile_m = i_end - ii;
+      size_t tile_n = j_end - jj;
+
+      for (size_t idx = 0; idx < TileSize * TileSize; ++idx) {
+        localC[idx] = T{};
       }
-      C[i * N + j] = sum;
+
+      for (size_t kk = 0; kk < K; kk += TileSize) {
+        size_t k_end = std::min(kk + TileSize, K);
+        size_t tile_k = k_end - kk;
+
+        for (size_t i = 0; i < tile_m; ++i) {
+          for (size_t k = 0; k < tile_k; ++k) {
+            localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
+          }
+          for (size_t k = tile_k; k < TileSize; ++k) {
+            localA[i * TileSize + k] = T{};
+          }
+        }
+        for (size_t i = tile_m; i < TileSize; ++i) {
+          for (size_t k = 0; k < TileSize; ++k) {
+            localA[i * TileSize + k] = T{};
+          }
+        }
+
+        for (size_t k = 0; k < tile_k; ++k) {
+          for (size_t j = 0; j < tile_n; ++j) {
+            localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
+          }
+          for (size_t j = tile_n; j < TileSize; ++j) {
+            localB[k * TileSize + j] = T{};
+          }
+        }
+        for (size_t k = tile_k; k < TileSize; ++k) {
+          for (size_t j = 0; j < TileSize; ++j) {
+            localB[k * TileSize + j] = T{};
+          }
+        }
+
+        // compute
+        for (size_t i = 0; i < TileSize; ++i) {
+          for (size_t k = 0; k < TileSize; ++k) {
+            T a_ik = localA[i * TileSize + k];
+            for (size_t j = 0; j < TileSize; ++j) {
+              localC[i * TileSize + j] += a_ik * localB[k * TileSize + j];
+            }
+          }
+        }
+      }
+
+      // copy
+      for (size_t i = 0; i < tile_m; ++i) {
+        for (size_t j = 0; j < tile_n; ++j) {
+          C[(ii + i) * N + (jj + j)] = localC[i * TileSize + j];
+        }
+      }
     }
   }
 }
 
-template <typename T>
-inline void naive_gemm_seq(T *C, const T *A, const T *B, const size_t &M,
+template <typename T, const size_t TileSize, const size_t Alignment>
+inline void tiled_gemm_seq(T *__restrict__ C, const T *__restrict__ A,
+                           const T *__restrict__ B, const size_t &M,
                            const size_t &K, const size_t &N, const T &alpha,
                            const T &beta) {
-  for (size_t i = 0; i < M; ++i) {
-    for (size_t j = 0; j < N; ++j) {
-      T sum = T{};
-      for (size_t k = 0; k < K; ++k) {
-        sum += A[i * K + k] * B[k * N + j];
+  // local buffer
+  alignas(Alignment) T localA[TileSize * TileSize];
+  alignas(Alignment) T localB[TileSize * TileSize];
+  alignas(Alignment) T localC[TileSize * TileSize];
+
+  for (size_t ii = 0; ii < M; ii += TileSize) {
+    for (size_t jj = 0; jj < N; jj += TileSize) {
+      size_t i_end = std::min(ii + TileSize, M);
+      size_t j_end = std::min(jj + TileSize, N);
+      size_t tile_m = i_end - ii;
+      size_t tile_n = j_end - jj;
+
+      for (size_t i = 0; i < tile_m; ++i) {
+        for (size_t j = 0; j < tile_n; ++j) {
+          C[(ii + i) * N + (jj + j)] *= beta;
+        }
       }
-      C[i * N + j] = alpha * sum + beta * C[i * N + j];
+
+      for (size_t kk = 0; kk < K; kk += TileSize) {
+        size_t k_end = std::min(kk + TileSize, K);
+        size_t tile_k = k_end - kk;
+        for (size_t i = 0; i < tile_m; ++i) {
+          for (size_t k = 0; k < tile_k; ++k) {
+            localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
+          }
+          for (size_t k = tile_k; k < TileSize; ++k) {
+            localA[i * TileSize + k] = T{};
+          }
+        }
+        for (size_t i = tile_m; i < TileSize; ++i) {
+          for (size_t k = 0; k < TileSize; ++k) {
+            localA[i * TileSize + k] = T{};
+          }
+        }
+        for (size_t k = 0; k < tile_k; ++k) {
+          for (size_t j = 0; j < tile_n; ++j) {
+            localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
+          }
+          for (size_t j = tile_n; j < TileSize; ++j) {
+            localB[k * TileSize + j] = T{};
+          }
+        }
+        for (size_t k = tile_k; k < TileSize; ++k) {
+          for (size_t j = 0; j < TileSize; ++j) {
+            localB[k * TileSize + j] = T{};
+          }
+
+          // compute
+          for (size_t i = 0; i < TileSize; ++i) {
+            for (size_t k = 0; k < TileSize; ++k) {
+              T a_ik = localA[i * TileSize + k];
+              for (size_t j = 0; j < TileSize; ++j) {
+                localC[i * TileSize + j] += a_ik * localB[k * TileSize + j];
+              }
+            }
+          }
+        }
+
+        // copy
+        for (size_t i = 0; i < tile_m; ++i) {
+          for (size_t j = 0; j < tile_n; ++j) {
+            C[(ii + i) * N + (jj + j)] += alpha * localC[i * TileSize + j];
+          }
+        }
+      }
     }
   }
 }
