@@ -1,5 +1,6 @@
 #define ENABLE_OPENMP
 #define ENABLE_SIMD
+#include <Accelerate/Accelerate.h>
 #include <gtest/gtest.h>
 #include <hpc.hh>
 

@@ -4,63 +4,20 @@ project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-  set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-  set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-  set(ENV{CCACHE_CUDA} "1")
-  message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+# Add cmake module path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# Generate and include build configuration
+if(EXISTS "${CMAKE_BINARY_DIR}/config.cmake")
+  include("${CMAKE_BINARY_DIR}/config.cmake")
 endif()
 
-# Colored printing
-function(print_info MSG COLOR)
-  if(CMAKE_COLOR_MAKEFILE)
-    execute_process(COMMAND printf "\\033[1;${COLOR}m${MSG}\\033[0m\n")
-  else()
-    message(STATUS "${MSG}")
-  endif()
-endfunction()
+# Include modular cmake components
+include(Platforms)
+include(CompilerSetup)
 
-function(make_paths_relative out_var)
-  set(result "")
-  foreach(path IN LISTS ${ARGV1})
-    file(RELATIVE_PATH rel "${CMAKE_SOURCE_DIR}" "${path}")
-    list(APPEND result "${rel}")
-  endforeach()
-  set(${out_var} "${result}" PARENT_SCOPE)
-endfunction()
-
-function(make_preview_string LIST_VAR N)
-  set(preview "")
-
-  list(LENGTH ${LIST_VAR} list_length)
-
-  foreach(item IN LISTS ${LIST_VAR})
-    list(APPEND preview "${item}")
-    if("${preview}" MATCHES "^.*;.*;.*$")
-      break()
-    endif()
-  endforeach()
-
-  if(list_length GREATER N)
-    math(EXPR remaining_items "${list_length} - ${N}")
-    list(APPEND preview "; ...(+${remaining_items} more)")
-  endif()
-
-  set(PREVIOUS_SCOPE_VAR "${preview}" PARENT_SCOPE)
-endfunction()
-
-# Platform detection
-if(APPLE)
-  set(IS_APPLE TRUE)
-  message(STATUS "Building on macOS")
-elseif(UNIX)
-  set(IS_UNIX TRUE)
-  message(STATUS "Building on Unix-like system")
-else() 
-  message(FATAL_ERROR "Unsupported platform")
-endif()
+# Build the main library
+include(Helpers)
 
 # CUDA
 include(CheckLanguage)
@@ -91,7 +48,7 @@ else()
 endif()
 
 # OpenMP
-if(IS_APPLE)
+if(APPLE)
   set(OPENMP_PATH "/opt/homebrew/opt/libomp")
   set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_PATH}/include")
   set(OpenMP_CXX_FLAGS "${OpenMP_C_FLAGS}")
@@ -158,7 +115,6 @@ if (HAS_CUDA)
       $<INSTALL_INTERFACE:include>
   )
   target_include_directories(hpc PUBLIC ${Python3_INCLUDE_DIRS})
-  target_precompile_headers(hpc PRIVATE include/hpc/pch.hh)
   set_source_files_properties(${HPC_CUDA_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
   target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
@@ -185,7 +141,7 @@ else()
   target_link_libraries(hpc INTERFACE MPI::MPI_C MPI::MPI_CXX)
   target_link_libraries(hpc INTERFACE Python3::Python "${TORCH_LIBRARIES}")
 
-  if (IS_APPLE)
+  if (APPLE)
     add_compile_definitions(ACCELERATE_NEW_LAPACK ACCELERATE_LAPACK_ILP64)
     find_library(ACCELERATE_LIB Accelerate)
     target_link_libraries(hpc INTERFACE ${ACCELERATE_LIB})

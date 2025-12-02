@@ -4,6 +4,14 @@
 #include <chrono>
 #include <iostream>
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
+
+#ifdef ENABLE_MPI
+#include <mpi.h>
+#endif
+
 #define __TICK(backend)                                                        \
   static hpc::ProgTimer __timer_##backend(Backend::backend, #backend);         \
   __timer_##backend.start();
