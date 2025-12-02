@@ -67,6 +67,11 @@ endif()
 # --- Pybind11 ---
 if(ENABLE_PYBIND11) 
   add_subdirectory(3rdparty/pybind11)
+
+  set(HAS_PYBIND11 TRUE CACHE INTERNAL "pybind11 is available")
+  message(STATUS "pybind11 found: ${pybind11_VERSION}")
+else()
+  set(HAS_PYBIND11 FALSE CACHE INTERNAL "pybind11 is not available")
 endif()
 
 # --- PyTorch ---

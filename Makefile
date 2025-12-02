@@ -2,7 +2,7 @@ PROJECT_DIR = $(shell pwd)
 CMAKE_DIR = $(PROJECT_DIR)/cmake
 BUILD_DIR = $(PROJECT_DIR)/build
 
-.PHONY: all pre build clean
+.PHONY: all pre build
 
 all: build
 
