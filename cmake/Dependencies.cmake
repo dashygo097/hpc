@@ -5,7 +5,7 @@ include_directories(3rdparty)
 add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
 
 # --- CUDA ---
-if(ENABLE_CUDA AND NOT IS_APPLE)
+if(ENABLE_CUDA AND NOT APPLE)
   include(CheckLanguage)
   check_language(CUDA)
   
@@ -25,7 +25,7 @@ if(ENABLE_CUDA AND NOT IS_APPLE)
   endif()
 else()
   set(HAS_CUDA FALSE CACHE INTERNAL "CUDA is not available")
-  if(IS_APPLE AND ENABLE_CUDA)
+  if(APPLE AND ENABLE_CUDA)
     message(STATUS "CUDA not supported on macOS; CUDA support disabled.")
   endif()
 endif()
@@ -46,20 +46,115 @@ if(ENABLE_OPENMP)
     endif()
   endif()
   
-  find_package(OpenMP REQUIRED)
-  set(HAS_OPENMP TRUE CACHE INTERNAL "OpenMP is available")
-  message(STATUS "OpenMP C version: ${OpenMP_C_VERSION}")
-  message(STATUS "OpenMP CXX version: ${OpenMP_CXX_VERSION}")
+  find_package(OpenMP)
+  if(OpenMP_CXX_FOUND)
+    set(HAS_OPENMP TRUE CACHE INTERNAL "OpenMP is available")
+    message(STATUS "OpenMP C version: ${OpenMP_C_VERSION}")
+    message(STATUS "OpenMP CXX version: ${OpenMP_CXX_VERSION}")
+  else()
+    set(HAS_OPENMP FALSE CACHE INTERNAL "OpenMP is not available")
+    message(WARNING "OpenMP requested but not found")
+  endif()
 else()
   set(HAS_OPENMP FALSE CACHE INTERNAL "OpenMP is not available")
 endif()
 
+# --- SIMD Detection ---
+if(ENABLE_SIMD)
+  include(CheckCXXSourceCompiles)
+
+  # Detect platform SIMD capabilities
+  if(APPLE)
+    # Apple SIMD
+    check_cxx_source_compiles("
+      #include <simd/simd.h>
+      int main() {
+        simd_float4 v = {1.0f, 2.0f, 3.0f, 4.0f};
+        return 0;
+      }
+    " HAS_APPLE_SIMD)
+      
+    if(HAS_APPLE_SIMD)
+      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+      set(SIMD_TYPE "APPLE_SIMD" CACHE INTERNAL "SIMD implementation type")
+      message(STATUS "SIMD: Apple Silicon SIMD detected (M-series chip)")
+    else()
+      set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+      message(WARNING "SIMD requested but Apple SIMD headers not found")
+    endif()
+    
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64")
+    # ARM NEON
+    check_cxx_source_compiles("
+      #include <arm_neon.h>
+      int main() {
+        float32x4_t v = vdupq_n_f32(1.0f);
+        return 0;
+      }
+    " HAS_ARM_NEON)
+    
+    if(HAS_ARM_NEON)
+      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+      set(SIMD_TYPE "NEON" CACHE INTERNAL "SIMD implementation type")
+      message(STATUS "SIMD: ARM NEON detected")
+      add_compile_options(-mfpu=neon)
+    else()
+      set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+      message(WARNING "SIMD requested but ARM NEON not available")
+    endif()
+    
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    # x86 SSE/AVX
+    check_cxx_source_compiles("
+      #include <immintrin.h>
+      int main() {
+        __m256 v = _mm256_set1_ps(1.0f);
+        return 0;
+      }
+    " HAS_AVX)
+    
+    check_cxx_source_compiles("
+      #include <xmmintrin.h>
+      int main() {
+        __m128 v = _mm_set1_ps(1.0f);
+        return 0;
+      }
+    " HAS_SSE)
+    
+    if(HAS_AVX)
+      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+      set(SIMD_TYPE "AVX" CACHE INTERNAL "SIMD implementation type")
+      add_compile_options(-mavx -mfma)
+      message(STATUS "SIMD: AVX detected")
+    elseif(HAS_SSE)
+      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+      set(SIMD_TYPE "SSE" CACHE INTERNAL "SIMD implementation type")
+      add_compile_options(-msse4.2)
+      message(STATUS "SIMD: SSE4.2 detected")
+    else()
+      set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+      message(WARNING "SIMD requested but no x86 SIMD extensions found")
+    endif()
+  else()
+    set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+    message(WARNING "SIMD requested but platform ${CMAKE_SYSTEM_PROCESSOR} not recognized")
+  endif()
+else()
+  set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+endif()
+ 
+
 # --- MPI ---
 if(ENABLE_MPI)
-  find_package(MPI REQUIRED)
-  set(HAS_MPI TRUE CACHE INTERNAL "MPI is available")
-  message(STATUS "MPI C version: ${MPI_C_VERSION}")
-  message(STATUS "MPI CXX version: ${MPI_CXX_VERSION}")
+  find_package(MPI)
+  if(MPI_CXX_FOUND)
+    set(HAS_MPI TRUE CACHE INTERNAL "MPI is available")
+    message(STATUS "MPI C version: ${MPI_C_VERSION}")
+    message(STATUS "MPI CXX version: ${MPI_CXX_VERSION}")
+  else()
+    set(HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
+    message(WARNING "MPI requested but not found")
+  endif()
 else()
   set(HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
 endif()
@@ -91,10 +186,9 @@ if(ENABLE_PYTORCH)
   
   list(APPEND CMAKE_PREFIX_PATH ${TORCH_CMAKE_PATH})
   
-  # Platform-specific library suffix handling
   set(CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  if(IS_APPLE)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ". dylib" ".a" ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  if(APPLE)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ". dylib" ". a" ${CMAKE_FIND_LIBRARY_SUFFIXES})
   endif()
   
   find_package(Torch REQUIRED)
@@ -108,8 +202,8 @@ else()
   set(HAS_PYTORCH FALSE CACHE INTERNAL "PyTorch is not available")
 endif()
 
-# --- Apple Accelerate (macOS only) ---
-if(IS_APPLE AND ENABLE_ACCELERATE)
+# --- Apple Accelerate ---
+if(APPLE AND ENABLE_ACCELERATE)
   find_library(ACCELERATE_LIB Accelerate REQUIRED)
   set(HAS_ACCELERATE TRUE CACHE INTERNAL "Accelerate is available")
   message(STATUS "Apple Accelerate framework found")

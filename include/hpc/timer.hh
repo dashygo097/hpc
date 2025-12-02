@@ -113,7 +113,7 @@ public:
   double elapsed_seconds() const { return elapsed; }
 
   void report() const {
-    std::cout << "[TIMER][" << label << "] " << elapsed << " sec\n";
+    std::cout << "[" << label << "] " << elapsed << " sec\n";
   }
 
   ~ProgTimer() {

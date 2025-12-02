@@ -1,5 +1,3 @@
-#define ENABLE_OPENMP
-#define ENABLE_SIMD
 #include <hpc.hh>
 
 using namespace hpc;

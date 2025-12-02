@@ -1,49 +1,63 @@
 # Print build configuration summary
 
+include(Helpers)
+
 print_info("――――――――――――――――――BUILD SUMMARY――――――――――――――――――" "0")
 
 # Platform
-print_info("[INFO] Platform: ${CMAKE_SYSTEM_NAME}" "92")
+print_info("[INFO] Platform: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_PROCESSOR})" "91")
+print_info("[INFO] Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}" "96")
 
-# Dependencies
+# Feature flags
+print_info("[INFO] Features:" "95")
+
 if(HAS_OPENMP)
-  print_info("[INFO] OpenMP C: ${OpenMP_C_VERSION}" "90")
-  print_info("[INFO] OpenMP CXX: ${OpenMP_CXX_VERSION}" "90")
+  print_info("  ✓ OpenMP: ${OpenMP_CXX_VERSION}" "92")
 else()
-  print_info("[INFO] OpenMP: disabled" "93")
+  print_info("  ✗ OpenMP: disabled" "90")
 endif()
 
 if(HAS_MPI)
-  print_info("[INFO] MPI C: ${MPI_C_VERSION}" "90")
-  print_info("[INFO] MPI CXX: ${MPI_CXX_VERSION}" "90")
+  print_info("  ✓ MPI: ${MPI_CXX_VERSION}" "92")
 else()
-  print_info("[INFO] MPI: disabled" "93")
+  print_info("  ✗ MPI: disabled" "90")
 endif()
 
-if (HAS_PYBIND11)
-  print_info("[INFO] pybind11: ${pybind11_VERSION}" "90")
+if(HAS_SIMD)
+  print_info("  ✓ SIMD: ${SIMD_TYPE}" "92")
 else()
-  print_info("[INFO] pybind11: disabled" "93")
-endif()
-
-if(HAS_PYTORCH)
-  print_info("[INFO] PyTorch: ${Torch_VERSION}" "90")
-else()
-  print_info("[INFO] PyTorch: disabled" "93")
+  print_info("  ✗ SIMD: disabled" "90")
 endif()
 
 if(HAS_CUDA)
-  print_info("[INFO] CUDA: ${CUDAToolkit_VERSION}" "90")
-  print_info("[INFO] CUDA compiler: ${CMAKE_CUDA_COMPILER}" "90")
+  print_info("  ✓ CUDA: ${CUDAToolkit_VERSION}" "92")
+  print_info("    Compiler: ${CMAKE_CUDA_COMPILER}" "90")
 else()
-  print_info("[INFO] CUDA: disabled" "93")
+  print_info("  ✗ CUDA: disabled" "90")
+endif()
+
+if (HAS_PYBIND11)
+  print_info("  ✓ pybind11: ${pybind11_VERSION}" "92")
+else()
+  print_info("  ✗ pybind11: disabled" "90")
+endif()
+
+if(HAS_PYTORCH)
+  print_info("  ✓ PyTorch: ${Torch_VERSION}" "92")
+else()
+  print_info("  ✗ PyTorch: disabled" "90")
 endif()
 
 if(HAS_ACCELERATE)
-  print_info("[INFO] Apple Accelerate: enabled" "90")
+  print_info("  ✓ Apple Accelerate framework" "92")
+endif()
+
+if(CCACHE_PROGRAM)
+  print_info("  ✓ ccache: ${CCACHE_PROGRAM}" "92")
 endif()
 
 # Source files
+print_info("" "0")
 make_paths_relative(REL_SOURCES HPC_SOURCES)
 make_paths_relative(REL_HEADERS HPC_HEADERS)
 
@@ -63,3 +77,5 @@ if(HAS_CUDA)
   make_preview_string(REL_CUDA_SOURCES 3)
   print_info("[TRACE] CUDA sources: ${PREVIOUS_SCOPE_VAR}" "96")
 endif()
+
+print_info("――――――――――――――――――――――――――――――――――――――――――――――" "0")
