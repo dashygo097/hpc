@@ -20,7 +20,7 @@ void tiled_mmul_1xk_simd(T *C, const T *A, const T *B, size_t M, size_t K,
   size_t simd_init_size = SimdWidth * ((M * N - SimdWidth + 1) / SimdWidth);
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < simd_init_size; i += SimdWidth) {
-    traits::store(C + i, traits::duplicate(T{}));
+    *(simd_t *)(C + i) = traits::duplicate(T{});
   }
   for (size_t i = simd_init_size; i < M * N; ++i) {
     C[i] = T{};
@@ -43,8 +43,8 @@ void tiled_mmul_1xk_simd(T *C, const T *A, const T *B, size_t M, size_t K,
         size_t tile_n = j_end - jj;
 
         // init localC
-        for (size_t idx = 0; idx < TileSize * TileSize; ++idx) {
-          traits::store(localC + idx, traits::duplicate(T{}));
+        for (size_t idx = 0; idx < TileSize * TileSize; idx += SimdWidth) {
+          *(simd_t *)(localC + idx) = traits::duplicate(T{});
         }
 
         for (size_t kk = 0; kk < K; kk += TileSize) {
@@ -62,7 +62,7 @@ void tiled_mmul_1xk_simd(T *C, const T *A, const T *B, size_t M, size_t K,
           }
           for (size_t i = tile_m; i < TileSize; ++i) {
             for (size_t k = 0; k < TileSize; k += SimdWidth) {
-              traits::store(localA + i * TileSize + k, traits::duplicate(T{}));
+              *(simd_t *)(localA + i * TileSize + k) = traits::duplicate(T{});
             }
           }
 
@@ -76,7 +76,9 @@ void tiled_mmul_1xk_simd(T *C, const T *A, const T *B, size_t M, size_t K,
             }
           }
           for (size_t k = tile_k; k < TileSize; ++k) {
-            traits::store(localB + k * TileSize, traits::duplicate(T{}));
+            for (size_t j = 0; j < TileSize; j += SimdWidth) {
+              *(simd_t *)(localB + k * TileSize + j) = traits::duplicate(T{});
+            }
           }
 
           // compute
@@ -86,10 +88,10 @@ void tiled_mmul_1xk_simd(T *C, const T *A, const T *B, size_t M, size_t K,
               simd_t a_ik_vec = traits::duplicate(a_ik);
               for (size_t j = 0; j < tile_n; j += SimdWidth) {
                 if (j + SimdWidth <= tile_n) {
-                  simd_t b_kj = traits::load(localB + k * TileSize + j);
-                  simd_t c_ij = traits::load(localC + i * TileSize + j);
-                  traits::store(localC + i * TileSize + j,
-                                traits::add(c_ij, traits::mul(a_ik_vec, b_kj)));
+                  simd_t b_kj = *(simd_t *)(localB + k * TileSize + j);
+                  simd_t c_ij = *(simd_t *)(localC + i * TileSize + j);
+                  *(simd_t *)(localC + i * TileSize + j) =
+                      c_ij + a_ik_vec * b_kj;
                 } else {
                   for (size_t jj = j; jj < tile_n; ++jj) {
                     localC[i * TileSize + jj] +=
