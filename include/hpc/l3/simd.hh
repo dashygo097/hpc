@@ -18,8 +18,9 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
 
   // init C
   size_t simd_init_size = SimdWidth * ((M * N - SimdWidth + 1) / SimdWidth);
+  simd_t zero_vec = traits::duplicate(T{});
   for (size_t i = 0; i < simd_init_size; i += SimdWidth) {
-    *(simd_t *)(C + i) = traits::duplicate(T{});
+    *(simd_t *)(C + i) = zero_vec;
   }
   for (size_t i = simd_init_size; i < M * N; ++i) {
     C[i] = T{};
@@ -40,7 +41,7 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
 
       // init localC
       for (size_t idx = 0; idx < TileSize * TileSize; idx += SimdWidth) {
-        *(simd_t *)(localC + idx) = traits::duplicate(T{});
+        *(simd_t *)(localC + idx) = zero_vec;
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
@@ -49,18 +50,13 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
 
         // copy A
         for (size_t i = 0; i < tile_m; ++i) {
-          for (size_t k = 0; k < tile_k; ++k) {
-            localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
-          }
-          for (size_t k = tile_k; k < TileSize; ++k) {
-            localA[i * TileSize + k] = T{};
-          }
+          std::memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
+                      tile_k * sizeof(T));
+          std::memset(localA + i * TileSize + tile_k, 0,
+                      (TileSize - tile_k) * sizeof(T));
         }
-        for (size_t i = tile_m; i < TileSize; ++i) {
-          for (size_t k = 0; k < TileSize; k += SimdWidth) {
-            *(simd_t *)(localA + i * TileSize + k) = traits::duplicate(T{});
-          }
-        }
+        std::memset(localA + tile_m * TileSize, 0,
+                    (TileSize - tile_m) * TileSize * sizeof(T));
 
         // copy B
         for (size_t k = 0; k < tile_k; ++k) {
@@ -73,7 +69,7 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
         }
         for (size_t k = tile_k; k < TileSize; ++k) {
           for (size_t j = 0; j < TileSize; j += SimdWidth) {
-            *(simd_t *)(localB + k * TileSize + j) = traits::duplicate(T{});
+            *(simd_t *)(localB + k * TileSize + j) = zero_vec;
           }
         }
 
