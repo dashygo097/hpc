@@ -117,7 +117,7 @@ inline void tiled_gemm_simd(T *__restrict__ C, const T *__restrict__ A,
   simd_t beta_vec = SIMD_DUP(traits, beta);
   size_t total_size = M * N;
 
-  // scale c by beta
+  // scale C by beta
   size_t i = 0;
   for (size_t i = 0; i + SimdWidth < total_size; i += SimdWidth) {
     simd_t c_vec = SIMD_LOAD(traits, C + i);

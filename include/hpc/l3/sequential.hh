@@ -10,6 +10,7 @@ template <typename T, const size_t TileSize, const size_t Alignment>
 void tiled_mmul_seq(T *__restrict__ C, const T *__restrict__ A,
                     const T *__restrict__ B, const size_t &M, const size_t &K,
                     const size_t &N) {
+  // init C
   for (size_t i = 0; i < M * N; ++i) {
     C[i] = T{};
   }
@@ -20,20 +21,23 @@ void tiled_mmul_seq(T *__restrict__ C, const T *__restrict__ A,
   alignas(Alignment) T localC[TileSize * TileSize];
 
   for (size_t ii = 0; ii < M; ii += TileSize) {
+    size_t i_end = std::min(ii + TileSize, M);
+    size_t tile_m = i_end - ii;
+
     for (size_t jj = 0; jj < N; jj += TileSize) {
-      size_t i_end = std::min(ii + TileSize, M);
       size_t j_end = std::min(jj + TileSize, N);
-      size_t tile_m = i_end - ii;
       size_t tile_n = j_end - jj;
 
-      for (size_t idx = 0; idx < TileSize * TileSize; ++idx) {
-        localC[idx] = T{};
+      // init localC
+      for (size_t i = 0; i < TileSize * TileSize; ++i) {
+        localC[i] = T{};
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
         size_t k_end = std::min(kk + TileSize, K);
         size_t tile_k = k_end - kk;
 
+        // load localA
         for (size_t i = 0; i < tile_m; ++i) {
           for (size_t k = 0; k < tile_k; ++k) {
             localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
@@ -48,6 +52,7 @@ void tiled_mmul_seq(T *__restrict__ C, const T *__restrict__ A,
           }
         }
 
+        // load localB
         for (size_t k = 0; k < tile_k; ++k) {
           for (size_t j = 0; j < tile_n; ++j) {
             localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
@@ -88,27 +93,34 @@ inline void tiled_gemm_seq(T *__restrict__ C, const T *__restrict__ A,
                            const T *__restrict__ B, const size_t &M,
                            const size_t &K, const size_t &N, const T &alpha,
                            const T &beta) {
+  // scale C by beta
+  for (size_t i = 0; i < M * N; ++i) {
+    C[i] *= beta;
+  }
+
   // local buffer
   alignas(Alignment) T localA[TileSize * TileSize];
   alignas(Alignment) T localB[TileSize * TileSize];
   alignas(Alignment) T localC[TileSize * TileSize];
 
   for (size_t ii = 0; ii < M; ii += TileSize) {
+    size_t i_end = std::min(ii + TileSize, M);
+    size_t tile_m = i_end - ii;
+
     for (size_t jj = 0; jj < N; jj += TileSize) {
-      size_t i_end = std::min(ii + TileSize, M);
       size_t j_end = std::min(jj + TileSize, N);
-      size_t tile_m = i_end - ii;
       size_t tile_n = j_end - jj;
 
-      for (size_t i = 0; i < tile_m; ++i) {
-        for (size_t j = 0; j < tile_n; ++j) {
-          C[(ii + i) * N + (jj + j)] *= beta;
-        }
+      // init localC
+      for (size_t i = 0; i < TileSize * TileSize; ++i) {
+        localC[i] = T{};
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
         size_t k_end = std::min(kk + TileSize, K);
         size_t tile_k = k_end - kk;
+
+        // load localA
         for (size_t i = 0; i < tile_m; ++i) {
           for (size_t k = 0; k < tile_k; ++k) {
             localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
@@ -122,6 +134,8 @@ inline void tiled_gemm_seq(T *__restrict__ C, const T *__restrict__ A,
             localA[i * TileSize + k] = T{};
           }
         }
+
+        // load localB
         for (size_t k = 0; k < tile_k; ++k) {
           for (size_t j = 0; j < tile_n; ++j) {
             localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
@@ -134,23 +148,23 @@ inline void tiled_gemm_seq(T *__restrict__ C, const T *__restrict__ A,
           for (size_t j = 0; j < TileSize; ++j) {
             localB[k * TileSize + j] = T{};
           }
+        }
 
-          // compute
-          for (size_t i = 0; i < TileSize; ++i) {
-            for (size_t k = 0; k < TileSize; ++k) {
-              T a_ik = localA[i * TileSize + k];
-              for (size_t j = 0; j < TileSize; ++j) {
-                localC[i * TileSize + j] += a_ik * localB[k * TileSize + j];
-              }
+        // compute
+        for (size_t i = 0; i < TileSize; ++i) {
+          for (size_t k = 0; k < TileSize; ++k) {
+            T a_ik = localA[i * TileSize + k];
+            for (size_t j = 0; j < TileSize; ++j) {
+              localC[i * TileSize + j] += a_ik * localB[k * TileSize + j];
             }
           }
         }
+      }
 
-        // copy
-        for (size_t i = 0; i < tile_m; ++i) {
-          for (size_t j = 0; j < tile_n; ++j) {
-            C[(ii + i) * N + (jj + j)] += alpha * localC[i * TileSize + j];
-          }
+      // copy
+      for (size_t i = 0; i < tile_m; ++i) {
+        for (size_t j = 0; j < tile_n; ++j) {
+          C[(ii + i) * N + (jj + j)] += alpha * localC[i * TileSize + j];
         }
       }
     }
