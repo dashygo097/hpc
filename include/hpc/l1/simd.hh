@@ -155,12 +155,12 @@ inline void axpy_simd(T *__restrict__ y, const T *__restrict__ x, const T &a,
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
   const size_t simd_end = n - (n % SimdWidth);
-  const simd_t a_vec = SIMD_DUP(traits, a);
+  const simd_t v_a = SIMD_DUP(traits, a);
 
   for (size_t i = 0; i < simd_end; i += SimdWidth) {
     simd_t vy = SIMD_LOAD(traits, y + i);
     simd_t vx = SIMD_LOAD(traits, x + i);
-    SIMD_STORE(traits, y + i, SIMD_FMA(traits, a_vec, vx, vy));
+    SIMD_STORE(traits, y + i, SIMD_FMA(traits, v_a, vx, vy));
   }
   for (size_t i = simd_end; i < n; ++i)
     y[i] += a * x[i];
