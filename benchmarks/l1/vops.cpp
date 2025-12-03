@@ -25,9 +25,6 @@ bool verify_result(const T *vec, const T *vec_ref, size_t n, T tol = 1e-5) {
     T diff = std::abs(vec[i] - vec_ref[i]);
     T max_val = std::max(std::abs(vec[i]), std::abs(vec_ref[i]));
     if (diff > tol * max_val && diff > tol) {
-      // 调试输出
-      // std::cerr << "Mismatch at " << i << ": " << vec[i] << " vs " <<
-      // vec_ref[i] << "\n";
       return false;
     }
   }
