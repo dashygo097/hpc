@@ -8,8 +8,8 @@ namespace details {
 
 template <typename T, const size_t TileSize, const size_t SimdWidth,
           const size_t Alignment>
-void tiled_mmul_1xk_omp_simd(T *C, const T *A, const T *B, size_t M, size_t K,
-                             size_t N) {
+void tiled_mmul_omp_simd(T *C, const T *A, const T *B, size_t M, size_t K,
+                         size_t N) {
   static_assert(TileSize % SimdWidth == 0,
                 "TileSize must be multiple of SimdWidth");
 
@@ -32,7 +32,7 @@ void tiled_mmul_1xk_omp_simd(T *C, const T *A, const T *B, size_t M, size_t K,
     alignas(Alignment) T localB[TileSize * TileSize];
     alignas(Alignment) T localC[TileSize * TileSize];
 
-#pragma omp parallel for schedule(static)
+#pragma omp for schedule(static)
     for (size_t ii = 0; ii < M; ii += TileSize) {
       size_t i_end = std::min(ii + TileSize, M);
       size_t tile_m = i_end - ii;

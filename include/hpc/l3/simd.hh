@@ -8,8 +8,8 @@ namespace details {
 
 template <typename T, const size_t TileSize, const size_t SimdWidth,
           const size_t Alignment>
-void tiled_mmul_1xk_simd(T *C, const T *A, const T *B, size_t M, size_t K,
-                         size_t N) {
+void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
+                     size_t N) {
   static_assert(TileSize % SimdWidth == 0,
                 "TileSize must be multiple of SimdWidth");
 

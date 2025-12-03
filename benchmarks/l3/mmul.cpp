@@ -131,21 +131,18 @@ DEFINE_MMUL_BENCHMARK(OpenMP_128, hpc::l3::details::tiled_mmul_omp, 128, 64)
 #endif
 
 #ifdef ENABLE_SIMD
-DEFINE_MMUL_BENCHMARK(SIMD_32_4, hpc::l3::details::tiled_mmul_1xk_simd, 32, 4,
-                      64)
-DEFINE_MMUL_BENCHMARK(SIMD_64_4, hpc::l3::details::tiled_mmul_1xk_simd, 64, 4,
-                      64)
-DEFINE_MMUL_BENCHMARK(SIMD_128_4, hpc::l3::details::tiled_mmul_1xk_simd, 128, 4,
-                      64)
+DEFINE_MMUL_BENCHMARK(SIMD_32_4, hpc::l3::details::tiled_mmul_simd, 32, 4, 64)
+DEFINE_MMUL_BENCHMARK(SIMD_64_4, hpc::l3::details::tiled_mmul_simd, 64, 4, 64)
+DEFINE_MMUL_BENCHMARK(SIMD_128_4, hpc::l3::details::tiled_mmul_simd, 128, 4, 64)
 #endif
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_32_4,
-                      hpc::l3::details::tiled_mmul_1xk_omp_simd, 32, 4, 64)
-DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_64_4,
-                      hpc::l3::details::tiled_mmul_1xk_omp_simd, 64, 4, 64)
-DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_128_4,
-                      hpc::l3::details::tiled_mmul_1xk_omp_simd, 128, 4, 64)
+DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_32_4, hpc::l3::details::tiled_mmul_omp_simd,
+                      32, 4, 64)
+DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_64_4, hpc::l3::details::tiled_mmul_omp_simd,
+                      64, 4, 64)
+DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_128_4, hpc::l3::details::tiled_mmul_omp_simd,
+                      128, 4, 64)
 #endif
 
 BENCHMARK_MAIN();
