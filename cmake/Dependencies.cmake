@@ -3,6 +3,7 @@
 # --- 3rdparty libraries (always included) ---
 include_directories(3rdparty)
 add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
+add_subdirectory(3rdparty/benchmark EXCLUDE_FROM_ALL)
 
 # --- CUDA ---
 if(ENABLE_CUDA AND NOT APPLE)

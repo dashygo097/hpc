@@ -33,3 +33,6 @@ include(BuildSummaries)
 
 # Apps
 add_subdirectory(demos)
+
+# Benchmarks
+add_subdirectory(benchmarks)

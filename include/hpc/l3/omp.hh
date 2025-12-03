@@ -7,8 +7,8 @@ namespace hpc::l3 {
 namespace details {
 
 template <typename T, const size_t TileSize, const size_t Alignment>
-void tiled_mmul_omp(T __restrict__ *C, const T __restrict__ *A,
-                    const T __restrict__ *B, const size_t &M, const size_t &K,
+void tiled_mmul_omp(T *__restrict__ C, const T *__restrict__ A,
+                    const T *__restrict__ B, const size_t &M, const size_t &K,
                     const size_t &N) {
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M * N; ++i) {
