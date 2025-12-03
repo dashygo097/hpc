@@ -35,12 +35,11 @@ bool verify_result(const T *C, const T *C_ref, size_t M, size_t N,
 template <typename T>
 void mmul_ref(T *C, const T *A, const T *B, size_t M, size_t K, size_t N) {
   for (size_t i = 0; i < M * N; ++i)
-    C[i] = T(0);
+    C[i] = T{};
   for (size_t i = 0; i < M; ++i) {
-    for (size_t k = 0; k < K; ++k) {
-      T a_ik = A[i * K + k];
-      for (size_t j = 0; j < N; ++j) {
-        C[i * N + j] += a_ik * B[k * N + j];
+    for (size_t j = 0; j < N; ++j) {
+      for (size_t k = 0; k < K; ++k) {
+        C[i * N + j] += A[i * K + k] * B[k * N + j];
       }
     }
   }
@@ -76,7 +75,7 @@ protected:
 
 using MMulFixtureFloat = MMulFixture<float>;
 
-// Macro for clean benchmark definition (方案1)
+// Macro for benchmark definition
 #define DEFINE_MMUL_BENCHMARK(Name, Function, ...)                             \
   BENCHMARK_DEFINE_F(MMulFixtureFloat, Name)(benchmark::State & state) {       \
     for (auto _ : state) {                                                     \
@@ -98,8 +97,6 @@ using MMulFixtureFloat = MMulFixture<float>;
   BENCHMARK_REGISTER_F(MMulFixtureFloat, Name)                                 \
       ->Args({256, 256, 256})                                                  \
       ->Args({512, 512, 512})                                                  \
-      ->Args({511, 511, 511})                                                  \
-      ->Args({513, 513, 513})                                                  \
       ->Args({1024, 1024, 1024})                                               \
       ->Unit(benchmark::kMillisecond);
 
@@ -121,11 +118,25 @@ BENCHMARK_REGISTER_F(MMulFixtureFloat, Naive)
     ->Args({1024, 1024, 1024})
     ->Unit(benchmark::kMillisecond);
 
-// Tiled benchmarks using macro
+// Sequential tiled benchmarks
+DEFINE_MMUL_BENCHMARK(Seq_32, hpc::l3::details::tiled_mmul_seq, 32, 64)
+DEFINE_MMUL_BENCHMARK(Seq_64, hpc::l3::details::tiled_mmul_seq, 64, 64)
+DEFINE_MMUL_BENCHMARK(Seq_128, hpc::l3::details::tiled_mmul_seq, 128, 64)
+
+// OpenMP benchmarks
 #ifdef ENABLE_OPENMP
 DEFINE_MMUL_BENCHMARK(OpenMP_32, hpc::l3::details::tiled_mmul_omp, 32, 64)
 DEFINE_MMUL_BENCHMARK(OpenMP_64, hpc::l3::details::tiled_mmul_omp, 64, 64)
 DEFINE_MMUL_BENCHMARK(OpenMP_128, hpc::l3::details::tiled_mmul_omp, 128, 64)
+#endif
+
+#ifdef ENABLE_SIMD
+DEFINE_MMUL_BENCHMARK(SIMD_32_4, hpc::l3::details::tiled_mmul_1xk_simd, 32, 4,
+                      64)
+DEFINE_MMUL_BENCHMARK(SIMD_64_4, hpc::l3::details::tiled_mmul_1xk_simd, 64, 4,
+                      64)
+DEFINE_MMUL_BENCHMARK(SIMD_128_4, hpc::l3::details::tiled_mmul_1xk_simd, 128, 4,
+                      64)
 #endif
 
 BENCHMARK_MAIN();

@@ -6,3 +6,5 @@
 #include "./sequential.hh"
 #include "./simd.hh"
 #include <cstddef>
+
+namespace hpc::l3 {} // namespace hpc::l3
