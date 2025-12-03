@@ -1,14 +1,18 @@
 #pragma once
 
 // SIMD
+#ifdef ENABLE_SIMD
 #include "./simd/apple_simd_traits.hh"
 #include "./simd/arm_neon_traits.hh"
 #include "./simd/avx_traits.hh"
 #include "./simd/sse_traits.hh"
+#endif
 
 // MPI
+#ifdef ENABLE_MPI
 #include "./mpi/comm.hh"
 #include "./mpi/env.hh"
+#endif
 
 // CUDA
 

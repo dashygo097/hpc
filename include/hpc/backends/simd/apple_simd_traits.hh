@@ -10,8 +10,8 @@
 #define SIMD_STORE(traits, ptr, value)                                         \
   (*(reinterpret_cast<typename traits::type *>(ptr)) = (value))
 #define SIMD_DUP(traits, value) traits::duplicate(value)
-#define SIMD_ADD(traits, type, a, b) ((a) + (b))
-#define SIMD_SUB(traits, type, a, b) ((a) - (b))
+#define SIMD_ADD(traits, a, b) ((a) + (b))
+#define SIMD_SUB(traits, a, b) ((a) - (b))
 #define SIMD_MUL(traits, a, b) ((a) * (b))
 #define SIMD_FMA(traits, a, b, c) ((a) * (b) + (c))
 #define SIMD_DIV(traits, a, b) ((a) / (b))
