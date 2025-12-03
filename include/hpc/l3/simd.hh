@@ -8,20 +8,21 @@ namespace details {
 
 template <typename T, const size_t TileSize, const size_t SimdWidth,
           const size_t Alignment>
-void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
-                     size_t N) {
+void tiled_mmul_simd(T *__restrict__ C, const T *__restrict__ A,
+                     const T *__restrict__ B, const size_t &M, const size_t &K,
+                     const size_t &N) {
   static_assert(TileSize % SimdWidth == 0,
                 "TileSize must be multiple of SimdWidth");
 
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  simd_t zero_vec = traits::duplicate(T{});
+  simd_t zero_vec = SIMD_DUP(traits, T{});
   size_t total_size = M * N;
 
   // init C
   size_t i = 0;
   for (size_t i = 0; i + SimdWidth < total_size; i += SimdWidth) {
-    *(simd_t *)(C + i) = zero_vec;
+    SIMD_STORE(traits, C + i, zero_vec);
   }
   for (; i < total_size; ++i) {
     C[i] = T{};
@@ -42,7 +43,7 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
 
       // init localC
       for (size_t idx = 0; idx < TileSize * TileSize; idx += SimdWidth) {
-        *(simd_t *)(localC + idx) = zero_vec;
+        SIMD_STORE(traits, localC + idx, zero_vec);
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
@@ -75,14 +76,13 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
 
           for (size_t k = 0; k < TileSize; ++k) {
             const T a_ik = a_row[k];
-            const simd_t a_ik_vec = traits::duplicate(a_ik);
             const T *b_row = localB + k * TileSize;
 
             size_t j = 0;
             for (; j + SimdWidth <= TileSize; j += SimdWidth) {
-              simd_t b_vec = *(simd_t *)(b_row + j);
-              simd_t c_vec = *(simd_t *)(c_row + j);
-              *(simd_t *)(c_row + j) = c_vec + a_ik_vec * b_vec;
+              simd_t b_vec = SIMD_LOAD(traits, b_row + j);
+              simd_t c_vec = SIMD_LOAD(traits, c_row + j);
+              *(simd_t *)(c_row + j) = SIMD_FMA(traits, a_ik, b_vec, c_vec);
             }
 
             for (; j < TileSize; ++j) {
