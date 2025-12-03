@@ -15,14 +15,15 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
 
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
+  simd_t zero_vec = traits::duplicate(T{});
+  size_t total_size = M * N;
 
   // init C
-  size_t simd_init_size = SimdWidth * ((M * N - SimdWidth + 1) / SimdWidth);
-  simd_t zero_vec = traits::duplicate(T{});
-  for (size_t i = 0; i < simd_init_size; i += SimdWidth) {
+  size_t i = 0;
+  for (size_t i = 0; i + SimdWidth < total_size; i += SimdWidth) {
     *(simd_t *)(C + i) = zero_vec;
   }
-  for (size_t i = simd_init_size; i < M * N; ++i) {
+  for (; i < total_size; ++i) {
     C[i] = T{};
   }
 
@@ -45,10 +46,9 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
-        size_t k_end = std::min(kk + TileSize, K);
-        size_t tile_k = k_end - kk;
+        const size_t tile_k = std::min(TileSize, K - kk);
 
-        // copy A
+        // load localA
         for (size_t i = 0; i < tile_m; ++i) {
           std::memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
                       tile_k * sizeof(T));
@@ -58,45 +58,44 @@ void tiled_mmul_simd(T *C, const T *A, const T *B, size_t M, size_t K,
         std::memset(localA + tile_m * TileSize, 0,
                     (TileSize - tile_m) * TileSize * sizeof(T));
 
-        // copy B
+        // load localB
         for (size_t k = 0; k < tile_k; ++k) {
-          for (size_t j = 0; j < tile_n; ++j) {
-            localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
-          }
-          for (size_t j = tile_n; j < TileSize; ++j) {
-            localB[k * TileSize + j] = T{};
-          }
+          std::memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
+                      tile_n * sizeof(T));
+          std::memset(localB + k * TileSize + tile_n, 0,
+                      (TileSize - tile_n) * sizeof(T));
         }
-        for (size_t k = tile_k; k < TileSize; ++k) {
-          for (size_t j = 0; j < TileSize; j += SimdWidth) {
-            *(simd_t *)(localB + k * TileSize + j) = zero_vec;
-          }
-        }
+        std::memset(localB + tile_k * TileSize, 0,
+                    (TileSize - tile_k) * TileSize * sizeof(T));
 
         // compute
-        for (size_t i = 0; i < TileSize; i++) {
+        for (size_t i = 0; i < TileSize; ++i) {
+          T *c_row = localC + i * TileSize;
+          const T *a_row = localA + i * TileSize;
+
           for (size_t k = 0; k < TileSize; ++k) {
-            T a_ik = localA[i * TileSize + k];
-            simd_t a_ik_vec = traits::duplicate(a_ik);
-            for (size_t j = 0; j < tile_n; j += SimdWidth) {
-              if (j + SimdWidth <= tile_n) {
-                simd_t b_kj = *(simd_t *)(localB + k * TileSize + j);
-                simd_t c_ij = *(simd_t *)(localC + i * TileSize + j);
-                *(simd_t *)(localC + i * TileSize + j) = c_ij + a_ik_vec * b_kj;
-              } else {
-                for (size_t jj = j; jj < tile_n; ++jj) {
-                  localC[i * TileSize + jj] += a_ik * localB[k * TileSize + jj];
-                }
-              }
+            const T a_ik = a_row[k];
+            const simd_t a_ik_vec = traits::duplicate(a_ik);
+            const T *b_row = localB + k * TileSize;
+
+            size_t j = 0;
+            for (; j + SimdWidth <= TileSize; j += SimdWidth) {
+              simd_t b_vec = *(simd_t *)(b_row + j);
+              simd_t c_vec = *(simd_t *)(c_row + j);
+              *(simd_t *)(c_row + j) = c_vec + a_ik_vec * b_vec;
+            }
+
+            for (; j < TileSize; ++j) {
+              c_row[j] += a_ik * b_row[j];
             }
           }
         }
+      }
 
-        // copy
-        for (size_t i = 0; i < tile_m; ++i) {
-          for (size_t j = 0; j < tile_n; ++j) {
-            C[(ii + i) * N + (jj + j)] = localC[i * TileSize + j];
-          }
+      // copy
+      for (size_t i = 0; i < tile_m; ++i) {
+        for (size_t j = 0; j < tile_n; ++j) {
+          C[(ii + i) * N + (jj + j)] = localC[i * TileSize + j];
         }
       }
     }
