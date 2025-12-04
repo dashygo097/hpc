@@ -8,10 +8,10 @@
 #include <cstddef>
 
 #define L1_FACTORY(name)                                                       \
-  template <typename T, Backend backend, typename BackendConfig>               \
+  template <typename T, Backend backend, auto... BackendParams>                \
   inline void name(T *__restrict__ dst, const T &scalar, size_t n) {           \
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
-      details::name##_seq<T>(dst, scalar, n);                                  \
+      details::name##_seq<T, BackendParams...>(dst, scalar, n);                \
     }                                                                          \
     ENABLE_SIMD_SCALAR_BRANCH(name)                                            \
     ENABLE_OPENMP_SCALAR_BRANCH(name)                                          \
@@ -21,10 +21,10 @@
     }                                                                          \
   }                                                                            \
                                                                                \
-  template <typename T, Backend backend, typename BackendConfig>               \
+  template <typename T, Backend backend, auto... BackendParams>                \
   inline void name(T *__restrict__ dst, const T *__restrict__ src, size_t n) { \
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
-      details::name##_seq<T>(dst, src, n);                                     \
+      details::name##_seq<T, BackendParams...>(dst, src, n);                   \
     }                                                                          \
     ENABLE_SIMD_VECTOR_BRANCH(name)                                            \
     ENABLE_OPENMP_VECTOR_BRANCH(name)                                          \
@@ -37,11 +37,11 @@
 #ifdef ENABLE_SIMD
 #define ENABLE_SIMD_SCALAR_BRANCH(name)                                        \
   else if constexpr (backend == Backend::SIMD) {                               \
-    details::name##_simd<T, BackendConfig::simd_width>(dst, scalar, n);        \
+    details::name##_simd<T, BackendParams...>(dst, scalar, n);                 \
   }
 #define ENABLE_SIMD_VECTOR_BRANCH(name)                                        \
   else if constexpr (backend == Backend::SIMD) {                               \
-    details::name##_simd<T, BackendConfig::simd_width>(dst, src, n);           \
+    details::name##_simd<T, BackendParams...>(dst, src, n);                    \
   }
 #else
 #define ENABLE_SIMD_SCALAR_BRANCH(name)
@@ -66,13 +66,11 @@
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
 #define ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                 \
   else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendConfig::tile_size,                      \
-                             BackendConfig::simd_width>(dst, scalar, n);       \
+    details::name##_omp_simd<T, BackendParams...>(dst, scalar, n);             \
   }
 #define ENABLE_OPENMP_SIMD_VECTOR_BRANCH(name)                                 \
   else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendConfig::tile_size,                      \
-                             BackendConfig::simd_width>(dst, src, n);          \
+    details::name##_omp_simd<T, BackendParams...>(dst, src, n);                \
   }
 #else
 #define ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)

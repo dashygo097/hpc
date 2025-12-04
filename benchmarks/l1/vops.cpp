@@ -122,39 +122,27 @@ BENCHMARK_REGISTER_F(VaddFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-struct Seq_Config {};
 DEFINE_VADD_VEC_BENCHMARK(Seq, hpc::l1::details::vadd_seq)
-DEFINE_VADD_VEC_BENCHMARK(SeqAPI, hpc::l1::vadd, hpc::Backend::SEQUENTIAL,
-                          Seq_Config)
+DEFINE_VADD_VEC_BENCHMARK(SeqAPI, hpc::l1::vadd, hpc::Backend::SEQUENTIAL)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-struct OpenMP_1024_Config {};
 DEFINE_VADD_VEC_BENCHMARK(OpenMP, hpc::l1::details::vadd_omp, 1024)
-DEFINE_VADD_VEC_BENCHMARK(OpenMPAPI, hpc::l1::vadd, hpc::Backend::OPENMP,
-                          OpenMP_1024_Config)
+DEFINE_VADD_VEC_BENCHMARK(OpenMPAPI, hpc::l1::vadd, hpc::Backend::OPENMP)
 #endif
 
 // SIMD
 #ifdef ENABLE_SIMD
-struct SIMD_4_Config {
-  constexpr static size_t simd_width = 4;
-};
 DEFINE_VADD_VEC_BENCHMARK(SIMD_4, hpc::l1::details::vadd_simd, 4)
-DEFINE_VADD_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::vadd, hpc::Backend::SIMD,
-                          SIMD_4_Config)
+DEFINE_VADD_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::vadd, hpc::Backend::SIMD, 4)
 #endif
 
 // OpenMP + SIMD
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-struct OpenMP_SIMD_4_Config {
-  constexpr static size_t tile_size = 1024;
-  constexpr static size_t simd_width = 4;
-};
 DEFINE_VADD_VEC_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::vadd_omp_simd, 1024,
                           4)
 DEFINE_VADD_VEC_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::vadd,
-                          hpc::Backend::OPENMP_SIMD, OpenMP_SIMD_4_Config)
+                          hpc::Backend::OPENMP_SIMD, 1024, 4)
 #endif
 
 BENCHMARK_MAIN();
