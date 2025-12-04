@@ -19,14 +19,14 @@ void tiled_mmul_simd(T *__restrict__ C, const T *__restrict__ A,
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
   simd_t zero_vec = SIMD_DUP(traits, T{});
-  size_t total_size = M * N;
+  size_t simd_total_size = (M * N - SimdWidth + 1) / SimdWidth * SimdWidth;
 
   // init C
   size_t i = 0;
-  for (size_t i = 0; i + SimdWidth < total_size; i += SimdWidth) {
+  for (size_t i = 0; i  < simd_total_size; i += SimdWidth) {
     SIMD_STORE(traits, C + i, zero_vec);
   }
-  for (; i < total_size; ++i) {
+  for (; i < M * N; ++i) {
     C[i] = T{};
   }
 
@@ -53,22 +53,22 @@ void tiled_mmul_simd(T *__restrict__ C, const T *__restrict__ A,
 
         // load localA
         for (size_t i = 0; i < tile_m; ++i) {
-          std::memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
+          memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
                       tile_k * sizeof(T));
-          std::memset(localA + i * TileSize + tile_k, 0,
+          memset(localA + i * TileSize + tile_k, 0,
                       (TileSize - tile_k) * sizeof(T));
         }
-        std::memset(localA + tile_m * TileSize, 0,
+        memset(localA + tile_m * TileSize, 0,
                     (TileSize - tile_m) * TileSize * sizeof(T));
 
         // load localB
         for (size_t k = 0; k < tile_k; ++k) {
-          std::memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
+          memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
                       tile_n * sizeof(T));
-          std::memset(localB + k * TileSize + tile_n, 0,
+          memset(localB + k * TileSize + tile_n, 0,
                       (TileSize - tile_n) * sizeof(T));
         }
-        std::memset(localB + tile_k * TileSize, 0,
+        memset(localB + tile_k * TileSize, 0,
                     (TileSize - tile_k) * TileSize * sizeof(T));
 
         // compute
@@ -78,13 +78,14 @@ void tiled_mmul_simd(T *__restrict__ C, const T *__restrict__ A,
 
           for (size_t k = 0; k < TileSize; ++k) {
             const T a_ik = a_row[k];
+            const simd_t a_ik_vec = SIMD_DUP(traits, a_ik);
             const T *b_row = localB + k * TileSize;
 
             size_t j = 0;
             for (; j + SimdWidth <= TileSize; j += SimdWidth) {
               simd_t b_vec = SIMD_LOAD(traits, b_row + j);
               simd_t c_vec = SIMD_LOAD(traits, c_row + j);
-              *(simd_t *)(c_row + j) = SIMD_FMA(traits, a_ik, b_vec, c_vec);
+              *(simd_t *)(c_row + j) = SIMD_FMA(traits, a_ik_vec, b_vec, c_vec);
             }
 
             for (; j < TileSize; ++j) {
@@ -117,15 +118,15 @@ inline void tiled_gemm_simd(T *__restrict__ C, const T *__restrict__ A,
   simd_t zero_vec = SIMD_DUP(traits, T{});
   simd_t alpha_vec = SIMD_DUP(traits, alpha);
   simd_t beta_vec = SIMD_DUP(traits, beta);
-  size_t total_size = M * N;
+  size_t simd_total_size = (M * N - SimdWidth + 1) / SimdWidth * SimdWidth;
 
   // scale C by beta
   size_t i = 0;
-  for (size_t i = 0; i + SimdWidth < total_size; i += SimdWidth) {
+  for (size_t i = 0; i < simd_total_size; i += SimdWidth) {
     simd_t c_vec = SIMD_LOAD(traits, C + i);
     SIMD_STORE(traits, C + i, SIMD_MUL(traits, beta_vec, c_vec));
   }
-  for (; i < total_size; ++i) {
+  for (; i < M * N; ++i) {
     C[i] *= beta;
   }
 
@@ -152,22 +153,22 @@ inline void tiled_gemm_simd(T *__restrict__ C, const T *__restrict__ A,
 
         // load localA
         for (size_t i = 0; i < tile_m; ++i) {
-          std::memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
+          memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
                       tile_k * sizeof(T));
-          std::memset(localA + i * TileSize + tile_k, 0,
+          memset(localA + i * TileSize + tile_k, 0,
                       (TileSize - tile_k) * sizeof(T));
         }
-        std::memset(localA + tile_m * TileSize, 0,
+        memset(localA + tile_m * TileSize, 0,
                     (TileSize - tile_m) * TileSize * sizeof(T));
 
         // load localB
         for (size_t k = 0; k < tile_k; ++k) {
-          std::memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
+          memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
                       tile_n * sizeof(T));
-          std::memset(localB + k * TileSize + tile_n, 0,
+          memset(localB + k * TileSize + tile_n, 0,
                       (TileSize - tile_n) * sizeof(T));
         }
-        std::memset(localB + tile_k * TileSize, 0,
+        memset(localB + tile_k * TileSize, 0,
                     (TileSize - tile_k) * TileSize * sizeof(T));
 
         // compute
@@ -177,6 +178,7 @@ inline void tiled_gemm_simd(T *__restrict__ C, const T *__restrict__ A,
 
           for (size_t k = 0; k < TileSize; ++k) {
             const T a_ik = a_row[k];
+            const T a_ik_vec = SIMD_DUP(traits, a_ik);
             const T *b_row = localB + k * TileSize;
 
             size_t j = 0;
@@ -184,7 +186,7 @@ inline void tiled_gemm_simd(T *__restrict__ C, const T *__restrict__ A,
               simd_t b_vec = SIMD_LOAD(traits, b_row + j);
               simd_t c_vec = SIMD_LOAD(traits, c_row + j);
               SIMD_STORE(traits, c_row + j,
-                         SIMD_FMA(traits, a_ik, b_vec, c_vec));
+                         SIMD_FMA(traits, a_ik_vec, b_vec, c_vec));
             }
             for (; j < TileSize; ++j) {
               c_row[j] += a_ik * b_row[j];

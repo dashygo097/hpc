@@ -6,10 +6,8 @@
 
 // FIXME: overhead is detected even after inlining these traits' methods.
 #ifdef SIMD_NEON
-#define SIMD_LOAD(traits, ptr)                                                 \
-  *reinterpret_cast<const typename traits::type *>(traits::load(ptr))
-#define SIMD_STORE(traits, ptr, value)                                         \
-  traits::store(reinterpret_cast<typename traits::type *>(ptr), value)
+#define SIMD_LOAD(traits, ptr) traits::load(ptr)
+#define SIMD_STORE(traits, ptr, value) traits::store(ptr, value)
 #define SIMD_DUP(traits, value) traits::duplicate(value)
 #define SIMD_ADD(traits, a, b) traits::add(a, b)
 #define SIMD_SUB(traits, a, b) traits::sub(a, b)
