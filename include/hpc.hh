@@ -1,9 +1,16 @@
 #pragma once
 
-#include "./hpc/backends/backends.hh"
+// Utils
 #include "./hpc/timer.hh"
 
-// BLAS-like APIs
-#include "./hpc/l1/api.hh"
-#include "./hpc/l2/api.hh"
-#include "./hpc/l3/api.hh"
+// Backends
+#include "./hpc/backends/backends.hh"
+
+// BLAS
+#include "./hpc/blas/blas.hh"
+
+// Bindings
+#include "./hpc/bindings/bindings.hh"
+
+// Neural Networks
+#include "./hpc/nn/nn.hh"

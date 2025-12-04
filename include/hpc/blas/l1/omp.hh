@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef ENABLE_OPENMP
-#include "../backends/backends.hh"
+#include "../../backends/backends.hh"
 #include <algorithm>
 #endif
 

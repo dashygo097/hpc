@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../backends/backends.hh"
+#ifdef ENABLE_SIMD
+#include "../../backends/backends.hh"
+#endif
 
 #ifdef ENABLE_SIMD
 namespace hpc::l3 {

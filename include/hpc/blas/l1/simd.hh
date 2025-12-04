@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef ENABLE_SIMD
-#include "../backends/backends.hh"
+#include "../../backends/backends.hh"
 #endif
 
 #ifdef ENABLE_SIMD

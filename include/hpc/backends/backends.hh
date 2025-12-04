@@ -15,6 +15,13 @@
 #endif
 
 // CUDA
+#ifdef ENABLE_CUDA
+#include "./cuda/device.cuh"
+#include "./cuda/err.cuh"
+#include "./cuda/launcher.cuh"
+#include "./cuda/macros.cuh"
+#include "./cuda/memory.cuh"
+#endif
 
 namespace hpc {
 enum class Backend {
