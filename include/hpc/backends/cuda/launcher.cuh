@@ -1,8 +1,8 @@
 #pragma once
 
 #ifdef ENABLE_CUDA
-#include "./config.cuh"
-#include "./err. cuh"
+#include "./err.cuh"
+#include "./macros.cuh"
 #include <cuda_runtime.h>
 #endif
 

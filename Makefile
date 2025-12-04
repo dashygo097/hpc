@@ -4,7 +4,7 @@ BUILD_DIR = $(PROJECT_DIR)/build
 
 .PHONY: all pre build
 
-all: build
+all: pre build
 
 pre:
 	@mkdir -p $(BUILD_DIR)
@@ -15,7 +15,7 @@ pre:
 		echo "Using existing config.cmake in build directory"; \
 	fi
 
-build:
+build: pre
 	@$(MAKE) -C $(BUILD_DIR) all || ( \
 		cd $(BUILD_DIR) && cmake $(PROJECT_DIR); \
 		$(MAKE) -C $(BUILD_DIR) all; \
