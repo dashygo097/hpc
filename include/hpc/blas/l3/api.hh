@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../backends/backends.hh"
-#include "../../assert.hh"
 #include "./omp.hh"
 #include "./omp_simd.hh"
 #include "./sequential.hh"
@@ -18,7 +17,7 @@
     }                                                                          \
     ENABLE_MMUL_SIMD_BRANCH(name)                                              \
     ENABLE_MMUL_OPENMP_BRANCH(name)                                            \
-    ENABLE_MMUL_OPENMP_SIMD_BRANCH(name)                                            \
+    ENABLE_MMUL_OPENMP_SIMD_BRANCH(name)                                       \
   }
 
 #define L3_GEMM_FACTORY(name)                                                  \

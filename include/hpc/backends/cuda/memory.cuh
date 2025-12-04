@@ -165,5 +165,5 @@ private:
   T *_ptr;
 };
 
-} // namespace hpc::cuda
+} // namespace hpc::cu
 #endif

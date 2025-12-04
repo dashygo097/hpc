@@ -22,5 +22,5 @@ namespace hpc::cu {
     CUDA_CHECK_LAST();                                                         \
   } while (0)
 
-} // namespace hpc::cuda
+} // namespace hpc::cu
 #endif

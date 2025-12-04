@@ -6,7 +6,7 @@
 
 #ifdef ENABLE_CUDA
 namespace hpc::cu {
-  
+
 inline void printDeviceInfo(int device_id = 0) {
   cudaDeviceProp prop;
   CUDA_CHECK(cudaGetDeviceProperties(&prop, device_id));

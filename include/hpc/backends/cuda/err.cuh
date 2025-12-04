@@ -1,10 +1,10 @@
 #pragma once
 
-#if defined(ENABLE_CUDA)  
+#if defined(ENABLE_CUDA)
 #include <cuda_runtime.h>
 #endif
 
-#if defined(ENABLE_CUDA) 
+#if defined(ENABLE_CUDA)
 #define CUDA_CHECK(call)                                                       \
   do {                                                                         \
     cudaError_t err = (call);                                                  \
