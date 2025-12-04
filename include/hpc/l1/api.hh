@@ -66,11 +66,13 @@
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
 #define ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                 \
   else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendConfig::simd_width>(dst, scalar, n);    \
+    details::name##_omp_simd<T, BackendConfig::tile_size,                      \
+                             BackendConfig::simd_width>(dst, scalar, n);       \
   }
 #define ENABLE_OPENMP_SIMD_VECTOR_BRANCH(name)                                 \
   else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendConfig::simd_width>(dst, src, n);       \
+    details::name##_omp_simd<T, BackendConfig::tile_size,                      \
+                             BackendConfig::simd_width>(dst, src, n);          \
   }
 #else
 #define ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)
