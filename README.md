@@ -1,3 +1,3 @@
 # hpc
 
-###### Dashygo's HPC learning proj
+###### Cross-platform, unified HPC lib for personal usage
