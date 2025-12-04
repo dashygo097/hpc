@@ -1,3 +1,3 @@
 // Dummy source file
-#include "hpc.hh"
+#include <hpc.hh>
 namespace hpc {} // namespace hpc

@@ -7,7 +7,7 @@
 #endif
 
 #ifdef ENABLE_CUDA
-namespace hpc::cuda {
+namespace hpc::cu {
 
 // Memory Allocation
 template <typename T> T *mallocDevice(size_t count) {
@@ -62,7 +62,7 @@ template <typename T> class DeviceBuffer {
 public:
   explicit DeviceBuffer(size_t count) : _size(count), _ptr(nullptr) {
     if (count > 0) {
-      _ptr = malloc<T>(count);
+      _ptr = mallocDevice<T>(count);
     }
   }
 
