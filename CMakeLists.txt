@@ -35,4 +35,6 @@ include(BuildSummaries)
 add_subdirectory(demos)
 
 # Benchmarks
-add_subdirectory(benchmarks)
+if(ENABLE_BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
+endif()

@@ -31,7 +31,7 @@ inline void printDeviceInfo(int device_id = 0) {
   printf("╠════════════════════════════════════════╣\n");
   printf("║ Name: %-32s ║\n", prop.name);
   printf("║ Compute Capability: %d.%-16d ║\n", prop.major, prop.minor);
-  printf("║ Global Memory: %. 2f GB%-15s ║\n", prop.totalGlobalMem / 1e9, "");
+  printf("║ Global Memory: %.2f GB%-15s ║\n", prop.totalGlobalMem / 1e9, "");
   printf("║ Shared Memory/Block: %zu KB%-10s ║\n",
          prop.sharedMemPerBlock / 1024, "");
   printf("║ Max Threads/Block: %-18d ║\n", prop.maxThreadsPerBlock);

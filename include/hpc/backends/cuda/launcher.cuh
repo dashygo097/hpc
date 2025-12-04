@@ -59,7 +59,7 @@ public:
   }
 
   // Auto-configure for 1D kernel
-  KernelLauncher &config1D(int n, int _blocksize = 256) {
+  KernelLauncher &config1D(int n, int block_size = 256) {
     _block = dim3(block_size);
     _grid = dim3((n + block_size - 1) / block_size);
     return *this;
@@ -77,7 +77,7 @@ public:
   // Launch kernel
   template <typename Kernel, typename... Args>
   void operator()(Kernel kernel, Args... args) {
-    kernel<<<_grid, _block, _shared_mem, stream_>>>(args...);
+    kernel<<<_grid, _block, _shared_mem, _stream>>>(args...);
     CUDA_CHECK_LAST();
   }
 
@@ -89,7 +89,7 @@ private:
 };
 
 template <typename Kernel, typename... Args>
-void launch1D(Kernel kernel, int n, int _blocksize, Args... args) {
+void launch1D(Kernel kernel, int n, int block_size, Args... args) {
   dim3 grid((n + block_size - 1) / block_size);
   dim3 block(block_size);
   kernel<<<grid, block>>>(args...);

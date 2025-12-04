@@ -2,6 +2,7 @@
 
 // Utils
 #include "./hpc/timer.hh"
+#include "./hpc/assert.hh"
 
 // Backends
 #include "./hpc/backends/backends.hh"

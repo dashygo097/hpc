@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
 #endif
 
 #ifdef ENABLE_CUDA

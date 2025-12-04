@@ -182,7 +182,7 @@ public:
     case Backend::CUDA: {
       cudaEventRecord(stop_event_);
       cudaEventSynchronize(stop_event_);
-      float ms = 0. 0f;
+      float ms = 0.0f;
       cudaEventElapsedTime(&ms, start_event_, stop_event_);
       elapsed_ = ms / 1000.0; // Convert to seconds
       break;

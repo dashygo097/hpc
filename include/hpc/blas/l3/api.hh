@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../backends/backends.hh"
+#include "../../assert.hh"
 #include "./omp.hh"
 #include "./omp_simd.hh"
 #include "./sequential.hh"
@@ -17,10 +18,7 @@
     }                                                                          \
     ENABLE_MMUL_SIMD_BRANCH(name)                                              \
     ENABLE_MMUL_OPENMP_BRANCH(name)                                            \
-    ENABLE_MMUL_OPENMP_BRANCH(name)                                            \
-    else {                                                                     \
-      static_assert(false, "Unsupported or disabled backend for " #name);      \
-    }                                                                          \
+    ENABLE_MMUL_OPENMP_SIMD_BRANCH(name)                                            \
   }
 
 #define L3_GEMM_FACTORY(name)                                                  \
@@ -34,9 +32,6 @@
     ENABLE_GEMM_SIMD_BRANCH(name)                                              \
     ENABLE_GEMM_OPENMP_BRANCH(name)                                            \
     ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)                                       \
-    else {                                                                     \
-      static_assert(false, "Unsupported or disabled backend for " #name);      \
-    }                                                                          \
   }
 
 #ifdef ENABLE_SIMD

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../backends/backends.hh"
+#include "../../assert.hh"
 #include "./omp.hh"
 #include "./omp_simd.hh"
 #include "./sequential.hh"
@@ -16,10 +17,7 @@
     ENABLE_SIMD_SCALAR_BRANCH(name)                                            \
     ENABLE_OPENMP_SCALAR_BRANCH(name)                                          \
     ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                     \
-    else {                                                                     \
-      static_assert(false, "Unsupported or disabled backend for " #name);      \
     }                                                                          \
-  }                                                                            \
                                                                                \
   template <typename T, Backend backend, auto... BackendParams>                \
   inline void name(T *__restrict__ dst, const T *__restrict__ src, size_t n) { \
@@ -29,10 +27,7 @@
     ENABLE_SIMD_VECTOR_BRANCH(name)                                            \
     ENABLE_OPENMP_VECTOR_BRANCH(name)                                          \
     ENABLE_OPENMP_SIMD_VECTOR_BRANCH(name)                                     \
-    else {                                                                     \
-      static_assert(false, "Unsupported or disabled backend for " #name);      \
-    }                                                                          \
-  }
+  } 
 
 #ifdef ENABLE_SIMD
 #define ENABLE_SIMD_SCALAR_BRANCH(name)                                        \
