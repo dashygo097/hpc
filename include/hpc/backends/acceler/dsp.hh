@@ -7,9 +7,9 @@
 
 #ifdef ENABLE_ACCELERATE
 namespace hpc::acceler {
-template <typename T> struct acceler_traits;
+template <typename T> struct dsp_traits;
 
-template <> struct acceler_traits<float> {
+template <> struct dsp_traits<float> {
   using type = float;
 
   static inline void vsadd(const float *src, float scalar, float *dst,
@@ -56,7 +56,7 @@ template <> struct acceler_traits<float> {
   }
 };
 
-template <> struct acceler_traits<double> {
+template <> struct dsp_traits<double> {
   using type = double;
 
   static inline void vsadd(const double *src, double scalar, double *dst,
@@ -105,4 +105,4 @@ template <> struct acceler_traits<double> {
 
 } // namespace hpc::acceler
 
-#endif // ENABLE_ACCELERATE
+#endif

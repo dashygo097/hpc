@@ -9,9 +9,9 @@ namespace hpc::l3 {
 namespace details {
 
 template <typename T, const size_t TileSize, const size_t Alignment>
-void tiled_mmul_omp(T *__restrict__ C, const T *__restrict__ A,
-                    const T *__restrict__ B, const size_t &M, const size_t &K,
-                    const size_t &N) {
+void mmul_omp(T *__restrict__ C, const T *__restrict__ A,
+              const T *__restrict__ B, const size_t &M, const size_t &K,
+              const size_t &N) {
   // init C
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < M * N; ++i) {
@@ -96,10 +96,9 @@ void tiled_mmul_omp(T *__restrict__ C, const T *__restrict__ A,
 }
 
 template <typename T, const size_t TileSize, const size_t Alignment>
-inline void tiled_gemm_omp(T *__restrict__ C, const T *__restrict__ A,
-                           const T *__restrict__ B, const size_t &M,
-                           const size_t &K, const size_t &N, const T &alpha,
-                           const T &beta) {
+inline void gemm_omp(T *__restrict__ C, const T *__restrict__ A,
+                     const T *__restrict__ B, const size_t &M, const size_t &K,
+                     const size_t &N, const T &alpha, const T &beta) {
 
 // scale C by beta
 #pragma omp parallel for schedule(static)

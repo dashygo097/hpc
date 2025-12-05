@@ -10,20 +10,20 @@ namespace details {
 
 template <typename T>
 inline void vadd_acceler(T *__restrict__ dst, const T &scalar, size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vsadd(dst, scalar, dst, n);
 }
 
 template <typename T>
 inline void vadd_acceler(T *__restrict__ dst, const T *__restrict__ src,
                          size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vadd(dst, src, dst, n);
 }
 
 template <typename T>
 inline void vsub_acceler(T *__restrict__ dst, const T &scalar, size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   T neg_scalar = -scalar;
   traits::vsadd(dst, neg_scalar, dst, n);
 }
@@ -31,46 +31,46 @@ inline void vsub_acceler(T *__restrict__ dst, const T &scalar, size_t n) {
 template <typename T>
 inline void vsub_acceler(T *__restrict__ dst, const T *__restrict__ src,
                          size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vsub(dst, src, dst, n);
 }
 
 template <typename T>
 inline void vmul_acceler(T *__restrict__ dst, const T &scalar, size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vsmul(dst, scalar, dst, n);
 }
 
 template <typename T>
 inline void vmul_acceler(T *__restrict__ dst, const T *__restrict__ src,
                          size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vmul(dst, src, dst, n);
 }
 
 template <typename T>
 inline void vdiv_acceler(T *__restrict__ dst, const T &scalar, size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vsdiv(dst, scalar, dst, n);
 }
 
 template <typename T>
 inline void vdiv_acceler(T *__restrict__ dst, const T *__restrict__ src,
                          size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vdiv(dst, src, dst, n);
 }
 
 template <typename T>
 inline void vfill_acceler(T *__restrict__ dst, const T &value, size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::vfill(value, dst, n);
 }
 
 template <typename T>
 inline void axpy_acceler(T *__restrict__ y, const T *__restrict__ x,
                          const T &alpha, size_t n) {
-  using traits = acceler::acceler_traits<T>;
+  using traits = acceler::dsp_traits<T>;
   traits::axpy(n, alpha, x, y);
 }
 

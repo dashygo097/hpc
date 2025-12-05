@@ -10,9 +10,9 @@ namespace details {
 
 template <typename T, const size_t TileSize, const size_t SimdWidth,
           const size_t Alignment>
-void tiled_mmul_omp_simd(T *__restrict__ C, const T *__restrict__ A,
-                         const T *__restrict__ B, const size_t &M,
-                         const size_t &K, const size_t &N) {
+void mmul_omp_simd(T *__restrict__ C, const T *__restrict__ A,
+                   const T *__restrict__ B, const size_t &M, const size_t &K,
+                   const size_t &N) {
   static_assert(TileSize % SimdWidth == 0,
                 "TileSize must be multiple of SimdWidth");
 
@@ -58,22 +58,22 @@ void tiled_mmul_omp_simd(T *__restrict__ C, const T *__restrict__ A,
           // load localA
           for (size_t i = 0; i < tile_m; ++i) {
             memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
-                        tile_k * sizeof(T));
+                   tile_k * sizeof(T));
             memset(localA + i * TileSize + tile_k, 0,
-                        (TileSize - tile_k) * sizeof(T));
+                   (TileSize - tile_k) * sizeof(T));
           }
           memset(localA + tile_m * TileSize, 0,
-                      (TileSize - tile_m) * TileSize * sizeof(T));
+                 (TileSize - tile_m) * TileSize * sizeof(T));
 
           // load localB
           for (size_t k = 0; k < tile_k; ++k) {
             memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
-                        tile_n * sizeof(T));
+                   tile_n * sizeof(T));
             memset(localB + k * TileSize + tile_n, 0,
-                        (TileSize - tile_n) * sizeof(T));
+                   (TileSize - tile_n) * sizeof(T));
           }
           memset(localB + tile_k * TileSize, 0,
-                      (TileSize - tile_k) * TileSize * sizeof(T));
+                 (TileSize - tile_k) * TileSize * sizeof(T));
 
           // compute
           for (size_t i = 0; i < TileSize; ++i) {
@@ -113,10 +113,10 @@ void tiled_mmul_omp_simd(T *__restrict__ C, const T *__restrict__ A,
 
 template <typename T, const size_t TileSize, const size_t SimdWidth,
           const size_t Alignment>
-inline void tiled_gemm_omp_simd(T *__restrict__ C, const T *__restrict__ A,
-                                const T *__restrict__ B, const size_t &M,
-                                const size_t &K, const size_t &N,
-                                const T &alpha, const T &beta) {
+inline void gemm_omp_simd(T *__restrict__ C, const T *__restrict__ A,
+                          const T *__restrict__ B, const size_t &M,
+                          const size_t &K, const size_t &N, const T &alpha,
+                          const T &beta) {
   static_assert(TileSize % SimdWidth == 0,
                 "TileSize must be multiple of SimdWidth");
   using traits = simd::simd_traits<T, SimdWidth>;
@@ -164,22 +164,22 @@ inline void tiled_gemm_omp_simd(T *__restrict__ C, const T *__restrict__ A,
           // load localA
           for (size_t i = 0; i < tile_m; ++i) {
             memcpy(localA + i * TileSize, A + (ii + i) * K + kk,
-                        tile_k * sizeof(T));
+                   tile_k * sizeof(T));
             memset(localA + i * TileSize + tile_k, 0,
-                        (TileSize - tile_k) * sizeof(T));
+                   (TileSize - tile_k) * sizeof(T));
           }
           memset(localA + tile_m * TileSize, 0,
-                      (TileSize - tile_m) * TileSize * sizeof(T));
+                 (TileSize - tile_m) * TileSize * sizeof(T));
 
           // load localB
           for (size_t k = 0; k < tile_k; ++k) {
             memcpy(localB + k * TileSize, B + (kk + k) * N + jj,
-                        tile_n * sizeof(T));
+                   tile_n * sizeof(T));
             memset(localB + k * TileSize + tile_n, 0,
-                        (TileSize - tile_n) * sizeof(T));
+                   (TileSize - tile_n) * sizeof(T));
           }
           memset(localB + tile_k * TileSize, 0,
-                      (TileSize - tile_k) * TileSize * sizeof(T));
+                 (TileSize - tile_k) * TileSize * sizeof(T));
 
           // compute
           for (size_t i = 0; i < TileSize; ++i) {

@@ -25,6 +25,7 @@
 
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
+#include "./acceler/blasl3.hh"
 #include "./acceler/dsp.hh"
 #endif
 

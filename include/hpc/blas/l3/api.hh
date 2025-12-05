@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../backends/backends.hh"
+#include "./acceler.hh"
 #include "./omp.hh"
 #include "./omp_simd.hh"
 #include "./sequential.hh"
@@ -18,6 +19,7 @@
     ENABLE_MMUL_SIMD_BRANCH(name)                                              \
     ENABLE_MMUL_OPENMP_BRANCH(name)                                            \
     ENABLE_MMUL_OPENMP_SIMD_BRANCH(name)                                       \
+    ENABLE_MMUL_ACCEL_BRANCH(name)                                             \
   }
 
 #define L3_GEMM_FACTORY(name)                                                  \
@@ -31,6 +33,7 @@
     ENABLE_GEMM_SIMD_BRANCH(name)                                              \
     ENABLE_GEMM_OPENMP_BRANCH(name)                                            \
     ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)                                       \
+    ENABLE_GEMM_ACCEL_BRANCH(name)                                             \
   }
 
 #ifdef ENABLE_SIMD
@@ -76,7 +79,21 @@
 #define ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)
 #endif
 
+#ifdef ENABLE_ACCELERATE
+#define ENABLE_MMUL_ACCEL_BRANCH(name)                                         \
+  else if constexpr (backend == Backend::ACCELERATE) {                         \
+    details::name##_acceler<T>(C, A, B, M, K, N);                              \
+  }
+#define ENABLE_GEMM_ACCEL_BRANCH(name)                                         \
+  else if constexpr (backend == Backend::ACCELERATE) {                         \
+    details::name##_acceler<T>(C, A, B, M, K, N, alpha, beta);                 \
+  }
+#else
+#define ENABLE_MMUL_ACCEL_BRANCH(name)
+#define ENABLE_GEMM_ACCEL_BRANCH(name)
+#endif
+
 namespace hpc::l3 {
-L3_MMUL_FACTORY(tiled_mmul)
-L3_GEMM_FACTORY(tiled_gemm)
+L3_MMUL_FACTORY(mmul)
+L3_GEMM_FACTORY(gemm)
 } // namespace hpc::l3
