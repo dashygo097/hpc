@@ -3,6 +3,7 @@
 #ifdef ENABLE_CUDA
 #include "./err.cuh"
 #include <cstdio>
+#include <cuda_fp16.h>
 #include <cuda_runtime.h>
 #endif
 
@@ -17,6 +18,7 @@
 
 #define HALF2(ptr) (*reinterpret_cast<half2 *>(ptr))
 #define BFLOAT2(ptr) (*reinterpret_cast<__nv_bfloat162 *>(ptr))
+
 #define MAX_EXP_FP16 __float2half(11.089866488461016f)
 #define MIN_EXP_FP16 __float2half(-9.704060527839234f)
 #endif
