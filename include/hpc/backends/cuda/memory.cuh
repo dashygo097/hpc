@@ -57,7 +57,7 @@ template <typename T> void memset(T *ptr, int value, size_t count) {
   CUDA_CHECK(cudaMemset(ptr, value, count * sizeof(T)));
 }
 
-// RAII Wrappers (Modern C++)
+// RAII Wrappers
 template <typename T> class DeviceBuffer {
 public:
   explicit DeviceBuffer(size_t count) : _size(count), _ptr(nullptr) {
