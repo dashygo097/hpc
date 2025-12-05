@@ -8,8 +8,8 @@
 
 #if defined(ENABLE_PYTORCH) && defined(__CUDACC__)
 namespace hpc::bindings::torch {
-template <template Func, typename ElementType, size_t NumElements,
-          size_t BlockSize>
+template <typename ElementType, const size_t NumElements,
+          const size_t BlockSize, typename Func>
 ::torch::Tensor elem_wrapper(Func kernel_func, ::torch::Tensor input,
                              ::torch::Dtype dtype) {
   TORCH_CHECK_TENSOR_DTYPE(input, dtype);
