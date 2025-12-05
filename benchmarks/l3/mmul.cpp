@@ -122,18 +122,21 @@ BENCHMARK_REGISTER_F(MMulFixtureFloat, Naive)
 DEFINE_MMUL_BENCHMARK(Seq_32, hpc::l3::details::mmul_seq, 32, 64)
 DEFINE_MMUL_BENCHMARK(Seq_64, hpc::l3::details::mmul_seq, 64, 64)
 DEFINE_MMUL_BENCHMARK(Seq_128, hpc::l3::details::mmul_seq, 128, 64)
+DEFINE_MMUL_BENCHMARK(SeqAPI, hpc::l3::mmul, hpc::Backend::SEQUENTIAL, 128, 64)
 
 // OpenMP benchmarks
 #ifdef ENABLE_OPENMP
 DEFINE_MMUL_BENCHMARK(OpenMP_32, hpc::l3::details::mmul_omp, 32, 64)
 DEFINE_MMUL_BENCHMARK(OpenMP_64, hpc::l3::details::mmul_omp, 64, 64)
 DEFINE_MMUL_BENCHMARK(OpenMP_128, hpc::l3::details::mmul_omp, 128, 64)
+DEFINE_MMUL_BENCHMARK(OpenMPAPI, hpc::l3::mmul, hpc::Backend::OPENMP, 128, 64)
 #endif
 
 #ifdef ENABLE_SIMD
 DEFINE_MMUL_BENCHMARK(SIMD_32_4, hpc::l3::details::mmul_simd, 32, 4, 64)
 DEFINE_MMUL_BENCHMARK(SIMD_64_4, hpc::l3::details::mmul_simd, 64, 4, 64)
 DEFINE_MMUL_BENCHMARK(SIMD_128_4, hpc::l3::details::mmul_simd, 128, 4, 64)
+DEFINE_MMUL_BENCHMARK(SIMDAPI, hpc::l3::mmul, hpc::Backend::SIMD, 128, 4, 64)
 #endif
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
@@ -143,10 +146,13 @@ DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_64_4, hpc::l3::details::mmul_omp_simd, 64, 4,
                       64)
 DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_128_4, hpc::l3::details::mmul_omp_simd, 128,
                       4, 64)
+DEFINE_MMUL_BENCHMARK(OpenMP_SIMD_API, hpc::l3::mmul, hpc::Backend::OPENMP_SIMD,
+                      128, 4, 64)
 #endif
 
 #ifdef ENABLE_ACCELERATE
 DEFINE_MMUL_BENCHMARK(Accelerate, hpc::l3::details::mmul_acceler)
+DEFINE_MMUL_BENCHMARK(AccelerateAPI, hpc::l3::mmul, hpc::Backend::ACCELERATE)
 #endif
 
 BENCHMARK_MAIN();

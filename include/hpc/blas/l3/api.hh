@@ -53,11 +53,11 @@
 #ifdef ENABLE_OPENMP
 #define ENABLE_MMUL_OPENMP_BRANCH(name)                                        \
   else if constexpr (backend == Backend::OPENMP) {                             \
-    details::name##_omp<T>(C, A, B, M, K, N);                                  \
+    details::name##_omp<T, BackendParams...>(C, A, B, M, K, N);                \
   }
 #define ENABLE_GEMM_OPENMP_BRANCH(name)                                        \
   else if constexpr (backend == Backend::OPENMP) {                             \
-    details::name##_omp<T>(C, A, B, M, K, N, alpha, beta);                     \
+    details::name##_omp<T, BackendParams...>(C, A, B, M, K, N, alpha, beta);   \
   }
 #else
 #define ENABLE_MMUL_OPENMP_BRANCH(name)
