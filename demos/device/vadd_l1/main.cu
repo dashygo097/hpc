@@ -1,17 +1,18 @@
+#include <chrono>
+#include <cmath>
 #include <hpc.hh>
 #include <iostream>
 #include <vector>
-#include <cmath>
-#include <chrono>
 
 int main() {
-  std::cout << "=== CUDA Vector Addition Test (Using HPC L1 API) ===\n" << std::endl;
+  std::cout << "=== CUDA Vector Addition Test (Using HPC L1 API) ===\n"
+            << std::endl;
 
   std::cout << "1.  Initializing CUDA..." << std::endl;
   try {
     hpc::cu::init(0, true);
   } catch (const std::exception &e) {
-    std::cerr << "CUDA initialization failed: " << e. what() << std::endl;
+    std::cerr << "CUDA initialization failed: " << e.what() << std::endl;
     return 1;
   }
 
@@ -49,29 +50,27 @@ int main() {
 
   // Launch kernel using HPC L1 API
   std::cout << "\n6.  Launching CUDA kernel via HPC L1 API..." << std::endl;
-  
+
   auto start = std::chrono::high_resolution_clock::now();
-  
+
   try {
-    hpc::l1::vadd<float, hpc::Backend::CUDA, 256>(
-      d_c.data(), d_a.data(), N
-    );
-    hpc::l1::vadd<float, hpc::Backend::CUDA, 256>(
-      d_c.data(), d_b.data(), N
-    );
- 
+    hpc::l1::vadd<float, hpc::Backend::CUDA, 256>(d_c.data(), d_a.data(), N);
+    hpc::l1::vadd<float, hpc::Backend::CUDA, 256>(d_c.data(), d_b.data(), N);
+
   } catch (const std::exception &e) {
-    std::cerr << "Kernel launch failed: " << e. what() << std::endl;
+    std::cerr << "Kernel launch failed: " << e.what() << std::endl;
     return 1;
   }
-  
+
   hpc::cu::sync();
-  
+
   auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-  
-  std::cout << "   Kernel execution time: " << duration.count() / 1000.0 << " ms" << std::endl;
-  
+  auto duration =
+      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+  std::cout << "   Kernel execution time: " << duration.count() / 1000.0
+            << " ms" << std::endl;
+
   // Copy result back to host
   std::cout << "\n7. Copying results back to host..." << std::endl;
   d_c.copyToHost(h_c.data());
@@ -86,13 +85,12 @@ int main() {
   for (int i = 0; i < N; i++) {
     double diff = std::abs(h_c[i] - h_expected[i]);
     max_diff = std::max(max_diff, diff);
-    
+
     if (diff > 1e-5) {
       errors++;
       if (errors <= max_errors_to_show) {
         std::cout << "   Error #" << errors << " at index " << i
-                  << ": expected=" << h_expected[i] 
-                  << ", actual=" << h_c[i]
+                  << ": expected=" << h_expected[i] << ", actual=" << h_c[i]
                   << ", diff=" << diff << std::endl;
       }
       passed = false;
@@ -103,20 +101,23 @@ int main() {
   std::cout << "\n9. Test results:" << std::endl;
   std::cout << "   Total elements: " << N << std::endl;
   std::cout << "   Max difference: " << max_diff << std::endl;
-  
+
   if (passed) {
-    std::cout << "   ✓ TEST PASSED! All " << N << " elements computed correctly" << std::endl;
+    std::cout << "   ✓ TEST PASSED! All " << N << " elements computed correctly"
+              << std::endl;
   } else {
     std::cout << "   ✗ TEST FAILED!" << std::endl;
     std::cout << "   Total errors found: " << errors << std::endl;
     if (errors > max_errors_to_show) {
-      std::cout << "   (only showing first " << max_errors_to_show << " errors)" << std::endl;
+      std::cout << "   (only showing first " << max_errors_to_show << " errors)"
+                << std::endl;
     }
   }
-  
+
   // Performance metrics
   std::cout << "\n10. Performance metrics:" << std::endl;
-  double bandwidth_gb = (3.0 * N * sizeof(float)) / (duration.count() * 1e-6) / 1e9;
+  double bandwidth_gb =
+      (3.0 * N * sizeof(float)) / (duration.count() * 1e-6) / 1e9;
   std::cout << "   Bandwidth: " << bandwidth_gb << " GB/s" << std::endl;
 
   std::cout << "\n=== Test Complete ===" << std::endl;
