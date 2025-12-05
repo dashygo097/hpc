@@ -124,13 +124,13 @@ BENCHMARK_REGISTER_F(VaddFixtureFloat, Naive)
 // Sequential
 DEFINE_VADD_VEC_BENCHMARK(Seq, hpc::l1::details::vadd_seq)
 DEFINE_VADD_VEC_BENCHMARK(SeqAPI, hpc::l1::vadd, hpc::Backend::SEQUENTIAL)
-
+  
 // OpenMP
 #ifdef ENABLE_OPENMP
 DEFINE_VADD_VEC_BENCHMARK(OpenMP, hpc::l1::details::vadd_omp, 1024)
 DEFINE_VADD_VEC_BENCHMARK(OpenMPAPI, hpc::l1::vadd, hpc::Backend::OPENMP)
 #endif
-
+  
 // SIMD
 #ifdef ENABLE_SIMD
 DEFINE_VADD_VEC_BENCHMARK(SIMD_4, hpc::l1::details::vadd_simd, 4)
@@ -151,5 +151,5 @@ DEFINE_VADD_VEC_BENCHMARK(Accelerate, hpc::l1::details::vadd_acceler)
 DEFINE_VADD_VEC_BENCHMARK(AccelerateAPI, hpc::l1::vadd,
                           hpc::Backend::ACCELERATE)
 #endif
-
+  
 BENCHMARK_MAIN();

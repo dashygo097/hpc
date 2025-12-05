@@ -37,13 +37,13 @@ else()
 endif()
 
 if (HAS_PYBIND11)
-  print_info("  ✓ pybind11: ${pybind11_VERSION}" "92")
+  print_info("  ✓ pybind11: ${pybind11_VERSION}\n" "92")
 else()
   print_info("  ✗ pybind11: disabled\n" "90")
 endif()
 
 if(HAS_PYTORCH)
-  print_info("  ✓ PyTorch: ${Torch_VERSION}" "92")
+  print_info("  ✓ PyTorch: ${Torch_VERSION}\n" "92")
 else()
   print_info("  ✗ PyTorch: disabled\n" "90")
 endif()
@@ -57,7 +57,7 @@ if(CCACHE_PROGRAM)
 endif()
 
 # Source files
-print_info("" "0")
+print_info("\n" "0")
 make_paths_relative(REL_SOURCES HPC_SOURCES)
 make_paths_relative(REL_HEADERS HPC_HEADERS)
 
