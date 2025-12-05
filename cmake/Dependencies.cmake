@@ -2,7 +2,7 @@
 
 # --- 3rdparty libraries (always included) ---
 include_directories(3rdparty)
-if(ENABLE_BUILD_BENCHMARKS)
+if(ENABLE_BENCHMARKING)
   add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
   add_subdirectory(3rdparty/benchmark EXCLUDE_FROM_ALL)
 endif()
