@@ -20,6 +20,8 @@ if(ENABLE_CUDA AND NOT APPLE)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fPIC")
     
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -t0") 
+    
     message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
     message(STATUS "CUDA toolkit version: ${CUDAToolkit_VERSION}")
   else()
