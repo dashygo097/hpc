@@ -75,6 +75,10 @@ endif()
 if(HAS_CUDA)
   target_link_libraries(hpc PUBLIC CUDA::cudart CUDA::cublas)
 endif()
+
+if(HAS_ACCELERATE)
+  target_link_libraries(hpc PUBLIC ${ACCELERATE_LIB})
+endif()
   
 # Export compile features
 target_compile_features(hpc PUBLIC cxx_std_17)

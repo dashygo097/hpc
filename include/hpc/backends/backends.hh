@@ -23,6 +23,11 @@
 #include "./cuda/memory.cuh"
 #endif
 
+// Apple Accelerate
+#ifdef ENABLE_ACCELERATE
+#include "./acceler/dsp.hh"
+#endif
+
 namespace hpc {
 enum class Backend {
   // Single backend
@@ -38,6 +43,9 @@ enum class Backend {
 #endif
 #ifdef ENABLE_CUDA
   CUDA,
+#endif
+#ifdef ENABLE_ACCELERATE
+  ACCELERATE,
 #endif
 
 // Multi backend (combinations)

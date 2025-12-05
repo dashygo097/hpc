@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../backends/backends.hh"
+#include "./acceler.hh"
 #include "./omp.hh"
 #include "./omp_simd.hh"
 #include "./sequential.hh"
@@ -16,6 +17,7 @@
     ENABLE_SIMD_SCALAR_BRANCH(name)                                            \
     ENABLE_OPENMP_SCALAR_BRANCH(name)                                          \
     ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                     \
+    ENABLE_ACCELERATE_SCALAR_BRANCH(name)                                      \
   }                                                                            \
                                                                                \
   template <typename T, Backend backend, auto... BackendParams>                \
@@ -26,6 +28,7 @@
     ENABLE_SIMD_VECTOR_BRANCH(name)                                            \
     ENABLE_OPENMP_VECTOR_BRANCH(name)                                          \
     ENABLE_OPENMP_SIMD_VECTOR_BRANCH(name)                                     \
+    ENABLE_ACCELERATE_VECTOR_BRANCH(name)                                      \
   }
 
 #ifdef ENABLE_SIMD
@@ -71,6 +74,20 @@
 #define ENABLE_OPENMP_SIMD_VECTOR_BRANCH(name)
 #endif
 
+#ifdef ENABLE_ACCELERATE
+#define ENABLE_ACCELERATE_SCALAR_BRANCH(name)                                  \
+  else if constexpr (backend == Backend::ACCELERATE) {                         \
+    details::name##_acceler<T, BackendParams...>(dst, scalar, n);              \
+  }
+#define ENABLE_ACCELERATE_VECTOR_BRANCH(name)                                  \
+  else if constexpr (backend == Backend::ACCELERATE) {                         \
+    details::name##_acceler<T, BackendParams...>(dst, src, n);                 \
+  }
+#else
+#define ENABLE_ACCELERATE_SCALAR_BRANCH(name)
+#define ENABLE_ACCELERATE_VECTOR_BRANCH(name)
+#endif
+
 namespace hpc::l1 {
 
 // Public API
@@ -88,5 +105,7 @@ L1_FACTORY(axpy)
 #undef ENABLE_OPENMP_VECTOR_BRANCH
 #undef ENABLE_OPENMP_SIMD_SCALAR_BRANCH
 #undef ENABLE_OPENMP_SIMD_VECTOR_BRANCH
+#undef ENABLE_ACCELERATE_SCALAR_BRANCH
+#undef ENABLE_ACCELERATE_VECTOR_BRANCH
 
 } // namespace hpc::l1

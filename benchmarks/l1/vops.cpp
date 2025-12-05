@@ -145,4 +145,11 @@ DEFINE_VADD_VEC_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::vadd,
                           hpc::Backend::OPENMP_SIMD, 1024, 4)
 #endif
 
+// Apple Accelerate
+#ifdef ENABLE_ACCELERATE
+DEFINE_VADD_VEC_BENCHMARK(Accelerate, hpc::l1::details::vadd_acceler)
+DEFINE_VADD_VEC_BENCHMARK(AccelerateAPI, hpc::l1::vadd,
+                          hpc::Backend::ACCELERATE)
+#endif
+
 BENCHMARK_MAIN();
