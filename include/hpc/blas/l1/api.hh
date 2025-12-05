@@ -94,11 +94,11 @@
 #if defined(ENABLE_CUDA) && defined(__CUDACC__)
 #define ENABLE_CUDA_SCALAR_BRANCH(name)                                        \
   else if constexpr (backend == Backend::CUDA) {                               \
-    CUDA_LAUNCH(details::name##_cuda, BackendParams..., dst, scalar, n);       \
+    details::name##_cuda<T, BackendParams...>(dst, scalar, n);              \
   }
 #define ENABLE_CUDA_VECTOR_BRANCH(name)                                        \
   else if constexpr (backend == Backend::CUDA) {                               \
-    CUDA_LAUNCH(details::name##_cuda, BackendParams..., dst, src, n);          \
+    details::name##_cuda<T, BackendParams...>(dst, src, n);                 \
   }
 #else
 #define ENABLE_CUDA_SCALAR_BRANCH(name)

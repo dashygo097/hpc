@@ -56,7 +56,7 @@ int main() {
   std::cout << "\n5. 启动CUDA内核..." << std::endl;
 
   hpc::cu::sync();
-  CUDA_LAUNCH(vadd_kernel, N, block_size, d_c.data(), d_a.data(), d_b.data(),
+  CUDA_LAUNCH(vadd_kernel, grid_size, block_size, d_c.data(), d_a.data(), d_b.data(),
               N);
 
   hpc::cu::sync();
