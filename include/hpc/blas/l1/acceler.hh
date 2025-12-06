@@ -68,6 +68,13 @@ inline void vfill_acceler(T *__restrict__ dst, const T &value, size_t n) {
 }
 
 template <typename T>
+inline void vcopy_acceler(T *__restrict__ dst, const T *__restrict__ src,
+                          size_t n) {
+  using traits = acceler::dsp_traits<T>;
+  traits::vcopy(src, dst, n);
+}
+
+template <typename T>
 inline void axpy_acceler(T *__restrict__ y, const T *__restrict__ x,
                          const T &alpha, size_t n) {
   using traits = acceler::dsp_traits<T>;

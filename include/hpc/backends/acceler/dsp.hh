@@ -53,6 +53,11 @@ template <> struct dsp_traits<float> {
   }
 
   __attribute__((always_inline)) static inline void
+  vcopy(const float *src, float *dst, size_t n) {
+    vDSP_mmov((float *)src, dst, n, 1, n, 1);
+  }
+
+  __attribute__((always_inline)) static inline void
   axpy(size_t n, float alpha, const float *x, float *y) {
     cblas_saxpy(static_cast<int>(n), alpha, x, 1, y, 1);
   }

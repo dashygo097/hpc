@@ -176,6 +176,28 @@ inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
   }
 }
 
+// copy
+template <typename T>
+inline void vcopy_omp(T *__restrict__ dst, const T *__restrict__ src,
+                      size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < n; ++i) {
+    dst[i] = src[i];
+  }
+}
+
+template <typename T, const size_t TileSize>
+inline void vcopy_omp(T *__restrict__ dst, const T *__restrict__ src,
+                      size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] = src[i];
+    }
+  }
+}
+
 // l1
 
 // axpy

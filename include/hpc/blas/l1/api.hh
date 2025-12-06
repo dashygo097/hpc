@@ -113,6 +113,7 @@ L1_FACTORY(vsub)
 L1_FACTORY(vmul)
 L1_FACTORY(vdiv)
 L1_FACTORY(vfill)
+L1_FACTORY(vcopy)
 L1_FACTORY(axpy)
 
 #undef L1_FACTORY
