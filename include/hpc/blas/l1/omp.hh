@@ -9,6 +9,7 @@
 namespace hpc::l1 {
 namespace details {
 
+// addition
 template <typename T>
 inline void vadd_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
@@ -25,6 +26,29 @@ inline void vadd_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
   }
 }
 
+template <typename T, const size_t TileSize>
+inline void vadd_omp(T *__restrict__ dst, const T &scalar, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] += scalar;
+    }
+  }
+}
+
+template <typename T, const size_t TileSize>
+inline void vadd_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] += src[i];
+    }
+  }
+}
+
+// subtraction
 template <typename T>
 inline void vsub_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
@@ -39,6 +63,29 @@ inline void vsub_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
     dst[i] -= src[i];
 }
 
+template <typename T, const size_t TileSize>
+inline void vsub_omp(T *__restrict__ dst, const T &scalar, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] -= scalar;
+    }
+  }
+}
+
+template <typename T, const size_t TileSize>
+inline void vsub_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] -= src[i];
+    }
+  }
+}
+
+// multiplication
 template <typename T>
 inline void vmul_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
@@ -53,6 +100,29 @@ inline void vmul_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
     dst[i] *= src[i];
 }
 
+template <typename T, const size_t TileSize>
+inline void vmul_omp(T *__restrict__ dst, const T &scalar, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] *= scalar;
+    }
+  }
+}
+
+template <typename T, const size_t TileSize>
+inline void vmul_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] *= src[i];
+    }
+  }
+}
+
+// division
 template <typename T>
 inline void vdiv_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
@@ -67,85 +137,12 @@ inline void vdiv_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
     dst[i] /= src[i];
 }
 
-template <typename T>
-inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < n; ++i)
-    dst[i] = value;
-}
-
-template <typename T, const size_t TileSize>
-inline void vadd_omp(T *__restrict__ dst, const T &scalar, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] += scalar;
-    }
-  }
-}
-
-template <typename T, const size_t TileSize>
-inline void vadd_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] += src[i];
-    }
-  }
-}
-
-template <typename T, const size_t TileSize>
-inline void vsub_omp(T *__restrict__ dst, const T &scalar, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] -= scalar;
-    }
-  }
-}
-
-template <typename T, const size_t TileSize>
-inline void vsub_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] -= src[i];
-    }
-  }
-}
-
-template <typename T, const size_t TileSize>
-inline void vmul_omp(T *__restrict__ dst, const T &scalar, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] *= scalar;
-    }
-  }
-}
-
-template <typename T, const size_t TileSize>
-inline void vmul_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] *= src[i];
-    }
-  }
-}
-
 template <typename T, const size_t TileSize>
 inline void vdiv_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 #pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
       dst[i] /= scalar;
     }
   }
@@ -154,22 +151,40 @@ inline void vdiv_omp(T *__restrict__ dst, const T &scalar, size_t n) {
 template <typename T, const size_t TileSize>
 inline void vdiv_omp(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
 #pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
       dst[i] /= src[i];
     }
   }
 }
 
+// fill
+template <typename T>
+inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < n; ++i)
+    dst[i] = value;
+}
+
 template <typename T, const size_t TileSize>
 inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
 #pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
-      dst[i] = value;
-    }
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    memset(dst + tile_start, value, (tile_end - tile_start) * sizeof(T));
+  }
+}
+
+// l1
+
+// axpy
+template <typename T>
+inline void axpy_omp(T *__restrict__ y, const T *__restrict__ x, const T &a,
+                     size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < n; ++i) {
+    y[i] += a * x[i];
   }
 }
 
@@ -177,9 +192,9 @@ template <typename T, const size_t TileSize>
 inline void axpy_omp(T *__restrict__ y, const T *__restrict__ x, const T &a,
                      size_t n) {
 #pragma omp parallel for schedule(static)
-  for (size_t block = 0; block < n; block += TileSize) {
-    size_t end = std::min(block + TileSize, n);
-    for (size_t i = block; i < end; ++i) {
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
       y[i] += a * x[i];
     }
   }

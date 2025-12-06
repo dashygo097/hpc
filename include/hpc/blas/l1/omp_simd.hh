@@ -1,13 +1,48 @@
 #pragma once
 
-#if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
+#if defined(ENABLE_SIMD) && defined(ENABLE_OPENMP)
 #include "../../backends/backends.hh"
-#include <algorithm>
 #endif
 
-#if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
+#if defined(ENABLE_SIMD) && defined(ENABLE_OPENMP)
 namespace hpc::l1 {
 namespace details {
+
+// addition
+template <typename T, const size_t SimdWidth>
+inline void vadd_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t scalar_vec = SIMD_DUP(traits, scalar);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t v = SIMD_LOAD(traits, dst + i);
+    SIMD_STORE(traits, dst + i, SIMD_ADD(traits, v, scalar_vec));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] += scalar;
+}
+
+template <typename T, const size_t SimdWidth>
+inline void vadd_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                          size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vd = SIMD_LOAD(traits, dst + i);
+    simd_t vs = SIMD_LOAD(traits, src + i);
+    SIMD_STORE(traits, dst + i, SIMD_ADD(traits, vd, vs));
+  }
+
+  for (size_t i = simd_end; i < n; ++i) {
+    dst[i] += src[i];
+  }
+}
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline void vadd_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
@@ -50,11 +85,45 @@ inline void vadd_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
   }
 }
 
+// subtraction
+template <typename T, const size_t SimdWidth>
+inline void vsub_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t scalar_vec = SIMD_DUP(traits, scalar);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t v = SIMD_LOAD(traits, dst + i);
+    SIMD_STORE(traits, dst + i, SIMD_SUB(traits, v, scalar_vec));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] -= scalar;
+}
+
+template <typename T, const size_t SimdWidth>
+inline void vsub_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                          size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vd = SIMD_LOAD(traits, dst + i);
+    simd_t vs = SIMD_LOAD(traits, src + i);
+    SIMD_STORE(traits, dst + i, SIMD_SUB(traits, vd, vs));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] -= src[i];
+}
+
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline void vsub_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
+  const size_t simd_end = n - (n % SimdWidth);
   const simd_t scalar_vec = SIMD_DUP(traits, scalar);
 
 #pragma omp parallel for schedule(static)
@@ -65,9 +134,8 @@ inline void vsub_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
                  SIMD_SUB(traits, SIMD_LOAD(traits, dst + i), scalar_vec));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] -= scalar;
-  }
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
@@ -75,10 +143,10 @@ inline void vsub_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
                           size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
+  const size_t simd_end = n - (n % SimdWidth);
 
 #pragma omp parallel for schedule(static)
-  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
     size_t tile_end = tile_start + TileSize;
     for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
       simd_t v_src = SIMD_LOAD(traits, src + i);
@@ -86,17 +154,50 @@ inline void vsub_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
                  SIMD_SUB(traits, SIMD_LOAD(traits, dst + i), v_src));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] -= src[i];
+}
+
+// multiplication
+template <typename T, const size_t SimdWidth>
+inline void vmul_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t scalar_vec = SIMD_DUP(traits, scalar);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t v = traits::load(dst + i);
+    traits::store(dst + i, traits::mul(v, scalar_vec));
   }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] *= scalar;
+}
+
+template <typename T, const size_t SimdWidth>
+inline void vmul_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                          size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vd = SIMD_LOAD(traits, dst + i);
+    simd_t vs = SIMD_LOAD(traits, src + i);
+    SIMD_STORE(traits, dst + i, SIMD_MUL(traits, vd, vs));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] *= src[i];
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline void vmul_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
-  simd_t scalar_vec = SIMD_DUP(traits, scalar);
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t scalar_vec = SIMD_DUP(traits, scalar);
 
 #pragma omp parallel for schedule(static)
   for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
@@ -106,9 +207,8 @@ inline void vmul_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
                  SIMD_MUL(traits, SIMD_LOAD(traits, dst + i), scalar_vec));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] *= scalar;
-  }
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
@@ -116,10 +216,10 @@ inline void vmul_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
                           size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
+  const size_t simd_end = n - (n % SimdWidth);
 
 #pragma omp parallel for schedule(static)
-  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
     size_t tile_end = tile_start + TileSize;
     for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
       simd_t v_src = SIMD_LOAD(traits, src + i);
@@ -127,17 +227,50 @@ inline void vmul_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
                  SIMD_MUL(traits, SIMD_LOAD(traits, dst + i), v_src));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] *= src[i];
+}
+
+// division
+template <typename T, const size_t SimdWidth>
+inline void vdiv_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t scalar_vec = SIMD_DUP(traits, scalar);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t v = SIMD_LOAD(traits, dst + i);
+    SIMD_STORE(traits, dst + i, SIMD_DIV(traits, v, scalar_vec));
   }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] /= scalar;
+}
+
+template <typename T, const size_t SimdWidth>
+inline void vdiv_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                          size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vd = SIMD_LOAD(traits, dst + i);
+    simd_t vs = SIMD_LOAD(traits, src + i);
+    SIMD_STORE(traits, dst + i, SIMD_DIV(traits, vd, vs));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] /= src[i];
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline void vdiv_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
-  const size_t scalar_vec = SIMD_DUP(traits, scalar);
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t scalar_vec = SIMD_DUP(traits, scalar);
 
 #pragma omp parallel for schedule(static)
   for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
@@ -147,20 +280,20 @@ inline void vdiv_omp_simd(T *__restrict__ dst, const T &scalar, size_t n) {
                  SIMD_DIV(traits, SIMD_LOAD(traits, dst + i), scalar_vec));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] /= scalar;
-  }
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline void vdiv_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+
                           size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
+  const size_t simd_end = n - (n % SimdWidth);
 
 #pragma omp parallel for schedule(static)
-  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
     size_t tile_end = tile_start + TileSize;
     for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
       simd_t v_src = SIMD_LOAD(traits, src + i);
@@ -168,51 +301,120 @@ inline void vdiv_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
                  SIMD_DIV(traits, SIMD_LOAD(traits, dst + i), v_src));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] /= src[i];
+}
+
+// fill
+template <typename T, const size_t SimdWidth>
+inline void vfill_omp_simd(T *__restrict__ dst, const T &value, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t value_vec = SIMD_DUP(traits, value);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    SIMD_STORE(traits, dst + i, value_vec);
   }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] = value;
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline void vfill_omp_simd(T *__restrict__ dst, const T &value, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
-  simd_t v_value = SIMD_DUP(traits, value);
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t value_vec = SIMD_DUP(traits, value);
 
 #pragma omp parallel for schedule(static)
   for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
     size_t tile_end = tile_start + TileSize;
     for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
-      SIMD_STORE(traits, dst + i, v_value);
+      SIMD_STORE(traits, dst + i, value_vec);
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     dst[i] = value;
+}
+
+// copy
+template <typename T, const size_t SimdWidth>
+inline void vcopy_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                           size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vs = SIMD_LOAD(traits, src + i);
+    SIMD_STORE(traits, dst + i, vs);
   }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] = src[i];
+}
+
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline void vcopy_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                           size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+    size_t tile_end = tile_start + TileSize;
+    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+      simd_t v_src = SIMD_LOAD(traits, src + i);
+      SIMD_STORE(traits, dst + i, v_src);
+    }
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] = src[i];
 }
 
 // l1
-template <typename T, const size_t TileSize, const size_t SimdWidth>
-inline void axpy_omp_simd(T *__restrict__ y, const T *__restrict__ x, const T a,
-                          size_t n) {
+
+// axpy
+template <typename T, const size_t SimdWidth>
+inline void axpy_omp_simd(T *__restrict__ y, const T *__restrict__ x,
+                          const T &a, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  size_t simd_end = n - (n % SimdWidth);
-  simd_t v_a = SIMD_DUP(traits, a);
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t v_a = SIMD_DUP(traits, a);
 
 #pragma omp parallel for schedule(static)
-  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vy = SIMD_LOAD(traits, y + i);
+    simd_t vx = SIMD_LOAD(traits, x + i);
+    SIMD_STORE(traits, y + i, SIMD_FMA(traits, v_a, vx, vy));
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    y[i] += a * x[i];
+}
+
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline void axpy_omp_simd(T *__restrict__ y, const T *__restrict__ x,
+                          const T &a, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t v_a = SIMD_DUP(traits, a);
+
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
     size_t tile_end = tile_start + TileSize;
     for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
-      simd_t v_x = SIMD_LOAD(traits, x + i);
-      simd_t v_y = SIMD_LOAD(traits, y + i);
-      SIMD_STORE(traits, y + i, SIMD_FMA(traits, v_a, v_x, v_y));
+      simd_t vy = SIMD_LOAD(traits, y + i);
+      simd_t vx = SIMD_LOAD(traits, x + i);
+      SIMD_STORE(traits, y + i, SIMD_FMA(traits, v_a, vx, vy));
     }
   }
-  for (size_t i = simd_end; i < n; ++i) {
+  for (size_t i = simd_end; i < n; ++i)
     y[i] += a * x[i];
-  }
 }
 
 } // namespace details
