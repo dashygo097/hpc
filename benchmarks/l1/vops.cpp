@@ -133,8 +133,8 @@ DEFINE_VADD_VEC_BENCHMARK(OpenMPAPI, hpc::l1::vadd, hpc::Backend::OPENMP, 1024)
 
 // SIMD
 #ifdef ENABLE_SIMD
-DEFINE_VADD_VEC_BENCHMARK(SIMD_4, hpc::l1::details::vadd_simd, 4)
-DEFINE_VADD_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::vadd, hpc::Backend::SIMD, 4)
+DEFINE_VADD_VEC_BENCHMARK(SIMD_4, hpc::l1::details::vadd_simd, 1024, 4)
+DEFINE_VADD_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::vadd, hpc::Backend::SIMD, 1024, 4)
 #endif
 
 // OpenMP + SIMD
