@@ -13,6 +13,7 @@
       dst[idx] op src[idx];                                                    \
     }                                                                          \
   }                                                                            \
+                                                                               \
   template <typename T>                                                        \
   __global__ void name##_cuda_kernel(T *__restrict__ dst, const T &scalar,     \
                                      size_t n) {                               \
@@ -20,6 +21,19 @@
     if (idx < n) {                                                             \
       dst[idx] op scalar;                                                      \
     }                                                                          \
+  }                                                                            \
+                                                                               \
+  template <typename T, int BlockSize = 256>                                   \
+  inline void name##_cuda(T *__restrict__ dst, const T *__restrict__ src,      \
+                          size_t n) {                                          \
+    int grid_size = (n + BlockSize - 1) / BlockSize;                           \
+    CUDA_LAUNCH(name##_cuda_kernel<T>, grid_size, BlockSize, dst, src, n);     \
+  }                                                                            \
+                                                                               \
+  template <typename T, int BlockSize = 256>                                   \
+  inline void name##_cuda(T *__restrict__ dst, const T &scalar, size_t n) {    \
+    int grid_size = (n + BlockSize - 1) / BlockSize;                           \
+    CUDA_LAUNCH(name##_cuda_kernel<T>, grid_size, BlockSize, dst, scalar, n);  \
   }
 
 #if defined(ENABLE_CUDA) && defined(__CUDACC__)
@@ -64,58 +78,6 @@ __global__ void axpy_cuda_kernel(T *__restrict__ y, const T *__restrict__ x,
 }
 
 // Host-side wrapper functions
-template <typename T, int BlockSize = 256>
-inline void vadd_cuda(T *__restrict__ dst, const T *__restrict__ src,
-                      size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vadd_cuda_kernel<T>, grid_size, BlockSize, dst, src, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vadd_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vadd_cuda_kernel<T>, grid_size, BlockSize, dst, scalar, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vsub_cuda(T *__restrict__ dst, const T *__restrict__ src,
-                      size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vsub_cuda_kernel<T>, grid_size, BlockSize, dst, src, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vsub_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vsub_cuda_kernel<T>, grid_size, BlockSize, dst, scalar, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vmul_cuda(T *__restrict__ dst, const T *__restrict__ src,
-                      size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vmul_cuda_kernel<T>, grid_size, BlockSize, dst, src, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vmul_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vmul_cuda_kernel<T>, grid_size, BlockSize, dst, scalar, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vdiv_cuda(T *__restrict__ dst, const T *__restrict__ src,
-                      size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vdiv_cuda_kernel<T>, grid_size, BlockSize, dst, src, n);
-}
-
-template <typename T, int BlockSize = 256>
-inline void vdiv_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vdiv_cuda_kernel<T>, grid_size, BlockSize, dst, scalar, n);
-}
-
 template <typename T, int BlockSize = 256>
 inline void vfill_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
