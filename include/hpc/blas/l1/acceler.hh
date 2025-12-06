@@ -61,12 +61,21 @@ inline void vdiv_acceler(T *__restrict__ dst, const T *__restrict__ src,
   traits::vdiv(dst, src, dst, n);
 }
 
+// reduce
+template <typename T>
+inline void vsum_acceler(const T *__restrict__ src, T &result, size_t n) {
+  using traits = acceler::dsp_traits<T>;
+  traits::vsum(src, &result, n);
+}
+
+// fill
 template <typename T>
 inline void vfill_acceler(T *__restrict__ dst, const T &value, size_t n) {
   using traits = acceler::dsp_traits<T>;
   traits::vfill(value, dst, n);
 }
 
+// copy
 template <typename T>
 inline void vcopy_acceler(T *__restrict__ dst, const T *__restrict__ src,
                           size_t n) {

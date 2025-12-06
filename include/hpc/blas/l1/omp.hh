@@ -59,6 +59,46 @@ DEF_BLAS_L1_OMP_OP(vsub, -=)
 DEF_BLAS_L1_OMP_OP(vmul, *=)
 DEF_BLAS_L1_OMP_OP(vdiv, /=)
 
+// reduce
+template <typename T>
+inline void vsum_omp(const T *__restrict__ src, T &result, size_t n) {
+  T sum = T{};
+#pragma omp parallel
+  {
+    T private_sum = T{};
+#pragma omp for schedule(static)
+    for (size_t i = 0; i < n; ++i) {
+      private_sum += src[i];
+    }
+#pragma omp critical
+    {
+      sum += private_sum;
+    }
+  }
+  result = sum;
+}
+
+template <typename T, const size_t TileSize>
+inline void vsum_omp(const T *__restrict__ src, T &result, size_t n) {
+  T sum = T{};
+#pragma omp parallel
+  {
+    T private_sum = T{};
+#pragma omp for schedule(static)
+    for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+      size_t tile_end = std::min(tile_start + TileSize, n);
+      for (size_t i = tile_start; i < tile_end; ++i) {
+        private_sum += src[i];
+      }
+    }
+#pragma omp critical
+    {
+      sum += private_sum;
+    }
+  }
+  result = sum;
+}
+
 // fill
 template <typename T>
 inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {

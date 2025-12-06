@@ -48,6 +48,11 @@ template <> struct dsp_traits<float> {
   }
 
   __attribute__((always_inline)) static inline void
+  vsum(const float *src, float *result, size_t n) {
+    vDSP_sve(src, 1, result, n);
+  }
+
+  __attribute__((always_inline)) static inline void
   vfill(float value, float *dst, size_t n) {
     vDSP_vfill(&value, dst, 1, n);
   }
@@ -99,6 +104,11 @@ template <> struct dsp_traits<double> {
   __attribute__((always_inline)) static inline void
   vdiv(const double *a, const double *b, double *dst, size_t n) {
     vDSP_vdivD(b, 1, a, 1, dst, 1, n);
+  }
+
+  __attribute__((always_inline)) static inline void
+  vsum(const double *src, double *result, size_t n) {
+    vDSP_sveD(src, 1, result, n);
   }
 
   __attribute__((always_inline)) static inline void

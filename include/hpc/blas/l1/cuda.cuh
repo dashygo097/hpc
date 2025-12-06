@@ -45,6 +45,16 @@ DEF_BLAS_L1_CUDA_OP(vsub, -=)
 DEF_BLAS_L1_CUDA_OP(vmul, *=)
 DEF_BLAS_L1_CUDA_OP(vdiv, /=)
 
+// reduce
+template <typename T>
+__global__ void vsum_cuda_kernel(T *result, const T *__restrict__ src,
+                                 size_t n) {
+  // NOTE: Unimpled method
+  cudaError_t err = cudaErrorNotSupported;
+  printf("Error: vsum_cuda_kernel is not implemented. %s\n",
+         cudaGetErrorString(err));
+}
+
 // fill
 template <typename T>
 __global__ void vfill_cuda_kernel(T *__restrict__ dst, const T &scalar,
@@ -78,6 +88,12 @@ __global__ void axpy_cuda_kernel(T *__restrict__ y, const T *__restrict__ x,
 }
 
 // Host-side wrapper functions
+template <typename T, int BlockSize = 256>
+inline void vsum_cuda(T *result, const T *__restrict__ src, size_t n) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(vsum_cuda_kernel<T>, grid_size, BlockSize, result, src, n);
+}
+
 template <typename T, int BlockSize = 256>
 inline void vfill_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
   int grid_size = (n + BlockSize - 1) / BlockSize;

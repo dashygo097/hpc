@@ -85,6 +85,54 @@ DEF_BLAS_L1_SIMD_OP(vsub, -=, SIMD_SUB)
 DEF_BLAS_L1_SIMD_OP(vmul, *=, SIMD_MUL)
 DEF_BLAS_L1_SIMD_OP(vdiv, /=, SIMD_DIV)
 
+// reduce
+template <typename T, const size_t SimdWidth>
+inline void vsum_simd(T *result, const T *__restrict__ src, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  simd_t vsum = SIMD_DUP(traits, T{});
+
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t v_src = SIMD_LOAD(traits, src + i);
+    vsum = SIMD_ADD(traits, vsum, v_src);
+  }
+
+  T temp[SimdWidth];
+  SIMD_STORE(traits, temp, vsum);
+  result = T{};
+
+  for (size_t i = 0; i < SimdWidth; ++i)
+    result += temp[i];
+  for (size_t i = simd_end; i < n; ++i)
+    result += src[i];
+}
+
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline void vsum_simd(T *result, const T *__restrict__ src, size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  simd_t vsum = SIMD_DUP(traits, T{});
+
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+    size_t tile_end = tile_start + TileSize;
+    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+      simd_t v_src = SIMD_LOAD(traits, src + i);
+      vsum = SIMD_ADD(traits, vsum, v_src);
+    }
+  }
+
+  T temp[SimdWidth];
+  SIMD_STORE(traits, temp, vsum);
+  result = T{};
+
+  for (size_t i = 0; i < SimdWidth; ++i)
+    result += temp[i];
+  for (size_t i = simd_end; i < n; ++i)
+    result += src[i];
+}
+
 // fill
 template <typename T, const size_t SimdWidth>
 inline void vfill_simd(T *__restrict__ dst, const T &value, size_t n) {
