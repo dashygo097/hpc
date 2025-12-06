@@ -14,3 +14,8 @@
 
 // Neural Networks
 #include "./hpc/nn/nn.hh"
+
+// Linear Algebra
+#include "./hpc/matrix.hh"
+#include "./hpc/tensor.hh"
+#include "./hpc/vector.hh"

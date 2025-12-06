@@ -4,9 +4,9 @@ BUILD_DIR = $(PROJECT_DIR)/build
 
 .PHONY: all pre build
 
-all: pre build
+all: config build
 
-pre:
+config:
 	@mkdir -p $(BUILD_DIR)
 	@if [ ! -f $(BUILD_DIR)/config.cmake ]; then \
 		echo "Copying default config.cmake to build directory... "; \
@@ -15,7 +15,7 @@ pre:
 		echo "Using existing config.cmake in build directory"; \
 	fi
 
-build: pre
+build: config 
 	@$(MAKE) -C $(BUILD_DIR) all || ( \
 		cd $(BUILD_DIR) && cmake $(PROJECT_DIR); \
 		$(MAKE) -C $(BUILD_DIR) all; \
