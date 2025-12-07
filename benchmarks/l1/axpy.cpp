@@ -32,14 +32,14 @@ bool verify_result(const T *vec, const T *vec_ref, size_t n, T tol = 1e-5) {
 }
 
 // Reference implementation
-template <typename T> void vadd_ref(T *dst, const T *src, size_t N) {
-  for (size_t i = 0; i < N; ++i) {
-    dst[i] += src[i];
+template <typename T> void axpy_ref(size_t n, T *dst, const T *src, T alpha) {
+  for (size_t i = 0; i < n; ++i) {
+    dst[i] += alpha * src[i];
   }
 }
 
 // Fixture
-template <typename T> class VaddFixture : public benchmark::Fixture {
+template <typename T> class AXPYFixture : public benchmark::Fixture {
 public:
   void SetUp(const ::benchmark::State &state) override {
     N = state.range(0);
@@ -62,14 +62,14 @@ protected:
   std::vector<T> src, dst, dst_ref;
 };
 
-using VaddFixtureFloat = VaddFixture<float>;
+using AXPYFixtureFloat = AXPYFixture<float>;
 
-#define DEFINE_VADD_VEC_BENCHMARK(Name, Function, ...)                         \
-  BENCHMARK_DEFINE_F(VaddFixtureFloat, Name)(benchmark::State & state) {       \
+#define DEFINE_AXPY_VEC_BENCHMARK(Name, Function, ...)                         \
+  BENCHMARK_DEFINE_F(AXPYFixtureFloat, Name)(benchmark::State & state) {       \
     std::vector<float> dst_copy = dst;                                         \
                                                                                \
     for (auto _ : state) {                                                     \
-      Function<float, ##__VA_ARGS__>(dst_copy.data(), src.data(), N);          \
+      Function<float, ##__VA_ARGS__>(N, dst_copy.data(), src.data(), 2.0);     \
       benchmark::DoNotOptimize(dst_copy.data());                               \
       benchmark::ClobberMemory();                                              \
     }                                                                          \
@@ -78,8 +78,8 @@ using VaddFixtureFloat = VaddFixture<float>;
       std::vector<float> test_dst = dst;                                       \
       std::vector<float> test_ref = dst;                                       \
                                                                                \
-      Function<float, ##__VA_ARGS__>(test_dst.data(), src.data(), N);          \
-      vadd_ref(test_ref.data(), src.data(), N);                                \
+      Function<float, ##__VA_ARGS__>(N, test_dst.data(), src.data(), 2.0);     \
+      axpy_ref<float>(N, test_ref.data(), src.data(), 2.0);                    \
                                                                                \
       if (!verify_result(test_dst.data(), test_ref.data(), N)) {               \
         state.SkipWithError("Verification failed!");                           \
@@ -93,18 +93,18 @@ using VaddFixtureFloat = VaddFixture<float>;
         benchmark::Counter::kIs1000);                                          \
     state.counters["N"] = N;                                                   \
   }                                                                            \
-  BENCHMARK_REGISTER_F(VaddFixtureFloat, Name)                                 \
+  BENCHMARK_REGISTER_F(AXPYFixtureFloat, Name)                                 \
       ->Args({256 * 256})                                                      \
       ->Args({1024 * 1024})                                                    \
       ->Args({4096 * 4096})                                                    \
       ->Unit(benchmark::kMillisecond);
 
 // Naive Benchmark
-BENCHMARK_DEFINE_F(VaddFixtureFloat, Naive)(benchmark::State &state) {
+BENCHMARK_DEFINE_F(AXPYFixtureFloat, Naive)(benchmark::State &state) {
   std::vector<float> dst_copy = dst;
 
   for (auto _ : state) {
-    vadd_ref(dst_copy.data(), src.data(), N);
+    axpy_ref<float>(N, dst_copy.data(), src.data(), 2.0);
     benchmark::DoNotOptimize(dst_copy.data());
     benchmark::ClobberMemory();
   }
@@ -115,40 +115,40 @@ BENCHMARK_DEFINE_F(VaddFixtureFloat, Naive)(benchmark::State &state) {
                          benchmark::Counter::kIs1000);
 }
 
-BENCHMARK_REGISTER_F(VaddFixtureFloat, Naive)
+BENCHMARK_REGISTER_F(AXPYFixtureFloat, Naive)
     ->Args({256 * 256})
     ->Args({1024 * 1024})
     ->Args({4096 * 4096})
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_VADD_VEC_BENCHMARK(Seq, hpc::l1::details::vadd_seq, 1024)
-DEFINE_VADD_VEC_BENCHMARK(SeqAPI, hpc::l1::vadd, hpc::Backend::SEQUENTIAL, 1024)
+DEFINE_AXPY_VEC_BENCHMARK(Seq, hpc::l1::details::axpy_seq, 1024)
+DEFINE_AXPY_VEC_BENCHMARK(SeqAPI, hpc::l1::axpy, hpc::Backend::SEQUENTIAL, 1024)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-DEFINE_VADD_VEC_BENCHMARK(OpenMP, hpc::l1::details::vadd_omp, 1024)
-DEFINE_VADD_VEC_BENCHMARK(OpenMPAPI, hpc::l1::vadd, hpc::Backend::OPENMP, 1024)
+DEFINE_AXPY_VEC_BENCHMARK(OpenMP, hpc::l1::details::axpy_omp, 1024)
+DEFINE_AXPY_VEC_BENCHMARK(OpenMPAPI, hpc::l1::axpy, hpc::Backend::OPENMP, 1024)
 #endif
 
 // SIMD
 #ifdef ENABLE_SIMD
-DEFINE_VADD_VEC_BENCHMARK(SIMD_4, hpc::l1::details::vadd_simd, 1024, 4)
-DEFINE_VADD_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::vadd, hpc::Backend::SIMD, 1024, 4)
+DEFINE_AXPY_VEC_BENCHMARK(SIMD_4, hpc::l1::details::axpy_simd, 1024, 4)
+DEFINE_AXPY_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::axpy, hpc::Backend::SIMD, 1024, 4)
 #endif
 
 // OpenMP + SIMD
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_VADD_VEC_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::vadd_omp_simd, 1024,
+DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::axpy_omp_simd, 1024,
                           4)
-DEFINE_VADD_VEC_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::vadd,
+DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::axpy,
                           hpc::Backend::OPENMP_SIMD, 1024, 4)
 #endif
 
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
-DEFINE_VADD_VEC_BENCHMARK(Accelerate, hpc::l1::details::vadd_acceler)
-DEFINE_VADD_VEC_BENCHMARK(AccelerateAPI, hpc::l1::vadd,
+DEFINE_AXPY_VEC_BENCHMARK(Accelerate, hpc::l1::details::axpy_acceler)
+DEFINE_AXPY_VEC_BENCHMARK(AccelerateAPI, hpc::l1::axpy,
                           hpc::Backend::ACCELERATE)
 #endif
 
