@@ -51,13 +51,26 @@ inline void axpy_simd(const size_t &n, T *__restrict__ dst,
   const size_t simd_end = n - (n % SimdWidth);
   const simd_t v_a = SIMD_DUP(traits, alpha);
 
-  for (size_t i = 0; i < simd_end; i += SimdWidth) {
-    simd_t vy = SIMD_LOAD(traits, dst + i);
-    simd_t vx = SIMD_LOAD(traits, src + i);
-    SIMD_STORE(traits, dst + i, SIMD_FMA(traits, v_a, vx, vy));
+  if (alpha == T{0}) {
+    return;
+  } else if (alpha == T{1}) {
+    for (size_t i = 0; i < simd_end; i += SimdWidth) {
+      simd_t vy = SIMD_LOAD(traits, dst + i);
+      simd_t vx = SIMD_LOAD(traits, src + i);
+      SIMD_STORE(traits, dst + i, SIMD_ADD(traits, vx, vy));
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] += src[i];
+    return;
+  } else {
+    for (size_t i = 0; i < simd_end; i += SimdWidth) {
+      simd_t vy = SIMD_LOAD(traits, dst + i);
+      simd_t vx = SIMD_LOAD(traits, src + i);
+      SIMD_STORE(traits, dst + i, SIMD_FMA(traits, v_a, vx, vy));
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] += alpha * src[i];
   }
-  for (size_t i = simd_end; i < n; ++i)
-    dst[i] += alpha * src[i];
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
@@ -68,16 +81,32 @@ inline void axpy_simd(const size_t &n, T *__restrict__ dst,
   const size_t simd_end = n - (n % SimdWidth);
   const simd_t v_a = SIMD_DUP(traits, alpha);
 
-  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
-    size_t tile_end = tile_start + TileSize;
-    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
-      simd_t vy = SIMD_LOAD(traits, dst + i);
-      simd_t vx = SIMD_LOAD(traits, src + i);
-      SIMD_STORE(traits, dst + i, SIMD_FMA(traits, v_a, vx, vy));
+  if (alpha == T{0}) {
+    return;
+  } else if (alpha == T{1}) {
+    for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+      size_t tile_end = tile_start + TileSize;
+      for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+        simd_t vy = SIMD_LOAD(traits, dst + i);
+        simd_t vx = SIMD_LOAD(traits, src + i);
+        SIMD_STORE(traits, dst + i, SIMD_ADD(traits, vx, vy));
+      }
     }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] += src[i];
+    return;
+  } else {
+    for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+      size_t tile_end = tile_start + TileSize;
+      for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+        simd_t vy = SIMD_LOAD(traits, dst + i);
+        simd_t vx = SIMD_LOAD(traits, src + i);
+        SIMD_STORE(traits, dst + i, SIMD_FMA(traits, v_a, vx, vy));
+      }
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] += alpha * src[i];
   }
-  for (size_t i = simd_end; i < n; ++i)
-    dst[i] += alpha * src[i];
 }
 
 // copy
@@ -112,6 +141,62 @@ inline void copy_simd(const size_t &n, T *__restrict__ dst,
   }
   for (size_t i = simd_end; i < n; ++i)
     dst[i] = src[i];
+}
+
+// scal
+template <typename T, const size_t SimdWidth>
+inline void scal_simd(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t v_zero = SIMD_DUP(traits, T{0});
+  const simd_t v_a = SIMD_DUP(traits, alpha);
+
+  if (alpha == T{0}) {
+    for (size_t i = 0; i < simd_end; i += SimdWidth) {
+      SIMD_STORE(traits, dst + i, v_zero);
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] = T{0};
+  } else if (alpha == T{1}) {
+    return;
+  } else {
+    for (size_t i = 0; i < simd_end; i += SimdWidth) {
+      simd_t vx = SIMD_LOAD(traits, dst + i);
+      SIMD_STORE(traits, dst + i, SIMD_MUL(traits, v_a, vx));
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] *= alpha;
+  }
+}
+
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline void scal_simd(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  const simd_t v_a = SIMD_DUP(traits, alpha);
+  const simd_t v_zero = SIMD_DUP(traits, T{0});
+
+  if (alpha == T{0}) {
+    for (size_t i = 0; i < simd_end; i += SimdWidth) {
+      SIMD_STORE(traits, dst + i, v_zero);
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] = T{0};
+  } else if (alpha == T{1}) {
+    return;
+  } else {
+    for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+      size_t tile_end = tile_start + TileSize;
+      for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+        simd_t vx = SIMD_LOAD(traits, dst + i);
+        SIMD_STORE(traits, dst + i, SIMD_MUL(traits, v_a, vx));
+      }
+    }
+    for (size_t i = simd_end; i < n; ++i)
+      dst[i] *= alpha;
+  }
 }
 
 } // namespace details
