@@ -199,6 +199,29 @@ inline void scal_simd(const size_t &n, T *__restrict__ dst, const T &alpha) {
   }
 }
 
+// dot
+template <typename T, const size_t SimdWidth>
+inline T dot_simd(const size_t &n, const T *__restrict__ x,
+                  const T *__restrict__ y) {
+  T sum = T{0};
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  simd_t v_sum = SIMD_DUP(traits, T{0});
+
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vx = SIMD_LOAD(traits, x + i);
+    simd_t vy = SIMD_LOAD(traits, y + i);
+    v_sum = SIMD_FMA(traits, vx, vy, v_sum);
+  }
+
+  for (size_t i = 0; i < SimdWidth; ++i)
+    sum += v_sum[i];
+  for (size_t i = simd_end; i < n; ++i)
+    sum += x[i] * y[i];
+  return sum;
+}
+
 } // namespace details
 } // namespace hpc::l1
 #endif

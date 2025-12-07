@@ -1,5 +1,6 @@
 #pragma once
 
+#include <simd/common.h>
 #ifdef SIMD_APPLE
 #include <simd/simd.h>
 #endif
@@ -10,6 +11,7 @@
 #define SIMD_STORE(traits, ptr, value)                                         \
   (*(reinterpret_cast<typename traits::type *>(ptr)) = (value))
 #define SIMD_DUP(traits, value) traits::duplicate(value)
+#define SIMD_SUM(traits, value) vector_reduce_add(value)
 #define SIMD_ADD(traits, a, b) ((a) + (b))
 #define SIMD_SUB(traits, a, b) ((a) - (b))
 #define SIMD_MUL(traits, a, b) ((a) * (b))
@@ -31,6 +33,7 @@ template <> struct simd_traits<float, 1> {
   __attribute__((always_inline)) static inline type duplicate(float v) {
     return v;
   }
+  __attribute__((always_inline)) static inline float sum(type v) { return v; }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
     ptr[0] = v;
   }
@@ -57,6 +60,9 @@ template <> struct simd_traits<float, 2> {
   }
   __attribute__((always_inline)) static inline type duplicate(float v) {
     return simd_make_float2(v, v);
+  }
+  __attribute__((always_inline)) static inline float sum(type v) {
+    return vector_reduce_add(v);
   }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
     *(type *)(ptr) = v;
@@ -85,6 +91,9 @@ template <> struct simd_traits<float, 4> {
   __attribute__((always_inline)) static inline type duplicate(float v) {
     return simd_make_float4(v, v, v, v);
   }
+  __attribute__((always_inline)) static inline float sum(type v) {
+    return vector_reduce_add(v);
+  }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
     *(type *)(ptr) = v;
   }
@@ -112,6 +121,7 @@ template <> struct simd_traits<double, 1> {
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return v;
   }
+  __attribute__((always_inline)) static inline double sum(type v) { return v; }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     ptr[0] = v;
   }
@@ -138,6 +148,9 @@ template <> struct simd_traits<double, 2> {
   }
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return simd_make_double2(v, v);
+  }
+  __attribute__((always_inline)) static inline double sum(type v) {
+    return vector_reduce_add(v);
   }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     *(type *)(ptr) = v;
@@ -166,6 +179,9 @@ template <> struct simd_traits<double, 4> {
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return simd_make_double4(v, v, v, v);
   }
+  __attribute__((always_inline)) static inline double sum(type v) {
+    return vector_reduce_add(v);
+  }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     *(type *)(ptr) = v;
   }
@@ -193,6 +209,7 @@ template <> struct simd_traits<int, 1> {
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return v;
   }
+  __attribute__((always_inline)) static inline int sum(type v) { return v; }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     ptr[0] = v;
   }
@@ -217,6 +234,9 @@ template <> struct simd_traits<int, 2> {
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return simd_make_int2(v, v);
   }
+  __attribute__((always_inline)) static inline int sum(type v) {
+    return vector_reduce_add(v);
+  }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     *(type *)(ptr) = v;
   }
@@ -240,6 +260,9 @@ template <> struct simd_traits<int, 4> {
   }
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return simd_make_int4(v, v, v, v);
+  }
+  __attribute__((always_inline)) static inline int sum(type v) {
+    return vector_reduce_add(v);
   }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     *(type *)(ptr) = v;

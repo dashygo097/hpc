@@ -148,6 +148,52 @@ inline void scal_seq(const size_t &n, T *__restrict__ dst, const T &alpha) {
   }
 }
 
+// dot
+template <typename T>
+inline T dot_omp(const size_t &n, const T *__restrict__ src1,
+                 const T *__restrict__ src2) {
+  T result = T{0};
+
+#pragma omp parallel
+  {
+    T local_sum = T{0};
+#pragma omp for schedule(static)
+    for (size_t i = 0; i < n; ++i) {
+      local_sum += src1[i] * src2[i];
+    }
+#pragma omp critical
+    {
+      result += local_sum;
+    }
+  }
+
+  return result;
+}
+
+template <typename T, const size_t TileSize>
+inline void dot_omp(const size_t &n, const T *__restrict__ src1,
+                    const T *__restrict__ src2) {
+  T result = T{0};
+
+#pragma omp parallel
+  {
+    T local_sum = T{0};
+#pragma omp for schedule(static)
+    for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+      const size_t tile_end = std::min(tile_start + TileSize, n);
+      for (size_t i = tile_start; i < tile_end; ++i) {
+        local_sum += src1[i] * src2[i];
+      }
+    }
+#pragma omp critical
+    {
+      result += local_sum;
+    }
+  }
+
+  return result;
+}
+
 } // namespace details
 } // namespace hpc::l1
 #endif
