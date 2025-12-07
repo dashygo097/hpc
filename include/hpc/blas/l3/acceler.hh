@@ -8,42 +8,15 @@
 namespace hpc::l3 {
 namespace details {
 
-// mmul
-template <typename T>
-inline void mmul_acceler(T *__restrict__ C, const T *__restrict__ A,
-                         const T *__restrict__ B, size_t M, size_t K,
-                         size_t N) {
-  using traits = acceler::blasl3_traits<T>;
-  traits::gemm_simple(M, N, K, A, B, C);
-}
-
-// l3
-
 // gemm
 template <typename T>
-inline void gemm_acceler(T *__restrict__ C, const T *__restrict__ A,
-                         const T *__restrict__ B, size_t M, size_t K, size_t N,
-                         const T &alpha, const T &beta) {
+inline void gemm_acceler(const size_t &M, const size_t &K, const size_t &N,
+                         T *__restrict__ C, const T *__restrict__ A,
+                         const T *__restrict__ B, const T &alpha = T{1},
+                         const T &beta = T{0}) {
   using traits = acceler::blasl3_traits<T>;
-  traits::gemm_scaled(M, N, K, alpha, A, B, beta, C);
-}
-
-template <typename T>
-inline void gemm_acceler(T *__restrict__ C, const T *__restrict__ A,
-                         bool transA, const T *__restrict__ B, bool transB,
-                         size_t M, size_t K, size_t N, const T &alpha,
-                         const T &beta) {
-  using traits = acceler::blasl3_traits<T>;
-
-  CBLAS_TRANSPOSE cblas_transA = transA ? CblasTrans : CblasNoTrans;
-  CBLAS_TRANSPOSE cblas_transB = transB ? CblasTrans : CblasNoTrans;
-
-  size_t lda = transA ? M : K;
-  size_t ldb = transB ? K : N;
-  size_t ldc = N;
-
-  traits::gemm(CblasRowMajor, cblas_transA, cblas_transB, M, N, K, alpha, A,
-               lda, B, ldb, beta, C, ldc);
+  traits::gemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha, A, K,
+               B, N, beta, C, N);
 }
 
 } // namespace details

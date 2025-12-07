@@ -16,12 +16,12 @@ set_target_properties(axpy PROPERTIES
 )
 
 # L3 benchmarks
-add_executable(mmul l3/mmul.cpp)
-target_link_libraries(mmul PRIVATE 
+add_executable(gemm l3/gemm.cpp)
+target_link_libraries(gemm PRIVATE 
   hpc 
   benchmark::benchmark
   # benchmark::benchmark_main
 )
-set_target_properties(mmul PROPERTIES
+set_target_properties(gemm PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/benchmarks
 )

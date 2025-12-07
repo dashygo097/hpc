@@ -9,176 +9,6 @@
 #include "./simd.hh"
 #include <cstddef>
 
-#ifdef ENABLE_OPENMP
-#define ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)                               \
-  else if constexpr (backend == Backend::OPENMP) {                             \
-    details::name##_omp<T, BackendParams...>(n, dst, src, scalar);             \
-  }
-#define ENABLE_OPENMP_BINARY_BRANCH(name)                                      \
-  else if constexpr (backend == Backend::OPENMP) {                             \
-    details::name##_omp<T, BackendParams...>(n, dst, src1, src2);              \
-  }
-#define ENABLE_OPENMP_UNARY_BRANCH(name)                                       \
-  else if constexpr (backend == Backend::OPENMP) {                             \
-    details::name##_omp<T, BackendParams...>(n, dst, src);                     \
-  }
-#define ENABLE_OPENMP_SCALAR_BRANCH(name)                                      \
-  else if constexpr (backend == Backend::OPENMP) {                             \
-    details::name##_omp<T, BackendParams...>(n, dst, scalar);                  \
-  }
-#define ENABLE_OPENMP_REDUCE_BRANCH(name)                                      \
-  else if constexpr (backend == Backend::OPENMP) {                             \
-    return details::name##_omp<T, BackendParams...>(n, src);                   \
-  }
-#define ENABLE_OPENMP_REDUCE2_BRANCH(name)                                     \
-  else if constexpr (backend == Backend::OPENMP) {                             \
-    return details::name##_omp<T, BackendParams...>(n, x, y);                  \
-  }
-#else
-#define ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_OPENMP_BINARY_BRANCH(name)
-#define ENABLE_OPENMP_UNARY_BRANCH(name)
-#define ENABLE_OPENMP_SCALAR_BRANCH(name)
-#define ENABLE_OPENMP_REDUCE_BRANCH(name)
-#define ENABLE_OPENMP_REDUCE2_BRANCH(name)
-#endif
-
-#ifdef ENABLE_SIMD
-#define ENABLE_SIMD_VECTOR_SCALAR_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::SIMD) {                               \
-    details::name##_simd<T, BackendParams...>(n, dst, src, scalar);            \
-  }
-#define ENABLE_SIMD_BINARY_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::SIMD) {                               \
-    details::name##_simd<T, BackendParams...>(n, dst, src1, src2);             \
-  }
-#define ENABLE_SIMD_UNARY_BRANCH(name)                                         \
-  else if constexpr (backend == Backend::SIMD) {                               \
-    details::name##_simd<T, BackendParams...>(n, dst, src);                    \
-  }
-#define ENABLE_SIMD_SCALAR_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::SIMD) {                               \
-    details::name##_simd<T, BackendParams...>(n, dst, scalar);                 \
-  }
-#define ENABLE_SIMD_REDUCE_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::SIMD) {                               \
-    return details::name##_simd<T, BackendParams...>(n, src);                  \
-  }
-#define ENABLE_SIMD_REDUCE2_BRANCH(name)                                       \
-  else if constexpr (backend == Backend::SIMD) {                               \
-    return details::name##_simd<T, BackendParams...>(n, x, y);                 \
-  }
-#else
-#define ENABLE_SIMD_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_SIMD_BINARY_BRANCH(name)
-#define ENABLE_SIMD_UNARY_BRANCH(name)
-#define ENABLE_SIMD_SCALAR_BRANCH(name)
-#define ENABLE_SIMD_REDUCE_BRANCH(name)
-#define ENABLE_SIMD_REDUCE2_BRANCH(name)
-#endif
-
-#if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-#define ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH(name)                          \
-  else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendParams...>(n, dst, src, scalar);        \
-  }
-#define ENABLE_OPENMP_SIMD_BINARY_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendParams...>(n, dst, src1, src2);         \
-  }
-#define ENABLE_OPENMP_SIMD_UNARY_BRANCH(name)                                  \
-  else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendParams...>(n, dst, src);                \
-  }
-#define ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    details::name##_omp_simd<T, BackendParams...>(n, dst, scalar);             \
-  }
-#define ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    return details::name##_omp_simd<T, BackendParams...>(n, src);              \
-  }
-#define ENABLE_OPENMP_SIMD_REDUCE2_BRANCH(name)                                \
-  else if constexpr (backend == Backend::OPENMP_SIMD) {                        \
-    return details::name##_omp_simd<T, BackendParams...>(n, x, y);             \
-  }
-#else
-#define ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_OPENMP_SIMD_BINARY_BRANCH(name)
-#define ENABLE_OPENMP_SIMD_UNARY_BRANCH(name)
-#define ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)
-#define ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)
-#define ENABLE_OPENMP_SIMD_REDUCE2_BRANCH(name)
-#endif
-
-#ifdef ENABLE_CUDA
-#define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, src, scalar);            \
-  }
-#define ENABLE_CUDA_BINARY_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, src1, src2);             \
-  }
-#define ENABLE_CUDA_UNARY_BRANCH(name)                                         \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, src);                    \
-  }
-#define ENABLE_CUDA_SCALAR_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, scalar);                 \
-  }
-#define ENABLE_CUDA_REDUCE_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    return details::name##_cuda<T, BackendParams...>(n, src);                  \
-  }
-#define ENABLE_CUDA_REDUCE2_BRANCH(name)                                       \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    return details::name##_cuda<T, BackendParams...>(n, x, y);                 \
-  }
-#else
-#define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_CUDA_BINARY_BRANCH(name)
-#define ENABLE_CUDA_UNARY_BRANCH(name)
-#define ENABLE_CUDA_SCALAR_BRANCH(name)
-#define ENABLE_CUDA_REDUCE_BRANCH(name)
-#define ENABLE_CUDA_REDUCE2_BRANCH(name)
-#endif
-
-#ifdef ENABLE_ACCELERATE
-#define ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH(name)                           \
-  else if constexpr (backend == Backend::ACCELERATE) {                         \
-    details::name##_acceler<T, BackendParams...>(n, dst, src, scalar);         \
-  }
-#define ENABLE_ACCELERATE_BINARY_BRANCH(name)                                  \
-  else if constexpr (backend == Backend::ACCELERATE) {                         \
-    details::name##_acceler<T, BackendParams...>(n, dst, src1, src2);          \
-  }
-#define ENABLE_ACCELERATE_UNARY_BRANCH(name)                                   \
-  else if constexpr (backend == Backend::ACCELERATE) {                         \
-    details::name##_acceler<T, BackendParams...>(n, dst, src);                 \
-  }
-#define ENABLE_ACCELERATE_SCALAR_BRANCH(name)                                  \
-  else if constexpr (backend == Backend::ACCELERATE) {                         \
-    details::name##_acceler<T, BackendParams...>(n, dst, scalar);              \
-  }
-#define ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                  \
-  else if constexpr (backend == Backend::ACCELERATE) {                         \
-    return details::name##_acceler<T, BackendParams...>(n, src);               \
-  }
-#define ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::ACCELERATE) {                         \
-    return details::name##_acceler<T, BackendParams...>(n, x, y);              \
-  }
-#else
-#define ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_ACCELERATE_BINARY_BRANCH(name)
-#define ENABLE_ACCELERATE_UNARY_BRANCH(name)
-#define ENABLE_ACCELERATE_SCALAR_BRANCH(name)
-#define ENABLE_ACCELERATE_REDUCE_BRANCH(name)
-#define ENABLE_ACCELERATE_REDUCE2_BRANCH(name)
-#endif
-
 // L1 Factory Macros
 #define L1_FACTORY_VECTOR_SCALAR(name)                                         \
   template <typename T, Backend backend, auto... BackendParams>                \
@@ -270,3 +100,39 @@ L1_FACTORY_UNARY(copy)
 } // namespace hpc::l1
 
 // Cleanup Macros
+#undef L1_FACTORY_VECTOR_SCALAR
+#undef L1_FACTORY_BINARY
+#undef L1_FACTORY_UNARY
+#undef L1_FACTORY_SCALAR
+#undef L1_FACTORY_REDUCE
+#undef L1_FACTORY_REDUCE2
+#undef ENABLE_OPENMP_VECTOR_SCALAR_BRANCH
+#undef ENABLE_OPENMP_BINARY_BRANCH
+#undef ENABLE_OPENMP_UNARY_BRANCH
+#undef ENABLE_OPENMP_SCALAR_BRANCH
+#undef ENABLE_OPENMP_REDUCE_BRANCH
+#undef ENABLE_OPENMP_REDUCE2_BRANCH
+#undef ENABLE_SIMD_VECTOR_SCALAR_BRANCH
+#undef ENABLE_SIMD_BINARY_BRANCH
+#undef ENABLE_SIMD_UNARY_BRANCH
+#undef ENABLE_SIMD_SCALAR_BRANCH
+#undef ENABLE_SIMD_REDUCE_BRANCH
+#undef ENABLE_SIMD_REDUCE2_BRANCH
+#undef ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH
+#undef ENABLE_OPENMP_SIMD_BINARY_BRANCH
+#undef ENABLE_OPENMP_SIMD_UNARY_BRANCH
+#undef ENABLE_OPENMP_SIMD_SCALAR_BRANCH
+#undef ENABLE_OPENMP_SIMD_REDUCE_BRANCH
+#undef ENABLE_OPENMP_SIMD_REDUCE2_BRANCH
+#undef ENABLE_CUDA_VECTOR_SCALAR_BRANCH
+#undef ENABLE_CUDA_BINARY_BRANCH
+#undef ENABLE_CUDA_UNARY_BRANCH
+#undef ENABLE_CUDA_SCALAR_BRANCH
+#undef ENABLE_CUDA_REDUCE_BRANCH
+#undef ENABLE_CUDA_REDUCE2_BRANCH
+#undef ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH
+#undef ENABLE_ACCELERATE_BINARY_BRANCH
+#undef ENABLE_ACCELERATE_UNARY_BRANCH
+#undef ENABLE_ACCELERATE_SCALAR_BRANCH
+#undef ENABLE_ACCELERATE_REDUCE_BRANCH
+#undef ENABLE_ACCELERATE_REDUCE2_BRANCH

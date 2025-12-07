@@ -2,14 +2,16 @@
 
 #ifdef ENABLE_CUDA
 namespace hpc::nn {
-__global__ void relu_f32_kernel(float *output, const float *input, size_t n) {
+__global__ void relu_f32_kernel(const size_t &n, float *output,
+                                const float *input) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
     output[idx] = fmaxf(0.0f, input[idx]);
   }
 }
 
-__global__ void relu_f16_kernel(__half *output, const __half *input, size_t n) {
+__global__ void relu_f16_kernel(const size_t &n, __half *output,
+                                const __half *input) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
     output[idx] =

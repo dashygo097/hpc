@@ -26,7 +26,7 @@ template <typename ElementType, const size_t NumElements,
 
   kernel_func<<<grid, block>>>(
       reinterpret_cast<ElementType *>(output.data_ptr()),
-      reinterpret_cast<const ElementType *>(input.data_ptr()), n);
+      reinterpret_cast<const ElementType *>(n, input.data_ptr()));
 
   return output;
 }
