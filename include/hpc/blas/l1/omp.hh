@@ -108,6 +108,46 @@ inline void copy_omp(const size_t &n, T *__restrict__ dst,
   }
 }
 
+// scal
+template <typename T>
+inline void scal_seq(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  if (alpha == T{0}) {
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < n; ++i) {
+      dst[i] = T{0};
+    }
+  } else if (alpha == T{1}) {
+    return;
+  } else {
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < n; ++i) {
+      dst[i] *= alpha;
+    }
+  }
+}
+template <typename T, const size_t TileSize>
+inline void scal_seq(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  if (alpha == T{0}) {
+#pragma omp parallel for schedule(static)
+    for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+      const size_t tile_end = std::min(tile_start + TileSize, n);
+      for (size_t i = tile_start; i < tile_end; ++i) {
+        dst[i] = T{0};
+      }
+    }
+  } else if (alpha == T{1}) {
+    return;
+  } else {
+#pragma omp parallel for schedule(static)
+    for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+      const size_t tile_end = std::min(tile_start + TileSize, n);
+      for (size_t i = tile_start; i < tile_end; ++i) {
+        dst[i] *= alpha;
+      }
+    }
+  }
+}
+
 } // namespace details
 } // namespace hpc::l1
 #endif

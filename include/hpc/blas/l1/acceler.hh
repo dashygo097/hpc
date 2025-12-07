@@ -58,6 +58,13 @@ inline void copy_acceler(const size_t &n, T *__restrict__ dst,
   traits::copy(n, dst, src);
 }
 
+// scal
+template <typename T>
+inline void scal_acceler(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  using traits = acceler::blasl1_traits<T>;
+  traits::scal(n, dst, alpha);
+}
+
 } // namespace details
 } // namespace hpc::l1
 

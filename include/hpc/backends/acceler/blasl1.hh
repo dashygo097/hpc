@@ -21,6 +21,11 @@ template <> struct blasl1_traits<float> {
   axpy(size_t n, float *y, const float *x, const float &alpha) {
     cblas_saxpy(static_cast<int>(n), alpha, x, 1, y, 1);
   }
+
+  __attribute__((always_inline)) static inline void scal(size_t n, float *x,
+                                                         const float &alpha) {
+    cblas_sscal(static_cast<int>(n), alpha, x, 1);
+  }
 };
 
 template <> struct blasl1_traits<double> {
@@ -34,6 +39,11 @@ template <> struct blasl1_traits<double> {
   __attribute__((always_inline)) static inline void
   axpy(size_t n, double *y, const double *x, const double &alpha) {
     cblas_daxpy(static_cast<int>(n), alpha, x, 1, y, 1);
+  }
+
+  __attribute__((always_inline)) static inline void scal(size_t n, double *x,
+                                                         const double &alpha) {
+    cblas_dscal(static_cast<int>(n), alpha, x, 1);
   }
 };
 
