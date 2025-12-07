@@ -13,6 +13,7 @@ set(ENABLE_PYTORCH OFF)
 
 # Compilation options
 set(USE_CCACHE ON)
+set(USE_HIGH_LEVEL_OPTIMIZATIONS OFF)
 
 # Application options
 set(ENABLE_BENCHMARKING ON)

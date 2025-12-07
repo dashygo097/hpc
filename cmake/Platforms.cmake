@@ -1,7 +1,12 @@
 # Platform detection and platform-specific defaults
 
-if(APPLE)
+if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
   message(STATUS "Building on macOS")
+  message(STATUS "Detected Apple Silicon (${CMAKE_SYSTEM_PROCESSOR})")
+
+elseif(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|i386)$")
+  message(STATUS "Building on macOS")
+  message(STATUS "Detected Intel architecture (${CMAKE_SYSTEM_PROCESSOR})")
   
 elseif(UNIX)
   message(STATUS "Building on Unix-like system")

@@ -2,6 +2,8 @@ PROJECT_DIR = $(shell pwd)
 CMAKE_DIR = $(PROJECT_DIR)/cmake
 BUILD_DIR = $(PROJECT_DIR)/build
 
+BUILD_TYPE ?= Debug 
+
 .PHONY: all pre build
 
 all: config build
@@ -17,7 +19,7 @@ config:
 
 build: config 
 	@$(MAKE) -C $(BUILD_DIR) all || ( \
-		cd $(BUILD_DIR) && cmake $(PROJECT_DIR); \
+		cd $(BUILD_DIR) && cmake $(PROJECT_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE); \
 		$(MAKE) -C $(BUILD_DIR) all; \
 	)
 

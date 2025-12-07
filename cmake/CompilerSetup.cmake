@@ -13,6 +13,24 @@ if(USE_CCACHE)
   endif()
 endif()
 
+if(USE_HIGH_LEVEL_OPTIMIZATIONS)
+  if(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+    set(CMAKE_CXX_FLAGS_RELEASE 
+      "${CMAKE_CXX_FLAGS_RELEASE} \
+      -O3 \
+      -mtune=native \
+      -ffast-math \
+      -funroll-loops \
+      -fvectorize \
+      -fslp-vectorize \
+      -ffp-contract=fast \
+      -fno-math-errno \
+      -fno-trapping-math"
+    )
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+  endif()
+endif()
+
 # Platform-specific compiler flags
 if(APPLE AND ENABLE_ACCELERATE)
   # macOS-specific flags
