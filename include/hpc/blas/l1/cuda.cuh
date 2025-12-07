@@ -65,16 +65,6 @@ __global__ void vfill_cuda_kernel(T *__restrict__ dst, const T &scalar,
   }
 }
 
-// copy
-template <typename T>
-__global__ void vcopy_cuda_kernel(T *__restrict__ dst,
-                                  const T *__restrict__ src, size_t n) {
-  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < n) {
-    dst[idx] = src[idx];
-  }
-}
-
 // l1
 
 // axpy
@@ -84,6 +74,16 @@ __global__ void axpy_cuda_kernel(T *__restrict__ y, const T *__restrict__ x,
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
     y[idx] += a * x[idx];
+  }
+}
+
+// copy
+template <typename T>
+__global__ void vcopy_cuda_kernel(T *__restrict__ dst,
+                                  const T *__restrict__ src, size_t n) {
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < n) {
+    dst[idx] = src[idx];
   }
 }
 
@@ -101,18 +101,19 @@ inline void vfill_cuda(T *__restrict__ dst, const T &scalar, size_t n) {
 }
 
 template <typename T, int BlockSize = 256>
+inline void axpy_cuda(T *__restrict__ y, const T *__restrict__ x, const T &a,
+                      size_t n) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(axpy_cuda_kernel<T>, grid_size, BlockSize, y, x, a, n);
+}
+
+template <typename T, int BlockSize = 256>
 inline void vcopy_cuda(T *__restrict__ dst, const T *__restrict__ src,
                        size_t n) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
   CUDA_LAUNCH(vcopy_cuda_kernel<T>, grid_size, BlockSize, dst, src, n);
 }
 
-template <typename T, int BlockSize = 256>
-inline void axpy_cuda(T *__restrict__ y, const T *__restrict__ x, const T &a,
-                      size_t n) {
-  int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(axpy_cuda_kernel<T>, grid_size, BlockSize, y, x, a, n);
-}
 } // namespace details
 } // namespace hpc::l1
 #endif

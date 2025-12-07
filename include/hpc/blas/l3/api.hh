@@ -96,5 +96,7 @@
 
 namespace hpc::l3 {
 L3_MMUL_FACTORY(mmul)
+
+// l3
 L3_GEMM_FACTORY(gemm)
 } // namespace hpc::l3

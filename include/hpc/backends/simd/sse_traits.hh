@@ -18,7 +18,7 @@
 
 #ifdef SIMD_SSE
 namespace hpc::simd {
-template<typename T, size_t Width> struct simd_traits;
+template <typename T, size_t Width> struct simd_traits;
 
 template <> struct simd_traits<float, 1> {
   using type = float;
@@ -172,7 +172,6 @@ template <> struct simd_traits<int, 4> {
     return _mm_loadu_si128((__m128i *)res_arr);
   }
 };
-
 
 } // namespace hpc::simd
 #endif

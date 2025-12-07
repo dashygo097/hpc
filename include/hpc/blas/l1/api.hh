@@ -114,8 +114,10 @@ L1_FACTORY(vmul)
 L1_FACTORY(vdiv)
 L1_FACTORY(vsum)
 L1_FACTORY(vfill)
-L1_FACTORY(vcopy)
+
+// l1
 L1_FACTORY(axpy)
+L1_FACTORY(vcopy)
 
 #undef L1_FACTORY
 #undef ENABLE_SIMD_SCALAR_BRANCH

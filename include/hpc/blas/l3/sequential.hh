@@ -6,13 +6,14 @@
 namespace hpc::l3 {
 namespace details {
 
+// mmul
 template <typename T, const size_t TileSize, const size_t Alignment>
 void mmul_seq(T *__restrict__ C, const T *__restrict__ A,
               const T *__restrict__ B, const size_t &M, const size_t &K,
               const size_t &N) {
   // init C
   for (size_t i = 0; i < M * N; ++i) {
-    C[i] = T{};
+    C[i] = T{0};
   }
 
   // local buffer
@@ -30,7 +31,7 @@ void mmul_seq(T *__restrict__ C, const T *__restrict__ A,
 
       // init localC
       for (size_t i = 0; i < TileSize * TileSize; ++i) {
-        localC[i] = T{};
+        localC[i] = T{0};
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
@@ -43,12 +44,12 @@ void mmul_seq(T *__restrict__ C, const T *__restrict__ A,
             localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
           }
           for (size_t k = tile_k; k < TileSize; ++k) {
-            localA[i * TileSize + k] = T{};
+            localA[i * TileSize + k] = T{0};
           }
         }
         for (size_t i = tile_m; i < TileSize; ++i) {
           for (size_t k = 0; k < TileSize; ++k) {
-            localA[i * TileSize + k] = T{};
+            localA[i * TileSize + k] = T{0};
           }
         }
 
@@ -58,12 +59,12 @@ void mmul_seq(T *__restrict__ C, const T *__restrict__ A,
             localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
           }
           for (size_t j = tile_n; j < TileSize; ++j) {
-            localB[k * TileSize + j] = T{};
+            localB[k * TileSize + j] = T{0};
           }
         }
         for (size_t k = tile_k; k < TileSize; ++k) {
           for (size_t j = 0; j < TileSize; ++j) {
-            localB[k * TileSize + j] = T{};
+            localB[k * TileSize + j] = T{0};
           }
         }
 
@@ -88,15 +89,27 @@ void mmul_seq(T *__restrict__ C, const T *__restrict__ A,
   }
 }
 
+// l3
+
+// gemm
 template <typename T, const size_t TileSize, const size_t Alignment>
 inline void gemm_seq(T *__restrict__ C, const T *__restrict__ A,
                      const T *__restrict__ B, const size_t &M, const size_t &K,
                      const size_t &N, const T &alpha, const T &beta) {
   // scale C by beta
-  for (size_t i = 0; i < M * N; ++i) {
-    C[i] *= beta;
+  if (beta != T{1}) {
+    for (size_t i = 0; i < M * N; ++i) {
+      C[i] *= beta;
+    }
+  } else if (beta == T{0}) {
+    for (size_t i = 0; i < M * N; ++i) {
+      C[i] = T{0};
+    }
   }
 
+  if (alpha == T{0}) {
+    return;
+  }
   // local buffer
   alignas(Alignment) T localA[TileSize * TileSize];
   alignas(Alignment) T localB[TileSize * TileSize];
@@ -112,7 +125,7 @@ inline void gemm_seq(T *__restrict__ C, const T *__restrict__ A,
 
       // init localC
       for (size_t i = 0; i < TileSize * TileSize; ++i) {
-        localC[i] = T{};
+        localC[i] = T{0};
       }
 
       for (size_t kk = 0; kk < K; kk += TileSize) {
@@ -125,12 +138,12 @@ inline void gemm_seq(T *__restrict__ C, const T *__restrict__ A,
             localA[i * TileSize + k] = A[(ii + i) * K + (kk + k)];
           }
           for (size_t k = tile_k; k < TileSize; ++k) {
-            localA[i * TileSize + k] = T{};
+            localA[i * TileSize + k] = T{0};
           }
         }
         for (size_t i = tile_m; i < TileSize; ++i) {
           for (size_t k = 0; k < TileSize; ++k) {
-            localA[i * TileSize + k] = T{};
+            localA[i * TileSize + k] = T{0};
           }
         }
 
@@ -140,12 +153,12 @@ inline void gemm_seq(T *__restrict__ C, const T *__restrict__ A,
             localB[k * TileSize + j] = B[(kk + k) * N + (jj + j)];
           }
           for (size_t j = tile_n; j < TileSize; ++j) {
-            localB[k * TileSize + j] = T{};
+            localB[k * TileSize + j] = T{0};
           }
         }
         for (size_t k = tile_k; k < TileSize; ++k) {
           for (size_t j = 0; j < TileSize; ++j) {
-            localB[k * TileSize + j] = T{};
+            localB[k * TileSize + j] = T{0};
           }
         }
 

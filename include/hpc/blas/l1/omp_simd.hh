@@ -102,10 +102,10 @@ inline void vsum_omp_simd(const T *__restrict__ src, T &result, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
   const size_t simd_end = n - (n % SimdWidth);
-  simd_t vsum = SIMD_DUP(traits, T{});
+  simd_t vsum = SIMD_DUP(traits, T{0});
 #pragma omp parallel
   {
-    simd_t vsum_private = SIMD_DUP(traits, T{});
+    simd_t vsum_private = SIMD_DUP(traits, T{0});
 #pragma omp for schedule(static)
     for (size_t i = 0; i < simd_end; i += SimdWidth) {
       simd_t v_src = SIMD_LOAD(traits, src + i);
@@ -132,11 +132,11 @@ inline void vsum_omp_simd(const T *__restrict__ src, T &result, size_t n) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
   const size_t simd_end = n - (n % SimdWidth);
-  simd_t vsum = SIMD_DUP(traits, T{});
+  simd_t vsum = SIMD_DUP(traits, T{0});
 
 #pragma omp parallel
   {
-    simd_t vsum_private = SIMD_DUP(traits, T{});
+    simd_t vsum_private = SIMD_DUP(traits, T{0});
 #pragma omp for schedule(static)
     for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
       size_t tile_end = tile_start + TileSize;
@@ -195,42 +195,6 @@ inline void vfill_omp_simd(T *__restrict__ dst, const T &value, size_t n) {
     dst[i] = value;
 }
 
-// copy
-template <typename T, const size_t SimdWidth>
-inline void vcopy_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
-                           size_t n) {
-  using traits = simd::simd_traits<T, SimdWidth>;
-  using simd_t = typename traits::type;
-  const size_t simd_end = n - (n % SimdWidth);
-
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < simd_end; i += SimdWidth) {
-    simd_t vs = SIMD_LOAD(traits, src + i);
-    SIMD_STORE(traits, dst + i, vs);
-  }
-  for (size_t i = simd_end; i < n; ++i)
-    dst[i] = src[i];
-}
-
-template <typename T, const size_t TileSize, const size_t SimdWidth>
-inline void vcopy_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
-                           size_t n) {
-  using traits = simd::simd_traits<T, SimdWidth>;
-  using simd_t = typename traits::type;
-  const size_t simd_end = n - (n % SimdWidth);
-
-#pragma omp parallel for schedule(static)
-  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
-    size_t tile_end = tile_start + TileSize;
-    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
-      simd_t v_src = SIMD_LOAD(traits, src + i);
-      SIMD_STORE(traits, dst + i, v_src);
-    }
-  }
-  for (size_t i = simd_end; i < n; ++i)
-    dst[i] = src[i];
-}
-
 // l1
 
 // axpy
@@ -271,6 +235,42 @@ inline void axpy_omp_simd(T *__restrict__ y, const T *__restrict__ x,
   }
   for (size_t i = simd_end; i < n; ++i)
     y[i] += a * x[i];
+}
+
+// copy
+template <typename T, const size_t SimdWidth>
+inline void vcopy_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                           size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < simd_end; i += SimdWidth) {
+    simd_t vs = SIMD_LOAD(traits, src + i);
+    SIMD_STORE(traits, dst + i, vs);
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] = src[i];
+}
+
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline void vcopy_omp_simd(T *__restrict__ dst, const T *__restrict__ src,
+                           size_t n) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+    size_t tile_end = tile_start + TileSize;
+    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+      simd_t v_src = SIMD_LOAD(traits, src + i);
+      SIMD_STORE(traits, dst + i, v_src);
+    }
+  }
+  for (size_t i = simd_end; i < n; ++i)
+    dst[i] = src[i];
 }
 
 } // namespace details

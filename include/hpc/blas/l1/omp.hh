@@ -62,10 +62,10 @@ DEF_BLAS_L1_OMP_OP(vdiv, /=)
 // reduce
 template <typename T>
 inline void vsum_omp(const T *__restrict__ src, T &result, size_t n) {
-  T sum = T{};
+  T sum = T{0};
 #pragma omp parallel
   {
-    T private_sum = T{};
+    T private_sum = T{0};
 #pragma omp for schedule(static)
     for (size_t i = 0; i < n; ++i) {
       private_sum += src[i];
@@ -80,10 +80,10 @@ inline void vsum_omp(const T *__restrict__ src, T &result, size_t n) {
 
 template <typename T, const size_t TileSize>
 inline void vsum_omp(const T *__restrict__ src, T &result, size_t n) {
-  T sum = T{};
+  T sum = T{0};
 #pragma omp parallel
   {
-    T private_sum = T{};
+    T private_sum = T{0};
 #pragma omp for schedule(static)
     for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
       size_t tile_end = std::min(tile_start + TileSize, n);
@@ -116,28 +116,6 @@ inline void vfill_omp(T *__restrict__ dst, const T &value, size_t n) {
   }
 }
 
-// copy
-template <typename T>
-inline void vcopy_omp(T *__restrict__ dst, const T *__restrict__ src,
-                      size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < n; ++i) {
-    dst[i] = src[i];
-  }
-}
-
-template <typename T, const size_t TileSize>
-inline void vcopy_omp(T *__restrict__ dst, const T *__restrict__ src,
-                      size_t n) {
-#pragma omp parallel for schedule(static)
-  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
-    size_t tile_end = std::min(tile_start + TileSize, n);
-    for (size_t i = tile_start; i < tile_end; ++i) {
-      dst[i] = src[i];
-    }
-  }
-}
-
 // l1
 
 // axpy
@@ -158,6 +136,28 @@ inline void axpy_omp(T *__restrict__ y, const T *__restrict__ x, const T &a,
     size_t tile_end = std::min(tile_start + TileSize, n);
     for (size_t i = tile_start; i < tile_end; ++i) {
       y[i] += a * x[i];
+    }
+  }
+}
+
+// copy
+template <typename T>
+inline void vcopy_omp(T *__restrict__ dst, const T *__restrict__ src,
+                      size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < n; ++i) {
+    dst[i] = src[i];
+  }
+}
+
+template <typename T, const size_t TileSize>
+inline void vcopy_omp(T *__restrict__ dst, const T *__restrict__ src,
+                      size_t n) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] = src[i];
     }
   }
 }

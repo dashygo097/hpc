@@ -8,6 +8,7 @@
 namespace hpc::l3 {
 namespace details {
 
+// mmul
 template <typename T>
 inline void mmul_acceler(T *__restrict__ C, const T *__restrict__ A,
                          const T *__restrict__ B, size_t M, size_t K,
@@ -16,6 +17,9 @@ inline void mmul_acceler(T *__restrict__ C, const T *__restrict__ A,
   traits::gemm_simple(M, N, K, A, B, C);
 }
 
+// l3
+
+// gemm
 template <typename T>
 inline void gemm_acceler(T *__restrict__ C, const T *__restrict__ A,
                          const T *__restrict__ B, size_t M, size_t K, size_t N,

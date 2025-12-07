@@ -18,7 +18,7 @@ void mmul_simd(T *__restrict__ C, const T *__restrict__ A,
 
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  simd_t zero_vec = SIMD_DUP(traits, T{});
+  simd_t zero_vec = SIMD_DUP(traits, T{0});
   size_t simd_total_size = (M * N - SimdWidth + 1) / SimdWidth * SimdWidth;
 
   // init C
@@ -27,7 +27,7 @@ void mmul_simd(T *__restrict__ C, const T *__restrict__ A,
     SIMD_STORE(traits, C + i, zero_vec);
   }
   for (; i < M * N; ++i) {
-    C[i] = T{};
+    C[i] = T{0};
   }
 
   // local buffer
@@ -105,6 +105,9 @@ void mmul_simd(T *__restrict__ C, const T *__restrict__ A,
   }
 }
 
+// l3
+
+//  gemm
 template <typename T, const size_t TileSize, const size_t SimdWidth,
           const size_t Alignment>
 inline void gemm_simd(T *__restrict__ C, const T *__restrict__ A,
@@ -114,21 +117,35 @@ inline void gemm_simd(T *__restrict__ C, const T *__restrict__ A,
                 "TileSize must be multiple of SimdWidth");
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
-  simd_t zero_vec = SIMD_DUP(traits, T{});
+  simd_t zero_vec = SIMD_DUP(traits, T{0});
   simd_t alpha_vec = SIMD_DUP(traits, alpha);
   simd_t beta_vec = SIMD_DUP(traits, beta);
   size_t simd_total_size = (M * N - SimdWidth + 1) / SimdWidth * SimdWidth;
 
   // scale C by beta
-  size_t i = 0;
-  for (size_t i = 0; i < simd_total_size; i += SimdWidth) {
-    simd_t c_vec = SIMD_LOAD(traits, C + i);
-    SIMD_STORE(traits, C + i, SIMD_MUL(traits, beta_vec, c_vec));
-  }
-  for (; i < M * N; ++i) {
-    C[i] *= beta;
+  if (beta != T{1}) {
+    size_t i = 0;
+    for (size_t i = 0; i < simd_total_size; i += SimdWidth) {
+      simd_t c_vec = SIMD_LOAD(traits, C + i);
+      SIMD_STORE(traits, C + i, SIMD_MUL(traits, beta_vec, c_vec));
+    }
+    for (; i < M * N; ++i) {
+      C[i] *= beta;
+    }
+  } else if (beta == T{0}) {
+    // init C
+    size_t i = 0;
+    for (size_t i = 0; i < simd_total_size; i += SimdWidth) {
+      SIMD_STORE(traits, C + i, zero_vec);
+    }
+    for (; i < M * N; ++i) {
+      C[i] = T{0};
+    }
   }
 
+  if (alpha == T{0}) {
+    return;
+  }
   // local buffer
   alignas(Alignment) T localA[TileSize * TileSize];
   alignas(Alignment) T localB[TileSize * TileSize];
