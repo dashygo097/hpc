@@ -27,7 +27,7 @@
   }
 #define ENABLE_SIMD_REDUCE2_BRANCH(name)                                       \
   else if constexpr (backend == Backend::SIMD) {                               \
-    return details::name##_simd<T, BackendParams...>(n, x, y);                 \
+    return details::name##_simd<T, BackendParams...>(n, src1, src2);           \
   }
 #else
 #define ENABLE_SIMD_VECTOR_SCALAR_BRANCH(name)
@@ -201,24 +201,45 @@ inline void scal_simd(const size_t &n, T *__restrict__ dst, const T &alpha) {
 
 // dot
 template <typename T, const size_t SimdWidth>
-inline T dot_simd(const size_t &n, const T *__restrict__ x,
-                  const T *__restrict__ y) {
-  T sum = T{0};
+inline T dot_simd(const size_t &n, const T *__restrict__ src1,
+                  const T *__restrict__ src2) {
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
   const size_t simd_end = n - (n % SimdWidth);
   simd_t v_sum = SIMD_DUP(traits, T{0});
 
   for (size_t i = 0; i < simd_end; i += SimdWidth) {
-    simd_t vx = SIMD_LOAD(traits, x + i);
-    simd_t vy = SIMD_LOAD(traits, y + i);
+    simd_t vx = SIMD_LOAD(traits, src1 + i);
+    simd_t vy = SIMD_LOAD(traits, src2 + i);
     v_sum = SIMD_FMA(traits, vx, vy, v_sum);
   }
 
-  for (size_t i = 0; i < SimdWidth; ++i)
-    sum += v_sum[i];
+  T sum = SIMD_SUM(traits, v_sum);
   for (size_t i = simd_end; i < n; ++i)
-    sum += x[i] * y[i];
+    sum += src1[i] * src2[i];
+  return sum;
+}
+
+template <typename T, const size_t TileSize, const size_t SimdWidth>
+inline T dot_simd(const size_t &n, const T *__restrict__ src1,
+                  const T *__restrict__ src2) {
+  using traits = simd::simd_traits<T, SimdWidth>;
+  using simd_t = typename traits::type;
+  const size_t simd_end = n - (n % SimdWidth);
+  simd_t v_sum = SIMD_DUP(traits, T{0});
+  for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
+    size_t tile_end = tile_start + TileSize;
+    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
+      simd_t vx = SIMD_LOAD(traits, src1 + i);
+      simd_t vy = SIMD_LOAD(traits, src2 + i);
+      v_sum = SIMD_FMA(traits, vx, vy, v_sum);
+    }
+  }
+
+  T sum = SIMD_SUM(traits, v_sum);
+  for (size_t i = simd_end; i < n; ++i)
+    sum += src1[i] * src2[i];
+
   return sum;
 }
 

@@ -27,7 +27,7 @@
   }
 #define ENABLE_CUDA_REDUCE2_BRANCH(name)                                       \
   else if constexpr (backend == Backend::CUDA) {                               \
-    return details::name##_cuda<T, BackendParams...>(n, src1, src2);                 \
+    return details::name##_cuda<T, BackendParams...>(n, src1, src2);           \
   }
 #else
 #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
@@ -55,7 +55,7 @@ __global__ void axpy_cuda_kernel(size_t n, T *__restrict__ dst,
 // copy
 template <typename T>
 __global__ void copy_cuda_kernel(size_t n, T *__restrict__ dst,
-                                  const T *__restrict__ src) {
+                                 const T *__restrict__ src) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
     dst[idx] = src[idx];
@@ -64,13 +64,17 @@ __global__ void copy_cuda_kernel(size_t n, T *__restrict__ dst,
 
 // scal
 template <typename T>
-__global__ void scal_cuda_kernel(size_t n, T *__restrict__ dst,
-                                  T alpha) {   
+__global__ void scal_cuda_kernel(size_t n, T *__restrict__ dst, T alpha) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
     dst[idx] *= alpha;
   }
 }
+
+// dot
+template <typename T>
+__global__ T dot_cuda_kernel(size_t n, const T *__restrict__ src1,
+                             const T *__restrict__ src2) {}
 
 // Host-side wrapper functions
 template <typename T, const size_t BlockSize>
@@ -82,18 +86,23 @@ inline void axpy_cuda(const size_t &n, T *__restrict__ dst,
 
 template <typename T, const size_t BlockSize>
 inline void copy_cuda(const size_t &n, T *__restrict__ dst,
-                       const T *__restrict__ src) {
+                      const T *__restrict__ src) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
   CUDA_LAUNCH(copy_cuda_kernel<T>, grid_size, BlockSize, n, dst, src);
 }
 
 template <typename T, const size_t BlockSize>
-inline void scal_cuda(const size_t &n, T *__restrict__ dst,
-                        const T &alpha) {   
+inline void scal_cuda(const size_t &n, T *__restrict__ dst, const T &alpha) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
   CUDA_LAUNCH(scal_cuda_kernel<T>, grid_size, BlockSize, n, dst, alpha);
 }
 
+template <typename T, const size_t BlockSize>
+inline void dot_cuda(const size_t &n, const T *__restrict__ src1,
+                     const T *__restrict__ src2, T &result) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(dot_cuda_kernel<T>, grid_size, BlockSize, n, src1, src2);
+}
 } // namespace details
 } // namespace hpc::l1
 #endif

@@ -71,7 +71,8 @@ endfunction()
 
 # Build Demos
 set(DEMO_COUNT 0)
-print_info("――――――――――――――――――DEMOS――――――――――――――――――\n" "0")
+print_info("◆ DEMOS " "0")
+print_info("==============================================\n" "0")
 
 # --- General host (mixed backends) ---
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/host)
@@ -117,4 +118,6 @@ else()
   print_info("[WARN] No demo executables found\n" "93")
 endif()
 
-print_info("――――――――――――――――――END OF DEMOS――――――――――――――――――\n" "90")
+print_info("◆ END OF DEMOS " "90")
+print_info("=======================================\n" "90")
+print_info("\n" "0")

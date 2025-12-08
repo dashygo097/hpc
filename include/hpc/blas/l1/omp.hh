@@ -28,7 +28,7 @@
   }
 #define ENABLE_OPENMP_REDUCE2_BRANCH(name)                                     \
   else if constexpr (backend == Backend::OPENMP) {                             \
-    return details::name##_omp<T, BackendParams...>(n, x, y);                  \
+    return details::name##_omp<T, BackendParams...>(n, src1, src2);            \
   }
 #else
 #define ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)
@@ -171,8 +171,8 @@ inline T dot_omp(const size_t &n, const T *__restrict__ src1,
 }
 
 template <typename T, const size_t TileSize>
-inline void dot_omp(const size_t &n, const T *__restrict__ src1,
-                    const T *__restrict__ src2) {
+inline T dot_omp(const size_t &n, const T *__restrict__ src1,
+                 const T *__restrict__ src2) {
   T result = T{0};
 
 #pragma omp parallel

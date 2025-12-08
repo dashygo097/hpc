@@ -2,7 +2,8 @@
 
 include(Helpers)
 
-print_info("――――――――――――――――――BUILD SUMMARY――――――――――――――――――\n" "0")
+print_info("◆ BUILD SUMMARY " "0")
+print_info("======================================\n" "0")
 
 # Platform
 print_info("[INFO] Platform: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_PROCESSOR})\n" "91")
@@ -77,3 +78,7 @@ if(HAS_CUDA)
   make_preview_string(REL_CUDA_SOURCES 3)
   print_info("[TRACE] CUDA sources: ${PREVIOUS_SCOPE_VAR}\n" "96")
 endif()
+
+print_info("◆ END OF SUMMARIES " "90")
+print_info("===================================\n" "90")
+print_info("\n" "0")

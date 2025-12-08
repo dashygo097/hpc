@@ -31,9 +31,7 @@ template <> struct simd_traits<float, 1> {
   __attribute__((always_inline)) static inline type duplicate(float v) {
     return v;
   }
-  __attribute__((always_inline)) static inline float sum(type v) {
-    return v;
-  }
+  __attribute__((always_inline)) static inline float sum(type v) { return v; }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
     ptr[0] = v;
   }
@@ -95,9 +93,7 @@ template <> struct simd_traits<double, 1> {
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return v;
   }
-  __attribute__((always_inline)) static inline double sum(type v) {
-    return v;
-  }
+  __attribute__((always_inline)) static inline double sum(type v) { return v; }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     ptr[0] = v;
   }
@@ -148,9 +144,7 @@ template <> struct simd_traits<int, 1> {
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return v;
   }
-  __attribute__((always_inline)) static inline int sum(type v) {
-    return v;
-  }
+  __attribute__((always_inline)) static inline int sum(type v) { return v; }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     ptr[0] = v;
   }

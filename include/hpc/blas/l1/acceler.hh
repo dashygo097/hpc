@@ -27,7 +27,7 @@
   }
 #define ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                 \
   else if constexpr (backend == Backend::ACCELERATE) {                         \
-    return details::name##_acceler<T, BackendParams...>(n, x, y);              \
+    return details::name##_acceler<T, BackendParams...>(n, src1, src2);        \
   }
 #else
 #define ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH(name)
@@ -63,6 +63,14 @@ template <typename T>
 inline void scal_acceler(const size_t &n, T *__restrict__ dst, const T &alpha) {
   using traits = acceler::blasl1_traits<T>;
   traits::scal(n, dst, alpha);
+}
+
+// dot
+template <typename T>
+inline T dot_acceler(const size_t &n, const T *__restrict__ src1,
+                     const T *__restrict__ src2) {
+  using traits = acceler::blasl1_traits<T>;
+  return traits::dot(n, src1, src2);
 }
 
 } // namespace details

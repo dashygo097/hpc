@@ -55,7 +55,8 @@ inline void copy_seq(const size_t &n, T *__restrict__ dst,
 }
 
 template <typename T, const size_t TileSize>
-inline void copy_seq(T *__restrict__ dst, const T *__restrict__ src, size_t n) {
+inline void copy_seq(const size_t &n, T *__restrict__ dst,
+                     const T *__restrict__ src) {
   for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
     const size_t tile_end = std::min(tile_start + TileSize, n);
     for (size_t i = tile_start; i < tile_end; ++i) {
