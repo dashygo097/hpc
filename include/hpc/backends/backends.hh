@@ -29,6 +29,9 @@
 #include "./acceler/blasl3.hh"
 #endif
 
+// Prefetch API
+#include "./prefetch/prefetch.hh"
+
 namespace hpc {
 enum class Backend {
   // Single backend
