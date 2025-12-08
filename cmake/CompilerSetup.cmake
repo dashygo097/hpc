@@ -28,6 +28,9 @@ if(USE_HIGH_LEVEL_OPTIMIZATIONS)
       -fno-trapping-math"
     )
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+    message(STATUS "High-level optimizations enabled for Apple ARM64")
+  else()
+    message(STATUS "High-level optimizations are only configured for Apple ARM64 in this setup")
   endif()
 endif()
 

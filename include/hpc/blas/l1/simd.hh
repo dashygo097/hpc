@@ -61,7 +61,6 @@ inline void axpy_simd(const size_t &n, T *__restrict__ dst,
     }
     for (size_t i = simd_end; i < n; ++i)
       dst[i] += src[i];
-    return;
   } else {
     for (size_t i = 0; i < simd_end; i += SimdWidth) {
       simd_t vy = SIMD_LOAD(traits, dst + i);
@@ -94,7 +93,6 @@ inline void axpy_simd(const size_t &n, T *__restrict__ dst,
     }
     for (size_t i = simd_end; i < n; ++i)
       dst[i] += src[i];
-    return;
   } else {
     for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
       size_t tile_end = tile_start + TileSize;
