@@ -119,13 +119,7 @@ inline void copy_omp_simd(const size_t &n, T *__restrict__ dst,
   using simd_t = typename traits::type;
   const size_t simd_end = n - (n % SimdWidth);
 
-#pragma omp parallel for schedule(static)
-  for (size_t i = 0; i < simd_end; i += SimdWidth) {
-    const simd_t vs = SIMD_LOAD(traits, src + i);
-    SIMD_STORE(traits, dst + i, vs);
-  }
-  for (size_t i = simd_end; i < n; ++i)
-    dst[i] = src[i];
+  memcpy(dst, src, n * sizeof(T));
 }
 
 template <typename T, const size_t TileSize, const size_t SimdWidth>
@@ -138,10 +132,8 @@ inline void copy_omp_simd(const size_t &n, T *__restrict__ dst,
 #pragma omp parallel for schedule(static)
   for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
     const size_t tile_end = tile_start + TileSize;
-    for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
-      const simd_t v_src = SIMD_LOAD(traits, src + i);
-      SIMD_STORE(traits, dst + i, v_src);
-    }
+    memcpy(dst + tile_start, src + tile_start,
+           (tile_end - tile_start) * sizeof(T));
   }
   for (size_t i = simd_end; i < n; ++i)
     dst[i] = src[i];
@@ -158,12 +150,7 @@ inline void scal_omp_simd(const size_t &n, T *__restrict__ dst,
   const simd_t v_zero = SIMD_DUP(traits, T{0});
 
   if (alpha == T{0}) {
-#pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < simd_end; i += SimdWidth) {
-      SIMD_STORE(traits, dst + i, v_zero);
-    }
-    for (size_t i = simd_end; i < n; ++i)
-      dst[i] = T{0};
+    memset(dst, 0, n * sizeof(T));
   } else if (alpha == T{1}) {
     return;
   } else {
@@ -187,15 +174,7 @@ inline void scal_omp_simd(const size_t &n, T *__restrict__ dst,
   const simd_t v_zero = SIMD_DUP(traits, T{0});
 
   if (alpha == T{0}) {
-#pragma omp parallel for schedule(static)
-    for (size_t tile_start = 0; tile_start < simd_end; tile_start += TileSize) {
-      const size_t tile_end = tile_start + TileSize;
-      for (size_t i = tile_start; i < tile_end; i += SimdWidth) {
-        SIMD_STORE(traits, dst + i, v_zero);
-      }
-    }
-    for (size_t i = simd_end; i < n; ++i)
-      dst[i] = T{0};
+    memset(dst, 0, n * sizeof(T));
   } else if (alpha == T{1}) {
     return;
   } else {

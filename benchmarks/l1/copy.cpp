@@ -121,13 +121,13 @@ BENCHMARK_REGISTER_F(CopyFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_COPY_BENCHMARK(Seq, hpc::l1::details::copy_seq, 1024)
-DEFINE_COPY_BENCHMARK(SeqAPI, hpc::l1::copy, hpc::Backend::SEQUENTIAL, 1024)
+DEFINE_COPY_BENCHMARK(Seq, hpc::l1::details::copy_seq)
+DEFINE_COPY_BENCHMARK(SeqAPI, hpc::l1::copy, hpc::Backend::SEQUENTIAL)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-DEFINE_COPY_BENCHMARK(OpenMP, hpc::l1::details::copy_omp, 1024)
-DEFINE_COPY_BENCHMARK(OpenMPAPI, hpc::l1::copy, hpc::Backend::OPENMP, 1024)
+DEFINE_COPY_BENCHMARK(OpenMP, hpc::l1::details::copy_omp, 8192)
+DEFINE_COPY_BENCHMARK(OpenMPAPI, hpc::l1::copy, hpc::Backend::OPENMP, 8192)
 #endif
 
 // SIMD
