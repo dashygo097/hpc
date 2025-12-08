@@ -31,7 +31,7 @@ int main() {
   for (int i = 0; i < N; i++) {
     h_a[i] = static_cast<float>(i);
     h_b[i] = static_cast<float>(2 * i);
-    h_expected[i] = h_a[i] + h_b[i];
+    h_expected[i] = h_a[i] + h_b[i] * 0.5f;
   }
   std::cout << "   Data initialization complete" << std::endl;
 
@@ -46,6 +46,7 @@ int main() {
   std::cout << "\n5.  Copying data to device..." << std::endl;
   d_a.copyFromHost(h_a.data());
   d_b.copyFromHost(h_b.data());
+  d_c.copyFromHost(h_c.data());
   std::cout << "   Data copy complete" << std::endl;
 
   // Launch kernel using HPC L1 API
@@ -54,8 +55,8 @@ int main() {
   auto start = std::chrono::high_resolution_clock::now();
 
   try {
-    hpc::l1::vadd<float, hpc::Backend::CUDA, 256>(d_c.data(), d_a.data(), N);
-    hpc::l1::vadd<float, hpc::Backend::CUDA, 256>(d_c.data(), d_b.data(), N);
+    hpc::l1::copy<float, hpc::Backend::CUDA, 256>(N, d_c.data(), d_a.data());
+    hpc::l1::axpy<float, hpc::Backend::CUDA, 256>(N, d_c.data(), d_b.data(), 0.5f);
 
   } catch (const std::exception &e) {
     std::cerr << "Kernel launch failed: " << e.what() << std::endl;

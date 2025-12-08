@@ -9,6 +9,7 @@
 #define SIMD_LOAD(traits, ptr) traits::load(ptr)
 #define SIMD_STORE(traits, ptr, value) traits::store(ptr, value)
 #define SIMD_DUP(traits, value) traits::duplicate(value)
+#define SIMD_SUM(traits, value) traits::sum(value)
 #define SIMD_ADD(traits, a, b) traits::add(a, b)
 #define SIMD_SUB(traits, a, b) traits::sub(a, b)
 #define SIMD_MUL(traits, a, b) traits::mul(a, b)
@@ -28,6 +29,9 @@ template <> struct simd_traits<float, 1> {
     return *ptr;
   }
   __attribute__((always_inline)) static inline type duplicate(float v) {
+    return v;
+  }
+  __attribute__((always_inline)) static inline float sum(type v) {
     return v;
   }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
@@ -58,6 +62,11 @@ struct simd_traits<float, 4> {
   __attribute__((always_inline)) static inline type duplicate(float v) {
     return vdupq_n_f32(v);
   }
+  __attribute__((always_inline)) static inline float sum(type v) {
+    float32x2_t sum1 = vadd_f32(vget_low_f32(v), vget_high_f32(v));
+    float32x2_t sum2 = vpadd_f32(sum1, sum1);
+    return vget_lane_f32(sum2, 0);
+  }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
     vst1q_f32(ptr, v);
   }
@@ -84,6 +93,15 @@ template <> struct simd_traits<float, 8> {
   }
   __attribute__((always_inline)) static inline type duplicate(float v) {
     return {vdupq_n_f32(v), vdupq_n_f32(v)};
+  }
+  __attribute__((always_inline)) static inline float sum(type v) {
+    float32x2_t sum1 =
+        vadd_f32(vget_low_f32(v.val[0]), vget_high_f32(v.val[0]));
+    float32x2_t sum2 =
+        vadd_f32(vget_low_f32(v.val[1]), vget_high_f32(v.val[1]));
+    float32x2_t total = vadd_f32(sum1, sum2);
+    float32x2_t final_sum = vpadd_f32(total, total);
+    return vget_lane_f32(final_sum, 0);
   }
   __attribute__((always_inline)) static inline void store(float *ptr, type v) {
     vst1q_f32(ptr, v.val[0]);
@@ -115,6 +133,9 @@ struct simd_traits<double, 1> {
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return v;
   }
+  __attribute__((always_inline)) static inline double sum(type v) {
+    return v;
+  }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     *ptr = v;
   }
@@ -143,6 +164,10 @@ struct simd_traits<double, 2> {
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return vdupq_n_f64(v);
   }
+  __attribute__((always_inline)) static inline double sum(type v) {
+    float64x1_t sum1 = vadd_f64(vget_low_f64(v), vget_high_f64(v));
+    return vget_lane_f64(sum1, 0);
+  }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     vst1q_f64(ptr, v);
   }
@@ -169,6 +194,14 @@ template <> struct simd_traits<double, 4> {
   }
   __attribute__((always_inline)) static inline type duplicate(double v) {
     return {vdupq_n_f64(v), vdupq_n_f64(v)};
+  }
+  __attribute__((always_inline)) static inline double sum(type v) {
+    float64x1_t sum1 =
+        vadd_f64(vget_low_f64(v.val[0]), vget_high_f64(v.val[0]));
+    float64x1_t sum2 =
+        vadd_f64(vget_low_f64(v.val[1]), vget_high_f64(v.val[1]));
+    float64x1_t total = vadd_f64(sum1, sum2);
+    return vget_lane_f64(total, 0);
   }
   __attribute__((always_inline)) static inline void store(double *ptr, type v) {
     vst1q_f64(ptr, v.val[0]);
@@ -199,6 +232,9 @@ template <> struct simd_traits<int, 1> {
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return v;
   }
+  __attribute__((always_inline)) static inline int sum(type v) {
+    return v;
+  }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     *ptr = v;
   }
@@ -224,6 +260,11 @@ struct simd_traits<int, 4> {
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return vdupq_n_s32(v);
   }
+  __attribute__((always_inline)) static inline int sum(type v) {
+    int32x2_t sum1 = vadd_s32(vget_low_s32(v), vget_high_s32(v));
+    int32x2_t sum2 = vpadd_s32(sum1, sum1);
+    return vget_lane_s32(sum2, 0);
+  }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     vst1q_s32(ptr, v);
   }
@@ -248,6 +289,15 @@ struct simd_traits<int, 8> {
   }
   __attribute__((always_inline)) static inline type duplicate(int v) {
     return {vdupq_n_s32(v), vdupq_n_s32(v)};
+  }
+  __attribute__((always_inline)) static inline int sum(type v) {
+    int32x2_t sum1 =
+        vadd_s32(vget_low_s32(v.val[0]), vget_high_s32(v.val[0]));
+    int32x2_t sum2 =
+        vadd_s32(vget_low_s32(v.val[1]), vget_high_s32(v.val[1]));
+    int32x2_t total = vadd_s32(sum1, sum2);
+    int32x2_t final_sum = vpadd_s32(total, total);
+    return vget_lane_s32(final_sum, 0);
   }
   __attribute__((always_inline)) static inline void store(int *ptr, type v) {
     vst1q_s32(ptr, v.val[0]);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <simd/common.h>
 #ifdef SIMD_APPLE
 #include <simd/simd.h>
 #endif

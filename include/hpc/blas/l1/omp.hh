@@ -110,7 +110,7 @@ inline void copy_omp(const size_t &n, T *__restrict__ dst,
 
 // scal
 template <typename T>
-inline void scal_seq(const size_t &n, T *__restrict__ dst, const T &alpha) {
+inline void scal_omp(const size_t &n, T *__restrict__ dst, const T &alpha) {
   if (alpha == T{0}) {
 #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < n; ++i) {
@@ -126,7 +126,7 @@ inline void scal_seq(const size_t &n, T *__restrict__ dst, const T &alpha) {
   }
 }
 template <typename T, const size_t TileSize>
-inline void scal_seq(const size_t &n, T *__restrict__ dst, const T &alpha) {
+inline void scal_omp(const size_t &n, T *__restrict__ dst, const T &alpha) {
   if (alpha == T{0}) {
 #pragma omp parallel for schedule(static)
     for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {

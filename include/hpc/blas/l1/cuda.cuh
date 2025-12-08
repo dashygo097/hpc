@@ -4,7 +4,7 @@
 #include "../../backends/backends.hh"
 #endif
 
-#ifdef ENABLE_CUDA
+#if defined(ENABLE_CUDA) && defined(__CUDACC__)
 #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)                                 \
   else if constexpr (backend == Backend::CUDA) {                               \
     details::name##_cuda<T, BackendParams...>(n, dst, src, scalar);            \
@@ -27,7 +27,7 @@
   }
 #define ENABLE_CUDA_REDUCE2_BRANCH(name)                                       \
   else if constexpr (backend == Backend::CUDA) {                               \
-    return details::name##_cuda<T, BackendParams...>(n, x, y);                 \
+    return details::name##_cuda<T, BackendParams...>(n, src1, src2);                 \
   }
 #else
 #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
@@ -44,8 +44,8 @@ namespace details {
 
 // axpy
 template <typename T>
-__global__ void axpy_cuda_kernel(const size_t &n, T *__restrict__ dst,
-                                 const T *__restrict__ src, const T &alpha) {
+__global__ void axpy_cuda_kernel(size_t n, T *__restrict__ dst,
+                                 const T *__restrict__ src, T alpha) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
     dst[idx] += alpha * src[idx];
@@ -54,7 +54,7 @@ __global__ void axpy_cuda_kernel(const size_t &n, T *__restrict__ dst,
 
 // copy
 template <typename T>
-__global__ void vcopy_cuda_kernel(const size_t &n, T *__restrict__ dst,
+__global__ void copy_cuda_kernel(size_t n, T *__restrict__ dst,
                                   const T *__restrict__ src) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < n) {
@@ -62,19 +62,36 @@ __global__ void vcopy_cuda_kernel(const size_t &n, T *__restrict__ dst,
   }
 }
 
+// scal
+template <typename T>
+__global__ void scal_cuda_kernel(size_t n, T *__restrict__ dst,
+                                  T alpha) {   
+  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < n) {
+    dst[idx] *= alpha;
+  }
+}
+
 // Host-side wrapper functions
-template <typename T, int BlockSize = 256>
+template <typename T, const size_t BlockSize>
 inline void axpy_cuda(const size_t &n, T *__restrict__ dst,
                       const T *__restrict__ src, const T &alpha) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
   CUDA_LAUNCH(axpy_cuda_kernel<T>, grid_size, BlockSize, n, dst, src, alpha);
 }
 
-template <typename T, int BlockSize = 256>
-inline void vcopy_cuda(const size_t &n, T *__restrict__ dst,
+template <typename T, const size_t BlockSize>
+inline void copy_cuda(const size_t &n, T *__restrict__ dst,
                        const T *__restrict__ src) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
-  CUDA_LAUNCH(vcopy_cuda_kernel<T>, grid_size, BlockSize, n, dst, src);
+  CUDA_LAUNCH(copy_cuda_kernel<T>, grid_size, BlockSize, n, dst, src);
+}
+
+template <typename T, const size_t BlockSize>
+inline void scal_cuda(const size_t &n, T *__restrict__ dst,
+                        const T &alpha) {   
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(scal_cuda_kernel<T>, grid_size, BlockSize, n, dst, alpha);
 }
 
 } // namespace details

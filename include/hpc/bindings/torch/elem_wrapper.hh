@@ -25,8 +25,9 @@ template <typename ElementType, const size_t NumElements,
   dim3 grid((n + BlockSize - 1) / BlockSize);
 
   kernel_func<<<grid, block>>>(
+      n, 
       reinterpret_cast<ElementType *>(output.data_ptr()),
-      reinterpret_cast<const ElementType *>(n, input.data_ptr()));
+      reinterpret_cast<const ElementType *>(input.data_ptr()));
 
   return output;
 }

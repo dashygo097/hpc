@@ -1,6 +1,6 @@
 #include <hpc.hh>
 
-#ifdef ENABLE_CUDA
+#if defined(ENABLE_CUDA) && defined(__CUDACC__)
 namespace hpc::nn {
 __global__ void relu_f32_kernel(const size_t &n, float *output,
                                 const float *input) {
