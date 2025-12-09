@@ -118,26 +118,26 @@ BENCHMARK_REGISTER_F(ScalFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_SCAL_BENCHMARK(Seq, hpc::l1::details::scal_seq, 1024)
-DEFINE_SCAL_BENCHMARK(SeqAPI, hpc::l1::scal, hpc::Backend::SEQUENTIAL, 1024)
+DEFINE_SCAL_BENCHMARK(Seq, hpc::l1::details::scal_seq, 8192)
+DEFINE_SCAL_BENCHMARK(SeqAPI, hpc::l1::scal, hpc::Backend::SEQUENTIAL, 8192)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-DEFINE_SCAL_BENCHMARK(OpenMP, hpc::l1::details::scal_omp, 1024)
-DEFINE_SCAL_BENCHMARK(OpenMPAPI, hpc::l1::scal, hpc::Backend::OPENMP, 1024)
+DEFINE_SCAL_BENCHMARK(OpenMP, hpc::l1::details::scal_omp, 8192)
+DEFINE_SCAL_BENCHMARK(OpenMPAPI, hpc::l1::scal, hpc::Backend::OPENMP, 8192)
 #endif
 
 // SIMD
 #ifdef ENABLE_SIMD
-DEFINE_SCAL_BENCHMARK(SIMD_4, hpc::l1::details::scal_simd, 1024, 4)
-DEFINE_SCAL_BENCHMARK(SIMDAPI_4, hpc::l1::scal, hpc::Backend::SIMD, 1024, 4)
+DEFINE_SCAL_BENCHMARK(SIMD_4, hpc::l1::details::scal_simd, 8192, 4)
+DEFINE_SCAL_BENCHMARK(SIMDAPI_4, hpc::l1::scal, hpc::Backend::SIMD, 8192, 4)
 #endif
 
 // OpenMP + SIMD
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_SCAL_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::scal_omp_simd, 1024, 4)
+DEFINE_SCAL_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::scal_omp_simd, 8192, 4)
 DEFINE_SCAL_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::scal,
-                      hpc::Backend::OPENMP_SIMD, 1024, 4)
+                      hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
 // Apple Accelerate

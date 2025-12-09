@@ -108,26 +108,26 @@ BENCHMARK_REGISTER_F(DotFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_DOT_BENCHMARK(Seq, hpc::l1::details::dot_seq, 1024)
-DEFINE_DOT_BENCHMARK(SeqAPI, hpc::l1::dot, hpc::Backend::SEQUENTIAL, 1024)
+DEFINE_DOT_BENCHMARK(Seq, hpc::l1::details::dot_seq, 8192)
+DEFINE_DOT_BENCHMARK(SeqAPI, hpc::l1::dot, hpc::Backend::SEQUENTIAL, 8192)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-DEFINE_DOT_BENCHMARK(OpenMP, hpc::l1::details::dot_omp, 1024)
-DEFINE_DOT_BENCHMARK(OpenMPAPI, hpc::l1::dot, hpc::Backend::OPENMP, 1024)
+DEFINE_DOT_BENCHMARK(OpenMP, hpc::l1::details::dot_omp, 8192)
+DEFINE_DOT_BENCHMARK(OpenMPAPI, hpc::l1::dot, hpc::Backend::OPENMP, 8192)
 #endif
 
 // SIMD
 #ifdef ENABLE_SIMD
-DEFINE_DOT_BENCHMARK(SIMD_4, hpc::l1::details::dot_simd, 1024, 4)
-DEFINE_DOT_BENCHMARK(SIMDAPI_4, hpc::l1::dot, hpc::Backend::SIMD, 1024, 4)
+DEFINE_DOT_BENCHMARK(SIMD_4, hpc::l1::details::dot_simd, 8192, 4)
+DEFINE_DOT_BENCHMARK(SIMDAPI_4, hpc::l1::dot, hpc::Backend::SIMD, 8192, 4)
 #endif
 
 // OpenMP + SIMD
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_DOT_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::dot_omp_simd, 1024, 4)
+DEFINE_DOT_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::dot_omp_simd, 8192, 4)
 DEFINE_DOT_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::dot, hpc::Backend::OPENMP_SIMD,
-                     1024, 4)
+                     8192, 4)
 #endif
 
 // Apple Accelerate

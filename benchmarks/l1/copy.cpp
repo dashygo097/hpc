@@ -121,8 +121,8 @@ BENCHMARK_REGISTER_F(CopyFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_COPY_BENCHMARK(Seq, hpc::l1::details::copy_seq)
-DEFINE_COPY_BENCHMARK(SeqAPI, hpc::l1::copy, hpc::Backend::SEQUENTIAL)
+DEFINE_COPY_BENCHMARK(Seq, hpc::l1::details::copy_seq, 8192)
+DEFINE_COPY_BENCHMARK(SeqAPI, hpc::l1::copy, hpc::Backend::SEQUENTIAL, 8192)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
@@ -132,15 +132,15 @@ DEFINE_COPY_BENCHMARK(OpenMPAPI, hpc::l1::copy, hpc::Backend::OPENMP, 8192)
 
 // SIMD
 #ifdef ENABLE_SIMD
-DEFINE_COPY_BENCHMARK(SIMD_4, hpc::l1::details::copy_simd, 1024, 4)
-DEFINE_COPY_BENCHMARK(SIMDAPI_4, hpc::l1::copy, hpc::Backend::SIMD, 1024, 4)
+DEFINE_COPY_BENCHMARK(SIMD_4, hpc::l1::details::copy_simd, 8192, 4)
+DEFINE_COPY_BENCHMARK(SIMDAPI_4, hpc::l1::copy, hpc::Backend::SIMD, 8192, 4)
 #endif
 
 // OpenMP + SIMD
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_COPY_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::copy_omp_simd, 1024, 4)
+DEFINE_COPY_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::copy_omp_simd, 8192, 4)
 DEFINE_COPY_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::copy,
-                      hpc::Backend::OPENMP_SIMD, 1024, 4)
+                      hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
 // Apple Accelerate
