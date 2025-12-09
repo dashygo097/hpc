@@ -50,11 +50,6 @@ clean:
 	@echo "==> Cleaning build directory..."
 	@rm -rf $(BUILD_DIR)
 
-# Install (requires sudo for system-wide install)
-install: build
-	@echo "==> Installing..."
-	@cd $(BUILD_DIR) && cmake --install . $(if $(PREFIX),--prefix $(PREFIX))
-
 # Run tests
 test: build
 	@echo "==> Running tests..."
@@ -77,5 +72,4 @@ help:
 	@echo "                     Current: $(BUILD_TYPE)"
 	@echo "  GENERATOR        - CMake generator (Ninja, 'Unix Makefiles', etc.)"
 	@echo "                     Current: $(GENERATOR)"
-	@echo "  PREFIX           - Installation prefix (for 'make install')"
 	@echo ""
