@@ -252,8 +252,8 @@ inline T dot_omp_simd(const size_t &n, const T *__restrict__ src1,
 template <typename T, const size_t TileSize, const size_t SimdWidth>
 inline T dot_omp_simd(const size_t &n, const T *__restrict__ src1,
                       const T *__restrict__ src2) {
-  assert(TileSize % (SimdWidth * 4) == 0 &&
-         "TileSize must be multiple of SimdWidth * 4");
+  static_assert(TileSize % (SimdWidth * 4) == 0 &&
+                "TileSize must be multiple of SimdWidth * 4");
   using traits = simd::simd_traits<T, SimdWidth>;
   using simd_t = typename traits::type;
 
