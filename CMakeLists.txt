@@ -33,9 +33,6 @@ endif()
 include(SourceCollections)
 include(LibraryTarget)
 
-set(CMAKE_MODULE_PATH ${_HPC_ORIGINAL_MODULE_PATH})
-unset(_HPC_ORIGINAL_MODULE_PATH)
-
 if(HPC_STANDALONE)
   include(BuildSummaries)
   
@@ -47,3 +44,6 @@ if(HPC_STANDALONE)
     add_subdirectory(benchmarks)
   endif()
 endif()
+
+set(CMAKE_MODULE_PATH ${_HPC_ORIGINAL_MODULE_PATH})
+unset(_HPC_ORIGINAL_MODULE_PATH)
