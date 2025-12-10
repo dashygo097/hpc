@@ -9,8 +9,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 message(STATUS "CMake module path: ${CMAKE_MODULE_PATH}")
 
 # Generate and include build configuration
-if(EXISTS "${CMAKE_BINARY_DIR}/config.cmake")
-  include("${CMAKE_BINARY_DIR}/config.cmake")
+if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/config.cmake")
+  include("${CMAKE_CURRENT_BINARY_DIR}/config.cmake")
 endif()
 
 # Include modular cmake components
