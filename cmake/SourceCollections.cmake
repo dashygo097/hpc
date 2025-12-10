@@ -1,8 +1,7 @@
 # Collect source and header files
 
-message(STATUS "Collecting source files at ${CMAKE_CURRENT_SOURCE_DIR}/src")
 file(GLOB_RECURSE HPC_SOURCES 
-  ${CMAKE_CURRNET_SOURCE_DIR}/src/*.c 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c 
   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc 
   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
