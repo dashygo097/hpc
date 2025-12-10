@@ -4,6 +4,13 @@ project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(HPC_STANDALONE ON)
+else()
+  set(HPC_STANDALONE OFF)
+  message(STATUS "HPC: Building as subdirectory")
+endif()
+
 # Add cmake module path
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 message(STATUS "CMake module path: ${CMAKE_MODULE_PATH}")
@@ -32,10 +39,12 @@ include(LibraryTarget)
 # Print build summary
 include(BuildSummaries)
 
-# Apps
-add_subdirectory(demos)
+if(HPC_STANDALONE)
+  # Apps
+  add_subdirectory(demos)
 
-# Benchmarks
-if(ENABLE_BENCHMARKING)
-  add_subdirectory(benchmarks)
+  # Benchmarks
+  if(ENABLE_BENCHMARKING)
+    add_subdirectory(benchmarks)
+  endif()
 endif()
