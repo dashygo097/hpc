@@ -4,10 +4,8 @@ project(hpc LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(_HPC_ORIGINAL_MODULE_PATH ${CMAKE_MODULE_PATH})
-
 # Add cmake module path
-list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # Generate and include build configuration
 if(EXISTS "${CMAKE_BINARY_DIR}/config.cmake")
@@ -40,6 +38,3 @@ add_subdirectory(demos)
 if(ENABLE_BUILD_BENCHMARKS)
   add_subdirectory(benchmarks)
 endif()
-
-set(CMAKE_MODULE_PATH ${_HPC_ORIGINAL_MODULE_PATH})
-unset(_HPC_ORIGINAL_MODULE_PATH)
