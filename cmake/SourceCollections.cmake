@@ -1,20 +1,20 @@
 # Collect source and header files
 
 file(GLOB_RECURSE HPC_SOURCES 
-  ${CMAKE_SOURCE_DIR}/src/*.c 
-  ${CMAKE_SOURCE_DIR}/src/*.cc 
-  ${CMAKE_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_CURRNET_SOURCE_DIR}/src/*.c 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
 file(GLOB_RECURSE HPC_HEADERS 
-  ${CMAKE_SOURCE_DIR}/include/*.h 
-  ${CMAKE_SOURCE_DIR}/include/*.hh 
-  ${CMAKE_SOURCE_DIR}/include/*.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h 
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hh 
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
 )
 
 if(HAS_CUDA)
-  file(GLOB_RECURSE HPC_CUDA_HEADERS ${CMAKE_SOURCE_DIR}/include/*.cuh)
-  file(GLOB_RECURSE HPC_CUDA_SOURCES ${CMAKE_SOURCE_DIR}/src/*.cu)
+  file(GLOB_RECURSE HPC_CUDA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.cuh)
+  file(GLOB_RECURSE HPC_CUDA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cu)
 else()
   set(HPC_CUDA_HEADERS "")
   set(HPC_CUDA_SOURCES "")
