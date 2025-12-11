@@ -122,33 +122,27 @@ BENCHMARK_REGISTER_F(AXPYFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_AXPY_VEC_BENCHMARK(Seq, hpc::l1::details::axpy_seq, 8192)
-DEFINE_AXPY_VEC_BENCHMARK(SeqAPI, hpc::l1::axpy, hpc::Backend::SEQUENTIAL, 8192)
+DEFINE_AXPY_VEC_BENCHMARK(Seq_8192, hpc::l1::axpy, hpc::Backend::SEQUENTIAL, 8192)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-DEFINE_AXPY_VEC_BENCHMARK(OpenMP, hpc::l1::details::axpy_omp, 8192)
-DEFINE_AXPY_VEC_BENCHMARK(OpenMPAPI, hpc::l1::axpy, hpc::Backend::OPENMP, 8192)
+DEFINE_AXPY_VEC_BENCHMARK(OpenMP_8192, hpc::l1::axpy, hpc::Backend::OPENMP, 8192)
 #endif
 
 // SIMD
 #ifdef ENABLE_SIMD
-DEFINE_AXPY_VEC_BENCHMARK(SIMD_4, hpc::l1::details::axpy_simd, 8192, 4)
-DEFINE_AXPY_VEC_BENCHMARK(SIMDAPI_4, hpc::l1::axpy, hpc::Backend::SIMD, 8192, 4)
+DEFINE_AXPY_VEC_BENCHMARK(SIMD_4, hpc::l1::axpy, hpc::Backend::SIMD, 4)
 #endif
 
 // OpenMP + SIMD
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMD_4, hpc::l1::details::axpy_omp_simd, 8192,
-                          4)
-DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMDAPI_4, hpc::l1::axpy,
+DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMD_8192_4, hpc::l1::axpy,
                           hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
-DEFINE_AXPY_VEC_BENCHMARK(Accelerate, hpc::l1::details::axpy_acceler)
-DEFINE_AXPY_VEC_BENCHMARK(AccelerateAPI, hpc::l1::axpy,
+DEFINE_AXPY_VEC_BENCHMARK(Accelerate, hpc::l1::axpy,
                           hpc::Backend::ACCELERATE)
 #endif
 
