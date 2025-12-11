@@ -6,7 +6,7 @@
 #include "./omp.hh"
 #include "./omp_simd.hh"
 #include "./sequential.hh"
-#include "./simd.hh"
+#include "./simd/simd.hh"
 #include <cstddef>
 
 // L1 Factory Macros
