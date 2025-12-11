@@ -50,16 +50,27 @@ inline void axpy_omp(const size_t &n, T *__restrict__ dst,
                      const T *__restrict__ src, const T &alpha) {
   if (alpha == T{0}) {
     return;
-  } else if (alpha == T{1}) {
+  }
+
+  if (alpha == T{1}) {
 #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < n; ++i) {
       dst[i] += src[i];
     }
-  } else {
+    return;
+  }
+
+  if (alpha == T{-1}) {
 #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < n; ++i) {
-      dst[i] += alpha * src[i];
+      dst[i] -= src[i];
     }
+    return;
+  }
+
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < n; ++i) {
+    dst[i] += alpha * src[i];
   }
 }
 
@@ -68,7 +79,9 @@ inline void axpy_omp(const size_t &n, T *__restrict__ dst,
                      const T *__restrict__ src, const T &alpha) {
   if (alpha == T{0}) {
     return;
-  } else if (alpha == T{1}) {
+  }
+
+  if (alpha == T{1}) {
 #pragma omp parallel for schedule(static)
     for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
       const size_t tile_end = std::min(tile_start + TileSize, n);
@@ -76,13 +89,25 @@ inline void axpy_omp(const size_t &n, T *__restrict__ dst,
         dst[i] += src[i];
       }
     }
-  } else {
+    return;
+  }
+
+  if (alpha == T{-1}) {
 #pragma omp parallel for schedule(static)
     for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
       const size_t tile_end = std::min(tile_start + TileSize, n);
       for (size_t i = tile_start; i < tile_end; ++i) {
-        dst[i] += alpha * src[i];
+        dst[i] -= src[i];
       }
+    }
+    return;
+  }
+
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    const size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] += alpha * src[i];
     }
   }
 }
@@ -108,30 +133,35 @@ inline void copy_omp(const size_t &n, T *__restrict__ dst,
 // scal
 template <typename T>
 inline void scal_omp(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  if (alpha == T{1}) {
+    return;
+  }
+
   if (alpha == T{0}) {
     memset(dst, 0, n * sizeof(T));
-  } else if (alpha == T{1}) {
     return;
-  } else {
+  }
+
 #pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < n; ++i) {
-      dst[i] *= alpha;
-    }
+  for (size_t i = 0; i < n; ++i) {
+    dst[i] *= alpha;
   }
 }
 template <typename T, const size_t TileSize>
 inline void scal_omp(const size_t &n, T *__restrict__ dst, const T &alpha) {
+  if (alpha == T{1}) {
+    return;
+  }
+
   if (alpha == T{0}) {
     memset(dst, 0, n * sizeof(T));
-  } else if (alpha == T{1}) {
-    return;
-  } else {
+  }
+
 #pragma omp parallel for schedule(static)
-    for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
-      const size_t tile_end = std::min(tile_start + TileSize, n);
-      for (size_t i = tile_start; i < tile_end; ++i) {
-        dst[i] *= alpha;
-      }
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    const size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      dst[i] *= alpha;
     }
   }
 }
