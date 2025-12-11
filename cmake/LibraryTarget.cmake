@@ -54,6 +54,7 @@ endif()
 if(HAS_OPENBLAS)
   target_compile_definitions(hpc PUBLIC 
     ENABLE_OPENBLAS 
+    OPENBLAS_NEW_LAPACK
     OPENBLAS_LAPACK_ILP64
   )
 endif()

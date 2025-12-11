@@ -6,7 +6,7 @@
 #endif
 
 #ifdef ENABLE_ACCELERATE
-namespace hpc::acceler {
+namespace hpc::accelerate {
 template <typename T> struct blasl1_traits;
 
 template <> struct blasl1_traits<float> {
@@ -57,6 +57,6 @@ template <> struct blasl1_traits<double> {
   }
 };
 
-} // namespace hpc::acceler
+} // namespace hpc::accelerate
 
 #endif

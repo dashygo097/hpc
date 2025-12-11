@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../../backends/backends.hh"
-#include "./openblas.hh"
-#include "./acceler.hh"
+#include "./accelerate.hh"
 #include "./cuda.cuh"
 #include "./omp.hh"
 #include "./omp_simd/omp_simd.hh"
+#include "./openblas.hh"
 #include "./sequential.hh"
 #include "./simd/simd.hh"
 #include <cstddef>
@@ -22,7 +22,7 @@
     ENABLE_GEMM_OPENMP_BRANCH(name)                                            \
     ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)                                       \
     ENABLE_GEMM_OPENBLAS_BRANCH(name)                                          \
-    ENABLE_GEMM_ACCEL_BRANCH(name)                                             \
+    ENABLE_GEMM_ACCELERATE_BRANCH(name)                                        \
   }
 
 namespace hpc::l3 {

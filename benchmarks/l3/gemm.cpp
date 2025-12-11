@@ -119,40 +119,34 @@ BENCHMARK_REGISTER_F(GEMMFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential tiled benchmarks
-DEFINE_GEMM_BENCHMARK(Seq_32, hpc::l3::details::gemm_seq, 32, 64)
-DEFINE_GEMM_BENCHMARK(Seq_64, hpc::l3::details::gemm_seq, 64, 64)
-DEFINE_GEMM_BENCHMARK(Seq_128, hpc::l3::details::gemm_seq, 128, 64)
-DEFINE_GEMM_BENCHMARK(SeqAPI, hpc::l3::gemm, hpc::Backend::SEQUENTIAL, 128, 64)
+DEFINE_GEMM_BENCHMARK(Seq_32, hpc::l3::gemm, hpc::Backend::SEQUENTIAL, 32, 64)
+DEFINE_GEMM_BENCHMARK(Seq_64, hpc::l3::gemm, hpc::Backend::SEQUENTIAL, 64, 64)
+DEFINE_GEMM_BENCHMARK(Seq_128, hpc::l3::gemm, hpc::Backend::SEQUENTIAL, 128, 64)
 
 // OpenMP benchmarks
 #ifdef ENABLE_OPENMP
-DEFINE_GEMM_BENCHMARK(OpenMP_32, hpc::l3::details::gemm_omp, 32, 64)
-DEFINE_GEMM_BENCHMARK(OpenMP_64, hpc::l3::details::gemm_omp, 64, 64)
-DEFINE_GEMM_BENCHMARK(OpenMP_128, hpc::l3::details::gemm_omp, 128, 64)
-DEFINE_GEMM_BENCHMARK(OpenMPAPI, hpc::l3::gemm, hpc::Backend::OPENMP, 128, 64)
+DEFINE_GEMM_BENCHMARK(OpenMP_32, hpc::l3::gemm, hpc::Backend::OPENMP, 32, 64)
+DEFINE_GEMM_BENCHMARK(OpenMP_64, hpc::l3::gemm, hpc::Backend::OPENMP, 64, 64)
+DEFINE_GEMM_BENCHMARK(OpenMP_128, hpc::l3::gemm, hpc::Backend::OPENMP, 128, 64)
 #endif
 
 #ifdef ENABLE_SIMD
-DEFINE_GEMM_BENCHMARK(SIMD_32_4, hpc::l3::details::gemm_simd, 32, 4, 64)
-DEFINE_GEMM_BENCHMARK(SIMD_64_4, hpc::l3::details::gemm_simd, 64, 4, 64)
-DEFINE_GEMM_BENCHMARK(SIMD_128_4, hpc::l3::details::gemm_simd, 128, 4, 64)
-DEFINE_GEMM_BENCHMARK(SIMDAPI, hpc::l3::gemm, hpc::Backend::SIMD, 128, 4, 64)
+DEFINE_GEMM_BENCHMARK(SIMD_32_4, hpc::l3::gemm, hpc::Backend::SIMD, 32, 4, 64)
+DEFINE_GEMM_BENCHMARK(SIMD_64_4, hpc::l3::gemm, hpc::Backend::SIMD, 64, 4, 64)
+DEFINE_GEMM_BENCHMARK(SIMD_128_4, hpc::l3::gemm, hpc::Backend::SIMD, 128, 4, 64)
 #endif
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_32_4, hpc::l3::details::gemm_omp_simd, 32, 4,
-                      64)
-DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_64_4, hpc::l3::details::gemm_omp_simd, 64, 4,
-                      64)
-DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_128_4, hpc::l3::details::gemm_omp_simd, 128,
-                      4, 64)
-DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_API, hpc::l3::gemm, hpc::Backend::OPENMP_SIMD,
-                      128, 4, 64)
+DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_32_4, hpc::l3::gemm,
+                      hpc::Backend::OPENMP_SIMD, 32, 4, 64)
+DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_64_4, hpc::l3::gemm,
+                      hpc::Backend::OPENMP_SIMD, 64, 4, 64)
+DEFINE_GEMM_BENCHMARK(OpenMP_SIMD_128_4, hpc::l3::gemm,
+                      hpc::Backend::OPENMP_SIMD, 128, 4, 64)
 #endif
 
 #ifdef ENABLE_ACCELERATE
-DEFINE_GEMM_BENCHMARK(Accelerate, hpc::l3::details::gemm_acceler)
-DEFINE_GEMM_BENCHMARK(AccelerateAPI, hpc::l3::gemm, hpc::Backend::ACCELERATE)
+DEFINE_GEMM_BENCHMARK(Accelerate, hpc::l3::gemm, hpc::Backend::ACCELERATE)
 #endif
 
 BENCHMARK_MAIN();
