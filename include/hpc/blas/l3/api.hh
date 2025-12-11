@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../backends/backends.hh"
+#include "./openblas.hh"
 #include "./acceler.hh"
 #include "./cuda.cuh"
 #include "./omp.hh"
@@ -20,6 +21,7 @@
     ENABLE_GEMM_SIMD_BRANCH(name)                                              \
     ENABLE_GEMM_OPENMP_BRANCH(name)                                            \
     ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)                                       \
+    ENABLE_GEMM_OPENBLAS_BRANCH(name)                                          \
     ENABLE_GEMM_ACCEL_BRANCH(name)                                             \
   }
 

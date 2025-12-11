@@ -18,7 +18,7 @@ template <> struct blasl1_traits<float> {
   }
 
   __attribute__((always_inline)) static inline void
-  axpy(size_t n, float *y, const float *x, const float &alpha) {
+  axpy(const size_t &n, float *y, const float *x, const float &alpha) {
     cblas_saxpy(static_cast<int>(n), alpha, x, 1, y, 1);
   }
 
@@ -28,7 +28,7 @@ template <> struct blasl1_traits<float> {
   }
 
   __attribute__((always_inline)) static inline type
-  dot(size_t n, const float *x, const float *y) {
+  dot(const size_t &n, const float *x, const float *y) {
     return cblas_sdot(static_cast<int>(n), x, 1, y, 1);
   }
 };

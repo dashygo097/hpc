@@ -25,8 +25,7 @@ inline void gemm_acceler(const size_t &M, const size_t &K, const size_t &N,
                          const T *__restrict__ B, const T &alpha = T{1},
                          const T &beta = T{0}) {
   using traits = acceler::blasl3_traits<T>;
-  traits::gemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha, A, K,
-               B, N, beta, C, N);
+  traits::gemm(M, K, N, C, A, B, alpha, beta);
 }
 
 } // namespace details

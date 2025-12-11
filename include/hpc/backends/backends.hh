@@ -56,6 +56,9 @@ enum class Backend {
 #ifdef ENABLE_CUDA
   CUDA,
 #endif
+#ifdef ENABLE_OPENBLAS
+  OPENBLAS,
+#endif
 #ifdef ENABLE_ACCELERATE
   ACCELERATE,
 #endif

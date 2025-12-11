@@ -13,13 +13,12 @@ template <> struct blasl3_traits<float> {
   using type = float;
 
   __attribute__((always_inline)) static inline void
-  gemm(CBLAS_ORDER order, CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
-       size_t M, size_t N, size_t K, float alpha, const float *A, size_t lda,
-       const float *B, size_t ldb, float beta, float *C, size_t ldc) {
-
-    cblas_sgemm(order, transA, transB, static_cast<int>(M), static_cast<int>(N),
-                static_cast<int>(K), alpha, A, static_cast<int>(lda), B,
-                static_cast<int>(ldb), beta, C, static_cast<int>(ldc));
+    gemm(const size_t &M, const size_t &K, const size_t &N,
+         float *__restrict__ C, const float *__restrict__ A,
+         const float *__restrict__ B, const float &alpha,
+         const float &beta) {
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha, A, K,
+                B, N, beta, C, N);
   }
 };
 
@@ -27,13 +26,12 @@ template <> struct blasl3_traits<double> {
   using type = double;
 
   __attribute__((always_inline)) static inline void
-  gemm(CBLAS_ORDER order, CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
-       size_t M, size_t N, size_t K, double alpha, const double *A, size_t lda,
-       const double *B, size_t ldb, double beta, double *C, size_t ldc) {
-
-    cblas_dgemm(order, transA, transB, static_cast<int>(M), static_cast<int>(N),
-                static_cast<int>(K), alpha, A, static_cast<int>(lda), B,
-                static_cast<int>(ldb), beta, C, static_cast<int>(ldc));
+    gemm(const size_t &M, const size_t &K, const size_t &N,
+         double *__restrict__ C, const double *__restrict__ A,
+         const double *__restrict__ B, const double &alpha,
+         const double &beta) {
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha, A, K,
+                B, N, beta, C, N);
   }
 };
 
