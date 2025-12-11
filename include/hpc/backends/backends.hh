@@ -23,6 +23,13 @@
 #include "./cuda/memory.cuh"
 #endif
 
+// OpenBLAS
+#ifdef ENABLE_OPENBLAS
+#include "./openblas/blasl1.hh"
+#include "./openblas/blasl2.hh"
+#include "./openblas/blasl3.hh"
+#endif
+
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
 #include "./acceler/blasl1.hh"

@@ -52,10 +52,10 @@ if(HAS_PYTORCH)
 endif()
 
 if(HAS_OPENBLAS)
-target_compile_definitions(hpc PUBLIC
-  ENABLE_OPENBLAS 
-  OPENBLAS_ILP64
-)
+  target_compile_definitions(hpc PUBLIC 
+    ENABLE_OPENBLAS 
+    OPENBLAS_LAPACK_ILP64
+  )
 endif()
 
 if(HAS_ACCELERATE)
@@ -84,7 +84,7 @@ if(HAS_CUDA)
 endif()
 
 if(HAS_OPENBLAS)
-  target_link_libraries(hpc PUBLIC ${OPENBLAS_LIB})
+  target_link_libraries(hpc PUBLIC ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()
 
 if(HAS_ACCELERATE)
