@@ -3,7 +3,7 @@ CMAKE_DIR = $(PROJECT_DIR)/cmake
 BUILD_DIR = $(PROJECT_DIR)/build
 
 # Build configuration
-BUILD_TYPE ?= Debug
+BUILD_TYPE ?= Release
 GENERATOR ?= Ninja 
 
 # Detect generator command

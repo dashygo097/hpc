@@ -4,7 +4,6 @@
 #include <arm_neon.h>
 #endif
 
-// FIXME: overhead is detected even after inlining these traits' methods.
 #ifdef SIMD_NEON
 #define SIMD_LOAD(traits, ptr) traits::load(ptr)
 #define SIMD_STORE(traits, ptr, value) traits::store(ptr, value)
@@ -15,6 +14,24 @@
 #define SIMD_MUL(traits, a, b) traits::mul(a, b)
 #define SIMD_FMA(traits, a, b, c) traits::add(traits::mul(a, b), c)
 #define SIMD_DIV(traits, a, b) traits::div(a, b)
+#endif
+
+// f32
+#ifdef SIMD_NEON
+#define SIMD_F32_LOAD(ptr) vld1q_f32(ptr)
+#define SIMD_F32_STORE(ptr, value) vst1q_f32(ptr, value)
+#define SIMD_F32_DUP(value) vdupq_n_f32(value)
+#define SIMD_F32_SUM(value)                                                    \
+  ({                                                                           \
+    float32x2_t sum1 = vadd_f32(vget_low_f32(value), vget_high_f32(value));    \
+    float32x2_t sum2 = vpadd_f32(sum1, sum1);                                  \
+    vget_lane_f32(sum2, 0);                                                    \
+  })
+#define SIMD_F32_ADD(a, b) vaddq_f32(a, b)
+#define SIMD_F32_SUB(a, b) vsubq_f32(a, b)
+#define SIMD_F32_MUL(a, b) vmulq_f32(a, b)
+#define SIMD_F32_FMA(a, b, c) vaddq_f32(vmulq_f32(a, b), c)
+#define SIMD_F32_DIV(a, b) vmulq_f32(a, vrecpeq_f32(b))
 #endif
 
 #ifdef SIMD_NEON

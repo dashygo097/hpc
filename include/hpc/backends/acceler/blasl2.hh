@@ -1,1 +1,25 @@
-#pragma
+#pragma once
+
+#ifdef ENABLE_ACCELERATE
+#include <Accelerate/Accelerate.h>
+#include <cstddef>
+#endif
+
+#ifdef ENABLE_ACCELERATE
+namespace hpc::acceler {
+template <typename T> struct blasl2_traits;
+
+template <> struct blasl2_traits<float> {
+  using type = float;
+  __attribute__((always_inline)) static inline void
+  gemv(const size_t &M, const size_t &N, float *y, const float *A,
+       const float *x, const float &alpha, const float &beta) {
+    cblas_sgemv(CblasRowMajor, CblasNoTrans, static_cast<int>(M),
+                static_cast<int>(N), alpha, A, static_cast<int>(N), x, 1, beta,
+                y, 1);
+  }
+};
+
+} // namespace hpc::acceler
+
+#endif

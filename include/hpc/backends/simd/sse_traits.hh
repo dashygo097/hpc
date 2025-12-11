@@ -4,7 +4,6 @@
 #include <xmmintrin.h>
 #endif
 
-// FIXME: overhead is detected even after inlining these traits' methods.
 #ifdef SIMD_SSE
 #define SIMD_LOAD(traits, ptr) traits::load(ptr)
 #define SIMD_STORE(traits, ptr, value) traits::store(ptr, value)
@@ -15,6 +14,10 @@
 #define SIMD_MUL(traits, a, b) traits::mul(a, b)
 #define SIMD_FMA(traits, a, b, c) traits::add(traits::mul(a, b), c)
 #define SIMD_DIV(traits, a, b) traits::div(a, b)
+#endif
+
+// f32
+#ifdef SIMD_SSE
 #endif
 
 #ifdef SIMD_SSE
