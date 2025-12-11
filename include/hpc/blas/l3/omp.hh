@@ -2,6 +2,16 @@
 
 #ifdef ENABLE_OPENMP
 #include "../../backends/backends.hh"
+#include <algorithm>
+#endif
+
+#ifdef ENABLE_OPENMP
+#define ENABLE_GEMM_OPENMP_BRANCH(name)                                        \
+  else if constexpr (backend == Backend::OPENMP) {                             \
+    details::name##_omp<T, BackendParams...>(M, K, N, C, A, B, alpha, beta);   \
+  }
+#else
+#define ENABLE_GEMM_OPENMP_BRANCH(name)
 #endif
 
 #ifdef ENABLE_OPENMP

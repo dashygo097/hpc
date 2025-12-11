@@ -5,6 +5,16 @@
 #endif
 
 #ifdef ENABLE_ACCELERATE
+#define ENABLE_GEMM_ACCEL_BRANCH(name)                                         \
+  else if constexpr (backend == Backend::ACCELERATE) {                         \
+    details::name##_acceler<T, BackendParams...>(M, K, N, C, A, B, alpha,      \
+                                                 beta);                        \
+  }
+#else
+#define ENABLE_GEMM_ACCEL_BRANCH(name)
+#endif
+
+#ifdef ENABLE_ACCELERATE
 namespace hpc::l3 {
 namespace details {
 

@@ -1,7 +1,8 @@
 #pragma once
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
-#include "../../backends/backends.hh"
+#include "../../../backends/backends.hh"
+#include <algorithm>
 #endif
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
