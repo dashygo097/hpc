@@ -122,11 +122,13 @@ BENCHMARK_REGISTER_F(AXPYFixtureFloat, Naive)
     ->Unit(benchmark::kMillisecond);
 
 // Sequential
-DEFINE_AXPY_VEC_BENCHMARK(Seq_8192, hpc::l1::axpy, hpc::Backend::SEQUENTIAL, 8192)
+DEFINE_AXPY_VEC_BENCHMARK(Seq_8192, hpc::l1::axpy, hpc::Backend::SEQUENTIAL,
+                          8192)
 
 // OpenMP
 #ifdef ENABLE_OPENMP
-DEFINE_AXPY_VEC_BENCHMARK(OpenMP_8192, hpc::l1::axpy, hpc::Backend::OPENMP, 8192)
+DEFINE_AXPY_VEC_BENCHMARK(OpenMP_8192, hpc::l1::axpy, hpc::Backend::OPENMP,
+                          8192)
 #endif
 
 // SIMD
@@ -142,8 +144,7 @@ DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMD_8192_4, hpc::l1::axpy,
 
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
-DEFINE_AXPY_VEC_BENCHMARK(Accelerate, hpc::l1::axpy,
-                          hpc::Backend::ACCELERATE)
+DEFINE_AXPY_VEC_BENCHMARK(Accelerate, hpc::l1::axpy, hpc::Backend::ACCELERATE)
 #endif
 
 BENCHMARK_MAIN();
