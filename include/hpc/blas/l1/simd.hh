@@ -2,6 +2,7 @@
 
 #ifdef ENABLE_SIMD
 #include "../../backends/backends.hh"
+#include <cstring>
 #endif
 
 #ifdef ENABLE_SIMD

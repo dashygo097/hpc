@@ -2,6 +2,7 @@
 
 #if defined(ENABLE_SIMD) && defined(ENABLE_OPENMP)
 #include "../../backends/backends.hh"
+#include <cstring>
 #endif
 
 #if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
