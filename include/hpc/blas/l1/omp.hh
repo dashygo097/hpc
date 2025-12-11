@@ -3,6 +3,7 @@
 #ifdef ENABLE_OPENMP
 #include "../../backends/backends.hh"
 #include <algorithm>
+#include <cstring>
 #endif
 
 #ifdef ENABLE_OPENMP
