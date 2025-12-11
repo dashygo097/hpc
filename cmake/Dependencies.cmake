@@ -207,6 +207,20 @@ else()
   set(HAS_PYTORCH FALSE CACHE INTERNAL "PyTorch is not available")
 endif()
 
+# --- OpenBLAS ---
+if(ENABLE_OPENBLAS)
+  find_package(BLAS REQUIRED)
+  if(BLAS_FOUND)
+    set(HAS_OPENBLAS TRUE CACHE INTERNAL "OpenBLAS is available")
+    message(STATUS "OpenBLAS found: ${BLAS_LIBRARIES}")
+  else()
+    set(HAS_OPENBLAS FALSE CACHE INTERNAL "OpenBLAS is not available")
+    message(WARNING "OpenBLAS requested but not found")
+  endif()
+else()
+  set(HAS_OPENBLAS FALSE CACHE INTERNAL "OpenBLAS is not available")
+endif()
+
 # --- Apple Accelerate ---
 if(APPLE AND ENABLE_ACCELERATE)
   find_library(ACCELERATE_LIB Accelerate REQUIRED)

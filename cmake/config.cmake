@@ -7,6 +7,7 @@ set(ENABLE_MPI OFF)
 set(ENABLE_CUDA OFF)
 
 # BLAS/LAPACK options
+set(ENABLE_OPENBLAS ON)
 set(ENABLE_ACCELERATE OFF)
 
 # Python options

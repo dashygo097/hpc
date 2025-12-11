@@ -49,6 +49,10 @@ else()
   print_info("  ✗ PyTorch: disabled\n" "90")
 endif()
 
+if(HAS_OPENBLAS) 
+  print_info("  ✓ OpenBLAS library\n" "92")
+endif()
+
 if(HAS_ACCELERATE)
   print_info("  ✓ Apple Accelerate framework\n" "92")
 endif()

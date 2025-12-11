@@ -51,6 +51,13 @@ if(HAS_PYTORCH)
   target_compile_definitions(hpc PUBLIC ENABLE_PYTORCH HAS_PYTORCH)
 endif()
 
+if(HAS_OPENBLAS)
+target_compile_definitions(hpc PUBLIC
+  ENABLE_OPENBLAS 
+  OPENBLAS_ILP64
+)
+endif()
+
 if(HAS_ACCELERATE)
   target_compile_definitions(hpc PUBLIC 
     ENABLE_ACCELERATE 
@@ -74,6 +81,10 @@ endif()
   
 if(HAS_CUDA)
   target_link_libraries(hpc PUBLIC CUDA::cudart CUDA::cublas)
+endif()
+
+if(HAS_OPENBLAS)
+  target_link_libraries(hpc PUBLIC ${OPENBLAS_LIB})
 endif()
 
 if(HAS_ACCELERATE)
