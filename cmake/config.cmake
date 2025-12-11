@@ -3,7 +3,7 @@
 # Backend toggles
 set(ENABLE_SIMD ON)
 set(ENABLE_OPENMP ON)
-set(ENABLE_MPI ON)
+set(ENABLE_MPI OFF)
 set(ENABLE_CUDA OFF)
 
 # BLAS/LAPACK options
