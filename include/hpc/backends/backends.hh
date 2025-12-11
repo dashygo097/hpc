@@ -32,9 +32,9 @@
 
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
-#include "./acceler/blasl1.hh"
-#include "./acceler/blasl2.hh"
-#include "./acceler/blasl3.hh"
+#include "./accelerate/blasl1.hh"
+#include "./accelerate/blasl2.hh"
+#include "./accelerate/blasl3.hh"
 #endif
 
 // Prefetch API
