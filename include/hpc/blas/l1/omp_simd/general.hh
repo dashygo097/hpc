@@ -4,6 +4,7 @@
 #include "../../../backends/backends.hh"
 #include <algorithm>
 #include <cstring>
+#include <cmath>
 #endif
 
 #if defined(ENABLE_SIMD) && defined(ENABLE_OPENMP)

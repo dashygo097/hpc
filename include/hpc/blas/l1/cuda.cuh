@@ -115,7 +115,7 @@ inline void scal_cuda(const size_t &n, T *__restrict__ dst, const T &alpha) {
 }
 
 template <typename T, const size_t BlockSize>
-inline void dot_cuda(const size_t &n, const T *__restrict__ src1,
+inline T dot_cuda(const size_t &n, const T *__restrict__ src1,
                      const T *__restrict__ src2, T &result) {
   int grid_size = (n + BlockSize - 1) / BlockSize;
   CUDA_LAUNCH(dot_cuda_kernel<T>, grid_size, BlockSize, n, src1, src2);

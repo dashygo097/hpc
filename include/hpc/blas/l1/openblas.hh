@@ -68,7 +68,7 @@ inline void scal_openblas(const size_t &n, T *__restrict__ dst,
 
 // dot
 template <typename T>
-inline void dot_openblas(const size_t &n, const T *__restrict__ src1,
+inline T dot_openblas(const size_t &n, const T *__restrict__ src1,
                          const T *__restrict__ src2) {
   using traits = openblas::blasl1_traits<T>;
   return traits::dot(n, src1, src2);

@@ -4,6 +4,7 @@
 #include "../../backends/backends.hh"
 #include <algorithm>
 #include <cstring>
+#include <cmath>
 #endif
 
 #ifdef ENABLE_OPENMP

@@ -91,6 +91,7 @@
     ENABLE_OPENMP_SIMD_REDUCE2_BRANCH(name)                                    \
     ENABLE_CUDA_REDUCE2_BRANCH(name)                                           \
     ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                     \
+    return T{};            \
   }
 
 #define L1_FACTORY_INDEXED_REDUCE(name)                                        \
@@ -126,6 +127,7 @@ L1_FACTORY_INDEXED_REDUCE(iamax)
 #undef L1_FACTORY_SCALAR
 #undef L1_FACTORY_REDUCE
 #undef L1_FACTORY_REDUCE2
+#undef L1_FACTORY_INDEXED_REDUCE
 #undef ENABLE_OPENMP_VECTOR_SCALAR_BRANCH
 #undef ENABLE_OPENMP_BINARY_BRANCH
 #undef ENABLE_OPENMP_UNARY_BRANCH
