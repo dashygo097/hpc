@@ -74,6 +74,35 @@ inline T dot_accelerate(const size_t &n, const T *__restrict__ src1,
   return traits::dot(n, src1, src2);
 }
 
+// swap
+template <typename T>
+inline void swap_accelerate(const size_t &n, T *__restrict__ src1,
+                            T *__restrict__ src2) {
+  using traits = accelerate::blasl1_traits<T>;
+  traits::swap(n, src1, src2);
+}
+
+// asum
+template <typename T>
+inline void asum_accelerate(const size_t &n, const T *__restrict__ src) {
+  using traits = accelerate::blasl1_traits<T>;
+  return traits::asum(n, src);
+}
+
+// nrm2
+template <typename T>
+inline void nrm2_accelerate(const size_t &n, const T *__restrict__ src) {
+  using traits = accelerate::blasl1_traits<T>;
+  return traits::nrm2(n, src);
+}
+
+// iamax
+template <typename T>
+inline void iamax_accelerate(const size_t &n, const T *__restrict__ src) {
+  using traits = accelerate::blasl1_traits<T>;
+  return traits::iamax(n, src);
+}
+
 } // namespace details
 } // namespace hpc::l1
 

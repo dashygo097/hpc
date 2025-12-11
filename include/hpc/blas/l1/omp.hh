@@ -212,6 +212,138 @@ inline T dot_omp(const size_t &n, const T *__restrict__ src1,
   return result;
 }
 
+template <typename T>
+inline void swap_omp(const size_t &n, T *__restrict__ src1,
+                     T *__restrict__ src2) {
+#pragma omp parallel for schedule(static)
+  for (size_t i = 0; i < n; ++i) {
+    T tmp = src1[i];
+    src1[i] = src2[i];
+    src2[i] = tmp;
+  }
+}
+
+template <typename T, const size_t TileSize>
+inline void swap_omp(const size_t &n, T *__restrict__ src1,
+                     T *__restrict__ src2) {
+#pragma omp parallel for schedule(static)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    const size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      T tmp = src1[i];
+      src1[i] = src2[i];
+      src2[i] = tmp;
+    }
+  }
+}
+
+template <typename T>
+inline T asum_omp(const size_t &n, const T *__restrict__ src) {
+  T sum = T{0};
+#pragma omp parallel for schedule(static) reduction(+ : sum)
+  for (size_t i = 0; i < n; ++i) {
+    sum += std::abs(src[i]);
+  }
+  return sum;
+}
+
+template <typename T, const size_t TileSize>
+inline T asum_omp(const size_t &n, const T *__restrict__ src) {
+  T sum = T{0};
+#pragma omp parallel for schedule(static) reduction(+ : sum)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    const size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      sum += std::abs(src[i]);
+    }
+  }
+  return sum;
+}
+
+template <typename T>
+inline T nrm2_omp(const size_t &n, const T *__restrict__ src) {
+  T sum = T{0};
+#pragma omp parallel for schedule(static) reduction(+ : sum)
+  for (size_t i = 0; i < n; ++i) {
+    sum += src[i] * src[i];
+  }
+  return std::sqrt(sum);
+}
+
+template <typename T, const size_t TileSize>
+inline T nrm2_omp(const size_t &n, const T *__restrict__ src) {
+  T sum = T{0};
+#pragma omp parallel for schedule(static) reduction(+ : sum)
+  for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+    const size_t tile_end = std::min(tile_start + TileSize, n);
+    for (size_t i = tile_start; i < tile_end; ++i) {
+      sum += src[i] * src[i];
+    }
+  }
+  return std::sqrt(sum);
+}
+
+template <typename T>
+inline size_t iamax_omp(const size_t &n, const T *__restrict__ src) {
+  if (n == 0)
+    return 0;
+  size_t global_idx = 0;
+  T global_max = std::abs(src[0]);
+#pragma omp parallel
+  {
+    size_t local_idx = 0;
+    T local_max = T{0};
+#pragma omp for schedule(static)
+    for (size_t i = 0; i < n; ++i) {
+      T val = std::abs(src[i]);
+      if (val > local_max) {
+        local_max = val;
+        local_idx = i;
+      }
+    }
+#pragma omp critical
+    {
+      if (local_max > global_max) {
+        global_max = local_max;
+        global_idx = local_idx;
+      }
+    }
+  }
+  return global_idx;
+}
+
+template <typename T, const size_t TileSize>
+inline size_t iamax_omp(const size_t &n, const T *__restrict__ src) {
+  if (n == 0)
+    return 0;
+  size_t global_idx = 0;
+  T global_max = std::abs(src[0]);
+#pragma omp parallel
+  {
+    size_t local_idx = 0;
+    T local_max = T{0};
+#pragma omp for schedule(static)
+    for (size_t tile_start = 0; tile_start < n; tile_start += TileSize) {
+      const size_t tile_end = std::min(tile_start + TileSize, n);
+      for (size_t i = tile_start; i < tile_end; ++i) {
+        T val = std::abs(src[i]);
+        if (val > local_max) {
+          local_max = val;
+          local_idx = i;
+        }
+      }
+    }
+#pragma omp critical
+    {
+      if (local_max > global_max) {
+        global_max = local_max;
+        global_idx = local_idx;
+      }
+    }
+  }
+  return global_idx;
+}
+
 } // namespace details
 } // namespace hpc::l1
 #endif

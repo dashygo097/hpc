@@ -76,6 +76,23 @@ template <typename T>
 __global__ T dot_cuda_kernel(size_t n, const T *__restrict__ src1,
                              const T *__restrict__ src2) {}
 
+// swap
+template <typename T>
+__global__ void swap_cuda_kernel(size_t n, T *__restrict__ src1,
+                                 T *__restrict__ src2) {}
+
+// asum
+template <typename T>
+__global__ T asum_cuda_kernel(size_t n, const T *__restrict__ src) {}
+
+// nrm2
+template <typename T>
+__global__ T nrm2_cuda_kernel(size_t n, const T *__restrict__ src) {}
+
+// iamax
+template <typename T>
+__global__ size_t iamax_cuda_kernel(size_t n, const T *__restrict__ src) {}
+
 // Host-side wrapper functions
 template <typename T, const size_t BlockSize>
 inline void axpy_cuda(const size_t &n, T *__restrict__ dst,
@@ -103,6 +120,33 @@ inline void dot_cuda(const size_t &n, const T *__restrict__ src1,
   int grid_size = (n + BlockSize - 1) / BlockSize;
   CUDA_LAUNCH(dot_cuda_kernel<T>, grid_size, BlockSize, n, src1, src2);
 }
+
+template <typename T, const size_t BlockSize>
+inline void swap_cuda(const size_t &n, T *__restrict__ src1,
+                      T *__restrict__ src2) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(swap_cuda_kernel<T>, grid_size, BlockSize, n, src1, src2);
+}
+
+template <typename T, const size_t BlockSize>
+inline void asum_cuda(const size_t &n, const T *__restrict__ src, T &result) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(asum_cuda_kernel<T>, grid_size, BlockSize, n, src);
+}
+
+template <typename T, const size_t BlockSize>
+inline void nrm2_cuda(const size_t &n, const T *__restrict__ src, T &result) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(nrm2_cuda_kernel<T>, grid_size, BlockSize, n, src);
+}
+
+template <typename T, const size_t BlockSize>
+inline void iamax_cuda(const size_t &n, const T *__restrict__ src,
+                       size_t &result) {
+  int grid_size = (n + BlockSize - 1) / BlockSize;
+  CUDA_LAUNCH(iamax_cuda_kernel<T>, grid_size, BlockSize, n, src);
+}
+
 } // namespace details
 } // namespace hpc::l1
 #endif

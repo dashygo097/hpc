@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../backends/backends.hh"
-#include "./acceler.hh"
+#include "./accelerate.hh"
 #include "./cuda.cuh"
 #include "./omp.hh"
 #include "./omp_simd/omp_simd.hh"

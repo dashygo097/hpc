@@ -126,6 +126,11 @@ DEFINE_DOT_BENCHMARK(OpenMP_SIMD_8192_4, hpc::l1::dot,
                      hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
+// OpenBLAS
+#ifdef ENABLE_OPENBLAS
+DEFINE_DOT_BENCHMARK(OpenBLAS, hpc::l1::dot, hpc::Backend::OPENBLAS)
+#endif
+
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
 DEFINE_DOT_BENCHMARK(Accelerate, hpc::l1::dot, hpc::Backend::ACCELERATE)

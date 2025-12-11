@@ -2,8 +2,7 @@
 
 include(Helpers)
 
-print_info("◆ BUILD SUMMARY " "0")
-print_info("======================================\n" "0")
+print_info("◆ BUILD SUMMARY\n" "0")
 
 # Platform
 print_info("[INFO] Platform: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_PROCESSOR})\n" "91")

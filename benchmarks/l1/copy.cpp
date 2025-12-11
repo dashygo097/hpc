@@ -139,6 +139,11 @@ DEFINE_COPY_BENCHMARK(OpenMP_SIMD_8192_4, hpc::l1::copy,
                       hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
+// OpenBLAS
+#ifdef ENABLE_OPENBLAS
+DEFINE_COPY_BENCHMARK(OpenBLAS, hpc::l1::copy, hpc::Backend::OPENBLAS)
+#endif
+
 // Apple Accelerate
 #ifdef ENABLE_ACCELERATE
 DEFINE_COPY_BENCHMARK(Accelerate, hpc::l1::copy, hpc::Backend::ACCELERATE)

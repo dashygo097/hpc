@@ -93,12 +93,29 @@
     ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                     \
   }
 
+#define L1_FACTORY_INDEXED_REDUCE(name)                                        \
+  template <typename T, Backend backend, auto... BackendParams>                \
+  inline size_t name(const size_t &n, const T *__restrict__ src) {             \
+    if constexpr (backend == Backend::SEQUENTIAL) {                            \
+      return details::name##_seq<T, BackendParams...>(n, src);                 \
+    }                                                                          \
+    ENABLE_OPENMP_REDUCE_BRANCH(name)                                          \
+    ENABLE_SIMD_REDUCE_BRANCH(name)                                            \
+    ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                     \
+    ENABLE_CUDA_REDUCE_BRANCH(name)                                            \
+    ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                      \
+  }
+
 namespace hpc::l1 {
 // Public API
 L1_FACTORY_VECTOR_SCALAR(axpy)
 L1_FACTORY_UNARY(copy)
 L1_FACTORY_SCALAR(scal)
 L1_FACTORY_REDUCE2(dot)
+L1_FACTORY_UNARY(swap)
+L1_FACTORY_REDUCE(asum)
+L1_FACTORY_REDUCE(nrm2)
+L1_FACTORY_INDEXED_REDUCE(iamax)
 
 } // namespace hpc::l1
 

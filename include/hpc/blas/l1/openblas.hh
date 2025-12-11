@@ -74,6 +74,35 @@ inline void dot_openblas(const size_t &n, const T *__restrict__ src1,
   return traits::dot(n, src1, src2);
 }
 
+// swap
+template <typename T>
+inline void swap_openblas(const size_t &n, T *__restrict__ dst,
+                          const T *__restrict__ src) {
+  using traits = openblas::blasl1_traits<T>;
+  traits::swap(n, dst, src);
+}
+
+// asum
+template <typename T>
+inline void asum_openblas(const size_t &n, const T *__restrict__ src) {
+  using traits = openblas::blasl1_traits<T>;
+  return traits::asum(n, src);
+}
+
+// nrm2
+template <typename T>
+inline void nrm2_openblas(const size_t &n, const T *__restrict__ src) {
+  using traits = openblas::blasl1_traits<T>;
+  return traits::nrm2(n, src);
+}
+
+// iamax
+template <typename T>
+inline void iamax_openblas(const size_t &n, const T *__restrict__ src) {
+  using traits = openblas::blasl1_traits<T>;
+  return traits::iamax(n, src);
+}
+
 } // namespace details
 } // namespace hpc::l1
 
