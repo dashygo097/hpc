@@ -2,6 +2,7 @@
 
 #if defined(ENABLE_CUDA)
 #include <cuda_runtime.h>
+#include <cstdio>
 #endif
 
 #if defined(ENABLE_CUDA)
