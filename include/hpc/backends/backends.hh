@@ -23,6 +23,13 @@
 #include "./cuda/memory.cuh"
 #endif
 
+// CUBLAS
+#if defined(ENABLE_CUDA) && defined(ENABLE_CUBLAS)
+#include "./cublas/blasl1.cuh"
+#include "./cublas/blasl2.cuh"
+#include "./cublas/blasl3.cuh"
+#endif
+
 // OpenBLAS
 #ifdef ENABLE_OPENBLAS
 #include "./openblas/blasl1.hh"
@@ -55,6 +62,9 @@ enum class Backend {
 #endif
 #ifdef ENABLE_CUDA
   CUDA,
+#endif
+#if defined(ENABLE_CUDA) && defined(ENABLE_CUBLAS)
+  CUBLAS,
 #endif
 #ifdef ENABLE_OPENBLAS
   OPENBLAS,
