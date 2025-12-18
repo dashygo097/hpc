@@ -11,30 +11,30 @@
 #define ENABLE_CUDA_SCALAR_BRANCH(name)
 #define ENABLE_CUDA_REDUCE_BRANCH(name)
 #define ENABLE_CUDA_REDUCE2_BRANCH(name)
-/* #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)                                 \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, src, scalar);            \
-  }
-#define ENABLE_CUDA_BINARY_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, src1, src2);             \
-  }
-#define ENABLE_CUDA_UNARY_BRANCH(name)                                         \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, src);                    \
-  }
-#define ENABLE_CUDA_SCALAR_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    details::name##_cuda<T, BackendParams...>(n, dst, scalar);                 \
-  }
-#define ENABLE_CUDA_REDUCE_BRANCH(name)                                        \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    return details::name##_cuda<T, BackendParams...>(n, src);                  \
-  }
-#define ENABLE_CUDA_REDUCE2_BRANCH(name)                                       \
-  else if constexpr (backend == Backend::CUDA) {                               \
-    return details::name##_cuda<T, BackendParams...>(n, src1, src2);           \
-  } */
+// #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name) \
+//   else if constexpr (backend == Backend::CUDA) { \
+//     details::name##_cuda<T, BackendParams...>(n, dst, src, scalar); \
+//   }
+// #define ENABLE_CUDA_BINARY_BRANCH(name) \
+//   else if constexpr (backend == Backend::CUDA) { \
+//     details::name##_cuda<T, BackendParams...>(n, dst, src1, src2); \
+//   }
+// #define ENABLE_CUDA_UNARY_BRANCH(name) \
+//   else if constexpr (backend == Backend::CUDA) { \
+//     details::name##_cuda<T, BackendParams...>(n, dst, src); \
+//   }
+// #define ENABLE_CUDA_SCALAR_BRANCH(name) \
+//   else if constexpr (backend == Backend::CUDA) { \
+//     details::name##_cuda<T, BackendParams...>(n, dst, scalar); \
+//   }
+// #define ENABLE_CUDA_REDUCE_BRANCH(name) \
+//   else if constexpr (backend == Backend::CUDA) { \
+//     return details::name##_cuda<T, BackendParams...>(n, src); \
+//   }
+// #define ENABLE_CUDA_REDUCE2_BRANCH(name) \
+//   else if constexpr (backend == Backend::CUDA) { \
+//     return details::name##_cuda<T, BackendParams...>(n, src1, src2); \
+//   }
 #else
 #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
 #define ENABLE_CUDA_BINARY_BRANCH(name)

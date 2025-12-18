@@ -51,6 +51,10 @@ if(HAS_PYTORCH)
   target_compile_definitions(hpc PUBLIC ENABLE_PYTORCH HAS_PYTORCH)
 endif()
 
+if(HAS_CUBLAS)
+  target_compile_definitions(hpc PUBLIC ENABLE_CUBLAS HAS_CUBLAS)
+endif()
+
 if(HAS_OPENBLAS)
   target_compile_definitions(hpc PUBLIC 
     ENABLE_OPENBLAS 
@@ -82,6 +86,10 @@ endif()
   
 if(HAS_CUDA)
   target_link_libraries(hpc PUBLIC CUDA::cudart CUDA::cublas)
+endif()
+
+if(HAS_CUBLAS)
+  target_link_libraries(hpc PUBLIC CUDA::cublas)
 endif()
 
 if(HAS_OPENBLAS)
