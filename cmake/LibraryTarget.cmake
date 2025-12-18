@@ -85,7 +85,7 @@ if(HAS_PYTORCH)
 endif()
   
 if(HAS_CUDA)
-  target_link_libraries(hpc PUBLIC CUDA::cudart CUDA::cublas)
+  target_link_libraries(hpc PUBLIC CUDA::cudart)
 endif()
 
 if(HAS_CUBLAS)

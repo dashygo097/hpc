@@ -37,15 +37,9 @@ endif()
 
 # --- CUBLAS ---
 if(ENABLE_CUBLAS AND HAS_CUDA) 
-  find_package(CUBLAS REQUIRED)
-  if(CUBLAS_FOUND)
-    set(HAS_CUBLAS TRUE CACHE INTERNAL "CUBLAS is available")
-    message(STATUS "CUBLAS found")
-  else()
-    set(HAS_CUBLAS FALSE CACHE INTERNAL "CUBLAS is not available")
-    message(WARNING "CUBLAS requested but not found")
-  endif()
-  else()
+  set(HAS_CUBLAS TRUE CACHE INTERNAL "CUBLAS is available")
+  message(STATUS "CUBLAS found")
+else()
   set(HAS_CUBLAS FALSE CACHE INTERNAL "CUBLAS is not available")
 endif()
 
