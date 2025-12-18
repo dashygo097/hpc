@@ -5,30 +5,30 @@
 #endif
 
 #if defined(ENABLE_CUDA) && defined(ENABLE_CUBLAS) && defined(__CUDACC__)
- #define ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH(name) \
-   else if constexpr (backend == Backend::CUBLAS) { \
-     details::name##_cublas<T, BackendParams...>(n, dst, src, scalar); \
-   }
- #define ENABLE_CUBLAS_BINARY_BRANCH(name) \
-   else if constexpr (backend == Backend::CUBLAS) { \
-     details::name##_cublas<T, BackendParams...>(n, dst, src1, src2); \
-   }
- #define ENABLE_CUBLAS_UNARY_BRANCH(name) \
-   else if constexpr (backend == Backend::CUBLAS) { \
-     details::name##_cublas<T, BackendParams...>(n, dst, src); \
-   }
- #define ENABLE_CUBLAS_SCALAR_BRANCH(name) \
-   else if constexpr (backend == Backend::CUBLAS) { \
-     details::name##_cublas<T, BackendParams...>(n, dst, scalar); \
-   }
-#define ENABLE_CUBLAS_REDUCE_BRANCH(name) \
-   else if constexpr (backend == Backend::CUBLAS) { \
-    return details::name##_cublas<T, BackendParams...>(n, src); \
+#define ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH(name)                               \
+  else if constexpr (backend == Backend::CUBLAS) {                             \
+    details::name##_cublas<T, BackendParams...>(n, dst, src, scalar);          \
   }
-#define ENABLE_CUBLAS_REDUCE2_BRANCH(name) \
-   else if constexpr (backend == Backend::CUBLAS) { \
-     return details::name##_cublas<T, BackendParams...>(n, src1, src2); \
-   }
+#define ENABLE_CUBLAS_BINARY_BRANCH(name)                                      \
+  else if constexpr (backend == Backend::CUBLAS) {                             \
+    details::name##_cublas<T, BackendParams...>(n, dst, src1, src2);           \
+  }
+#define ENABLE_CUBLAS_UNARY_BRANCH(name)                                       \
+  else if constexpr (backend == Backend::CUBLAS) {                             \
+    details::name##_cublas<T, BackendParams...>(n, dst, src);                  \
+  }
+#define ENABLE_CUBLAS_SCALAR_BRANCH(name)                                      \
+  else if constexpr (backend == Backend::CUBLAS) {                             \
+    details::name##_cublas<T, BackendParams...>(n, dst, scalar);               \
+  }
+#define ENABLE_CUBLAS_REDUCE_BRANCH(name)                                      \
+  else if constexpr (backend == Backend::CUBLAS) {                             \
+    return details::name##_cublas<T, BackendParams...>(n, src);                \
+  }
+#define ENABLE_CUBLAS_REDUCE2_BRANCH(name)                                     \
+  else if constexpr (backend == Backend::CUBLAS) {                             \
+    return details::name##_cublas<T, BackendParams...>(n, src1, src2);         \
+  }
 #else
 #define ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH(name)
 #define ENABLE_CUBLAS_BINARY_BRANCH(name)
@@ -59,8 +59,7 @@ inline void copy_cublas(const size_t &n, T *__restrict__ dst,
 
 // scal: dst = alpha * dst
 template <typename T, typename... BackendParams>
-inline void scal_cublas(const size_t &n, T *__restrict__ dst,
-                        const T &alpha) {
+inline void scal_cublas(const size_t &n, T *__restrict__ dst, const T &alpha) {
   using traits = cublas::blasl1_traits<T>;
   traits::scal(n, dst, alpha);
 }
@@ -102,6 +101,6 @@ inline size_t iamax_cublas(const size_t &n, const T *__restrict__ src) {
   return traits::iamax(n, src);
 }
 
-}
+} // namespace details
 } // namespace hpc::l1
 #endif
