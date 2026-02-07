@@ -1,6 +1,6 @@
 #include <hpc.hh>
 
-#if defined(ENABLE_CUDA) && defined(__CUDACC__)
+#if defined(HPC_ENABLE_CUDA) && defined(__CUDACC__)
 namespace hpc::nn {
 __global__ void relu_f32_kernel(const size_t &n, float *output,
                                 const float *input) {
@@ -19,7 +19,7 @@ __global__ void relu_f16_kernel(const size_t &n, __half *output,
   }
 }
 
-#ifdef ENABLE_PYTORCH
+#ifdef HPC_ENABLE_PYTORCH
 ::torch::Tensor relu_f32(::torch::Tensor input) {
   return hpc::bindings::torch::elem_wrapper<float, 1, 256>(
       relu_f32_kernel, input, ::torch::kFloat32);
@@ -31,7 +31,7 @@ __global__ void relu_f16_kernel(const size_t &n, __half *output,
 #endif
 } // namespace hpc::nn
 
-#ifdef ENABLE_PYBIND11
+#ifdef HPC_ENABLE_PYBIND11
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("relu_f32", &hpc::nn::relu_f32,
         "ReLU activation function for float32 tensors");

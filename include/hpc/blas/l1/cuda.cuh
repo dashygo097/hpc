@@ -1,50 +1,50 @@
 #pragma once
 
-#if defined(ENABLE_CUDA) && defined(__CUDACC__)
+#if defined(HPC_ENABLE_CUDA) && defined(__CUDACC__)
 #include "../../backends/backends.hh"
 #endif
 
-#if defined(ENABLE_CUDA) && defined(__CUDACC__)
-#define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_CUDA_BINARY_BRANCH(name)
-#define ENABLE_CUDA_UNARY_BRANCH(name)
-#define ENABLE_CUDA_SCALAR_BRANCH(name)
-#define ENABLE_CUDA_REDUCE_BRANCH(name)
-#define ENABLE_CUDA_REDUCE2_BRANCH(name)
-// #define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name) \
+#if defined(HPC_ENABLE_CUDA) && defined(__CUDACC__)
+#define HPC_ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
+#define HPC_ENABLE_CUDA_BINARY_BRANCH(name)
+#define HPC_ENABLE_CUDA_UNARY_BRANCH(name)
+#define HPC_ENABLE_CUDA_SCALAR_BRANCH(name)
+#define HPC_ENABLE_CUDA_REDUCE_BRANCH(name)
+#define HPC_ENABLE_CUDA_REDUCE2_BRANCH(name)
+// #define HPC_ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name) \
 //   else if constexpr (backend == Backend::CUDA) { \
 //     details::name##_cuda<T, BackendParams...>(n, dst, src, scalar); \
 //   }
-// #define ENABLE_CUDA_BINARY_BRANCH(name) \
+// #define HPC_ENABLE_CUDA_BINARY_BRANCH(name) \
 //   else if constexpr (backend == Backend::CUDA) { \
 //     details::name##_cuda<T, BackendParams...>(n, dst, src1, src2); \
 //   }
-// #define ENABLE_CUDA_UNARY_BRANCH(name) \
+// #define HPC_ENABLE_CUDA_UNARY_BRANCH(name) \
 //   else if constexpr (backend == Backend::CUDA) { \
 //     details::name##_cuda<T, BackendParams...>(n, dst, src); \
 //   }
-// #define ENABLE_CUDA_SCALAR_BRANCH(name) \
+// #define HPC_ENABLE_CUDA_SCALAR_BRANCH(name) \
 //   else if constexpr (backend == Backend::CUDA) { \
 //     details::name##_cuda<T, BackendParams...>(n, dst, scalar); \
 //   }
-// #define ENABLE_CUDA_REDUCE_BRANCH(name) \
+// #define HPC_ENABLE_CUDA_REDUCE_BRANCH(name) \
 //   else if constexpr (backend == Backend::CUDA) { \
 //     return details::name##_cuda<T, BackendParams...>(n, src); \
 //   }
-// #define ENABLE_CUDA_REDUCE2_BRANCH(name) \
+// #define HPC_ENABLE_CUDA_REDUCE2_BRANCH(name) \
 //   else if constexpr (backend == Backend::CUDA) { \
 //     return details::name##_cuda<T, BackendParams...>(n, src1, src2); \
 //   }
 #else
-#define ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_CUDA_BINARY_BRANCH(name)
-#define ENABLE_CUDA_UNARY_BRANCH(name)
-#define ENABLE_CUDA_SCALAR_BRANCH(name)
-#define ENABLE_CUDA_REDUCE_BRANCH(name)
-#define ENABLE_CUDA_REDUCE2_BRANCH(name)
+#define HPC_ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)
+#define HPC_ENABLE_CUDA_BINARY_BRANCH(name)
+#define HPC_ENABLE_CUDA_UNARY_BRANCH(name)
+#define HPC_ENABLE_CUDA_SCALAR_BRANCH(name)
+#define HPC_ENABLE_CUDA_REDUCE_BRANCH(name)
+#define HPC_ENABLE_CUDA_REDUCE2_BRANCH(name)
 #endif
 
-#if defined(ENABLE_CUDA) && defined(__CUDACC__)
+#if defined(HPC_ENABLE_CUDA) && defined(__CUDACC__)
 namespace hpc::l1 {
 namespace details {
 

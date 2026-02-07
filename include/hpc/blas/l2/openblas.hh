@@ -1,10 +1,10 @@
 #pragma once
 
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 #include "../../backends/backends.hh"
 #endif
 
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 namespace hpc::l2 {
 namespace details {
 

@@ -11,48 +11,48 @@ print_info("[INFO] Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSI
 # Feature flags
 print_info("[INFO] Features:\n" "95")
 
-if(HAS_OPENMP)
+if(HPC_HAS_OPENMP)
   print_info("  ✓ OpenMP: ${OpenMP_CXX_VERSION}\n" "92")
 else()
   print_info("  ✗ OpenMP: disabled\n" "90")
 endif()
 
-if(HAS_MPI)
+if(HPC_HAS_MPI)
   print_info("  ✓ MPI: ${MPI_CXX_VERSION}\n" "92")
 else()
   print_info("  ✗ MPI: disabled\n" "90")
 endif()
 
-if(HAS_SIMD)
+if(HPC_HAS_SIMD)
   print_info("  ✓ SIMD: ${SIMD_TYPE}\n" "92")
 else()
   print_info("  ✗ SIMD: disabled\n" "90")
 endif()
 
-if(HAS_CUDA)
+if(HPC_HAS_CUDA)
   print_info("  ✓ CUDA: ${CUDAToolkit_VERSION}\n" "92")
   print_info("    Compiler: ${CMAKE_CUDA_COMPILER}\n" "90")
 else()
   print_info("  ✗ CUDA: disabled\n" "90")
 endif()
 
-if (HAS_PYBIND11)
+if (HPC_HAS_PYBIND11)
   print_info("  ✓ pybind11: ${pybind11_VERSION}\n" "92")
 else()
   print_info("  ✗ pybind11: disabled\n" "90")
 endif()
 
-if(HAS_PYTORCH)
+if(HPC_HAS_PYTORCH)
   print_info("  ✓ PyTorch: ${Torch_VERSION}\n" "92")
 else()
   print_info("  ✗ PyTorch: disabled\n" "90")
 endif()
 
-if(HAS_OPENBLAS) 
+if(HPC_HAS_OPENBLAS) 
   print_info("  ✓ OpenBLAS library\n" "92")
 endif()
 
-if(HAS_ACCELERATE)
+if(HPC_HAS_ACCELERATE)
   print_info("  ✓ Apple Accelerate framework\n" "92")
 endif()
 
@@ -71,7 +71,7 @@ print_info("[TRACE] Headers: ${PREVIOUS_SCOPE_VAR}\n" "94")
 make_preview_string(REL_SOURCES 3)
 print_info("[TRACE] Sources: ${PREVIOUS_SCOPE_VAR}\n" "96")
 
-if(HAS_CUDA)
+if(HPC_HAS_CUDA)
   make_paths_relative(REL_CUDA_HEADERS HPC_CUDA_HEADERS)
   make_paths_relative(REL_CUDA_SOURCES HPC_CUDA_SOURCES)
   

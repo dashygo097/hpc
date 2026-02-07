@@ -1,11 +1,11 @@
 #pragma once
 
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 #include <Accelerate/Accelerate.h>
 #include <cstddef>
 #endif
 
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 namespace hpc::accelerate {
 template <typename T> struct blasl3_traits;
 
@@ -37,4 +37,4 @@ template <> struct blasl3_traits<double> {
 
 } // namespace hpc::accelerate
 
-#endif // ENABLE_ACCELERATE
+#endif // HPC_ENABLE_ACCELERATE

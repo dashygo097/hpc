@@ -1,20 +1,20 @@
 #pragma once
 
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 #include "../../backends/backends.hh"
 #endif
 
-#ifdef ENABLE_ACCELERATE
-#define ENABLE_GEMM_ACCELERATE_BRANCH(name)                                    \
+#ifdef HPC_ENABLE_ACCELERATE
+#define HPC_ENABLE_GEMM_ACCELERATE_BRANCH(name)                                \
   else if constexpr (backend == Backend::ACCELERATE) {                         \
     details::name##_accelerate<T, BackendParams...>(M, K, N, C, A, B, alpha,   \
                                                     beta);                     \
   }
 #else
-#define ENABLE_GEMM_ACCELERATE_BRANCH(name)
+#define HPC_ENABLE_GEMM_ACCELERATE_BRANCH(name)
 #endif
 
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 namespace hpc::l3 {
 namespace details {
 

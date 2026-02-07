@@ -15,21 +15,21 @@ target_include_directories(hpc PUBLIC
   $<INSTALL_INTERFACE:include>
 )
   
-if(HAS_PYTORCH)
+if(HPC_HAS_PYTORCH)
   target_include_directories(hpc PUBLIC ${Python3_INCLUDE_DIRS})
 endif()
 
 # Define feature macros based on what's enabled
-if(HAS_CUDA)
-  target_compile_definitions(hpc PUBLIC ENABLE_CUDA HAS_CUDA)
+if(HPC_HAS_CUDA)
+  target_compile_definitions(hpc PUBLIC HPC_ENABLE_CUDA HPC_HAS_CUDA)
 endif()
 
-if(HAS_OPENMP)
-  target_compile_definitions(hpc PUBLIC ENABLE_OPENMP HAS_OPENMP)
+if(HPC_HAS_OPENMP)
+  target_compile_definitions(hpc PUBLIC HPC_ENABLE_OPENMP HPC_HAS_OPENMP)
 endif()
 
-if(HAS_SIMD)
-  target_compile_definitions(hpc PUBLIC ENABLE_SIMD HAS_SIMD)
+if(HPC_HAS_SIMD)
+  target_compile_definitions(hpc PUBLIC HPC_ENABLE_SIMD HPC_HAS_SIMD)
   
   # Platform-specific SIMD defines
   if(SIMD_TYPE STREQUAL "Apple")
@@ -43,60 +43,60 @@ if(HAS_SIMD)
   endif()
 endif()
 
-if(HAS_MPI)
-  target_compile_definitions(hpc PUBLIC ENABLE_MPI HAS_MPI)
+if(HPC_HAS_MPI)
+  target_compile_definitions(hpc PUBLIC HPC_ENABLE_MPI HPC_HAS_MPI)
 endif()
 
-if(HAS_PYTORCH)
-  target_compile_definitions(hpc PUBLIC ENABLE_PYTORCH HAS_PYTORCH)
+if(HPC_HAS_PYTORCH)
+  target_compile_definitions(hpc PUBLIC HPC_ENABLE_PYTORCH HPC_HAS_PYTORCH)
 endif()
 
-if(HAS_CUBLAS)
-  target_compile_definitions(hpc PUBLIC ENABLE_CUBLAS HAS_CUBLAS)
+if(HPC_HAS_CUBLAS)
+  target_compile_definitions(hpc PUBLIC HPC_ENABLE_CUBLAS HPC_HAS_CUBLAS)
 endif()
 
-if(HAS_OPENBLAS)
+if(HPC_HAS_OPENBLAS)
   target_compile_definitions(hpc PUBLIC 
-    ENABLE_OPENBLAS 
+    HPC_ENABLE_OPENBLAS 
     OPENBLAS_NEW_LAPACK
     OPENBLAS_LAPACK_ILP64
   )
 endif()
 
-if(HAS_ACCELERATE)
+if(HPC_HAS_ACCELERATE)
   target_compile_definitions(hpc PUBLIC 
-    ENABLE_ACCELERATE 
+    HPC_ENABLE_ACCELERATE 
     ACCELERATE_NEW_LAPACK 
     ACCELERATE_LAPACK_ILP64
   )
 endif()
 
 # Link libraries
-if(HAS_OPENMP)
+if(HPC_HAS_OPENMP)
   target_link_libraries(hpc PUBLIC OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
 endif()
   
-if(HAS_MPI)
+if(HPC_HAS_MPI)
   target_link_libraries(hpc PUBLIC MPI::MPI_C MPI::MPI_CXX)
 endif()
   
-if(HAS_PYTORCH)
+if(HPC_HAS_PYTORCH)
   target_link_libraries(hpc PRIVATE Python3::Python "${TORCH_LIBRARIES}")
 endif()
   
-if(HAS_CUDA)
+if(HPC_HAS_CUDA)
   target_link_libraries(hpc PUBLIC CUDA::cudart)
 endif()
 
-if(HAS_CUBLAS)
+if(HPC_HAS_CUBLAS)
   target_link_libraries(hpc PUBLIC CUDA::cublas)
 endif()
 
-if(HAS_OPENBLAS)
+if(HPC_HAS_OPENBLAS)
   target_link_libraries(hpc PUBLIC ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()
 
-if(HAS_ACCELERATE)
+if(HPC_HAS_ACCELERATE)
   target_link_libraries(hpc PUBLIC ${ACCELERATE_LIB})
 endif()
   

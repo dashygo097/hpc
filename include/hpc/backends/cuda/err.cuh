@@ -1,11 +1,11 @@
 #pragma once
 
-#if defined(ENABLE_CUDA)
-#include <cuda_runtime.h>
+#if defined(HPC_ENABLE_CUDA)
 #include <cstdio>
+#include <cuda_runtime.h>
 #endif
 
-#if defined(ENABLE_CUDA)
+#if defined(HPC_ENABLE_CUDA)
 #define CUDA_CHECK(call)                                                       \
   do {                                                                         \
     cudaError_t err = (call);                                                  \
@@ -37,7 +37,7 @@
 
 #endif
 
-#if defined(ENABLE_CUDA) && defined(__CUDACC__)
+#if defined(HPC_ENABLE_CUDA) && defined(__CUDACC__)
 namespace hpc::cu {
 
 inline void checkCudaError(cudaError_t err, const char *file, int line,

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
-#define ENABLE_GEMM_CUDA_BRANCH(name)
+#ifdef HPC_ENABLE_CUDA
+#define HPC_ENABLE_GEMM_CUDA_BRANCH(name)
 #else
-#define ENABLE_GEMM_CUDA_BRANCH(name)
+#define HPC_ENABLE_GEMM_CUDA_BRANCH(name)
 #endif

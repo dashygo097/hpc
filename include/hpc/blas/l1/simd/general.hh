@@ -1,11 +1,11 @@
 #pragma once
 
-#ifdef ENABLE_SIMD
+#ifdef HPC_ENABLE_SIMD
 #include "../../../backends/backends.hh"
 #include <cstring>
 #endif
 
-#ifdef ENABLE_SIMD
+#ifdef HPC_ENABLE_SIMD
 namespace hpc::l1 {
 namespace details {
 

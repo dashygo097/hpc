@@ -1,10 +1,6 @@
 #pragma once
 
-#ifdef ENABLE_OPENBLAS
-#include <cblas.h>
-#endif
-
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 #include <cstddef>
 
 #if defined(__APPLE__)
@@ -15,7 +11,7 @@
 
 #endif
 
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 namespace hpc::openblas {
 template <typename T> struct blasl2_traits;
 

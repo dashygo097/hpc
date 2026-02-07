@@ -1,47 +1,47 @@
 #pragma once
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
 #include "../../backends/backends.hh"
 #include <algorithm>
-#include <cstring>
 #include <cmath>
+#include <cstring>
 #endif
 
-#ifdef ENABLE_OPENMP
-#define ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)                               \
+#ifdef HPC_ENABLE_OPENMP
+#define HPC_ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)                           \
   else if constexpr (backend == Backend::OPENMP) {                             \
     details::name##_omp<T, BackendParams...>(n, dst, src, scalar);             \
   }
-#define ENABLE_OPENMP_BINARY_BRANCH(name)                                      \
+#define HPC_ENABLE_OPENMP_BINARY_BRANCH(name)                                  \
   else if constexpr (backend == Backend::OPENMP) {                             \
     details::name##_omp<T, BackendParams...>(n, dst, src1, src2);              \
   }
-#define ENABLE_OPENMP_UNARY_BRANCH(name)                                       \
+#define HPC_ENABLE_OPENMP_UNARY_BRANCH(name)                                   \
   else if constexpr (backend == Backend::OPENMP) {                             \
     details::name##_omp<T, BackendParams...>(n, dst, src);                     \
   }
-#define ENABLE_OPENMP_SCALAR_BRANCH(name)                                      \
+#define HPC_ENABLE_OPENMP_SCALAR_BRANCH(name)                                  \
   else if constexpr (backend == Backend::OPENMP) {                             \
     details::name##_omp<T, BackendParams...>(n, dst, scalar);                  \
   }
-#define ENABLE_OPENMP_REDUCE_BRANCH(name)                                      \
+#define HPC_ENABLE_OPENMP_REDUCE_BRANCH(name)                                  \
   else if constexpr (backend == Backend::OPENMP) {                             \
     return details::name##_omp<T, BackendParams...>(n, src);                   \
   }
-#define ENABLE_OPENMP_REDUCE2_BRANCH(name)                                     \
+#define HPC_ENABLE_OPENMP_REDUCE2_BRANCH(name)                                 \
   else if constexpr (backend == Backend::OPENMP) {                             \
     return details::name##_omp<T, BackendParams...>(n, src1, src2);            \
   }
 #else
-#define ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)
-#define ENABLE_OPENMP_BINARY_BRANCH(name)
-#define ENABLE_OPENMP_UNARY_BRANCH(name)
-#define ENABLE_OPENMP_SCALAR_BRANCH(name)
-#define ENABLE_OPENMP_REDUCE_BRANCH(name)
-#define ENABLE_OPENMP_REDUCE2_BRANCH(name)
+#define HPC_ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)
+#define HPC_ENABLE_OPENMP_BINARY_BRANCH(name)
+#define HPC_ENABLE_OPENMP_UNARY_BRANCH(name)
+#define HPC_ENABLE_OPENMP_SCALAR_BRANCH(name)
+#define HPC_ENABLE_OPENMP_REDUCE_BRANCH(name)
+#define HPC_ENABLE_OPENMP_REDUCE2_BRANCH(name)
 #endif
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
 namespace hpc::l1 {
 namespace details {
 

@@ -1,6 +1,6 @@
 # Compiler setup and ccache configuration
 
-if(USE_CCACHE)
+if(HPC_USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
   if(CCACHE_PROGRAM)
     set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
@@ -13,7 +13,7 @@ if(USE_CCACHE)
   endif()
 endif()
 
-if(USE_HIGH_LEVEL_OPTIMIZATIONS)
+if(HPC_USE_HIGH_LEVEL_OPTIMIZATIONS)
   if(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     set(CMAKE_CXX_FLAGS_RELEASE 
       "${CMAKE_CXX_FLAGS_RELEASE} \
@@ -35,7 +35,7 @@ if(USE_HIGH_LEVEL_OPTIMIZATIONS)
 endif()
 
 # Platform-specific compiler flags
-if(APPLE AND ENABLE_ACCELERATE)
+if(APPLE AND HPC_ENABLE_ACCELERATE)
   # macOS-specific flags
   add_compile_definitions(ACCELERATE_NEW_LAPACK ACCELERATE_LAPACK_ILP64)
 endif()

@@ -1,13 +1,13 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 #include "./err.cuh"
 #include <cstdio>
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 #define FLOAT2(ptr) (*reinterpret_cast<float2 *>(ptr))
 #define FLOAT4(ptr) (*reinterpret_cast<float4 *>(ptr))
 #define INT2(ptr) (*reinterpret_cast<int2 *>(ptr))

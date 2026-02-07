@@ -1,13 +1,13 @@
 #pragma once
 
-#if defined(ENABLE_CUDA) && defined(ENABLE_CUBLAS)
+#if defined(HPC_ENABLE_CUDA) && defined(HPC_ENABLE_CUBLAS)
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cublas_v2.h>
 #endif
 
-#if defined(ENABLE_CUDA) && defined(ENABLE_CUBLAS)
+#if defined(HPC_ENABLE_CUDA) && defined(HPC_ENABLE_CUBLAS)
 
 #define CUBLAS_CHECK(call)                                                     \
   do {                                                                         \

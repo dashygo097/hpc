@@ -121,28 +121,28 @@ BENCHMARK_REGISTER_F(ScalFixtureFloat, Naive)
 DEFINE_SCAL_BENCHMARK(Seq_8192, hpc::l1::scal, hpc::Backend::SEQUENTIAL, 8192)
 
 // OpenMP
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
 DEFINE_SCAL_BENCHMARK(OpenMP_8192, hpc::l1::scal, hpc::Backend::OPENMP, 8192)
 #endif
 
 // SIMD
-#ifdef ENABLE_SIMD
+#ifdef HPC_ENABLE_SIMD
 DEFINE_SCAL_BENCHMARK(SIMD_8192_4, hpc::l1::scal, hpc::Backend::SIMD, 8192, 4)
 #endif
 
 // OpenMP + SIMD
-#if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
+#if defined(HPC_ENABLE_OPENMP) && defined(HPC_ENABLE_SIMD)
 DEFINE_SCAL_BENCHMARK(OpenMP_SIMD_8192_4, hpc::l1::scal,
                       hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
 // OpenBLAS
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 DEFINE_SCAL_BENCHMARK(OpenBLAS, hpc::l1::scal, hpc::Backend::OPENBLAS)
 #endif
 
 // Apple Accelerate
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 DEFINE_SCAL_BENCHMARK(Accelerate, hpc::l1::scal, hpc::Backend::ACCELERATE)
 #endif
 

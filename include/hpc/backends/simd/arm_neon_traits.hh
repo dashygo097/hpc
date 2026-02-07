@@ -2,6 +2,7 @@
 
 #ifdef SIMD_NEON
 #include <arm_neon.h>
+#include <cstddef>
 #endif
 
 #ifdef SIMD_NEON
@@ -52,11 +53,7 @@ template <> struct simd_traits<float, 1> {
   }
   __attribute__((always_inline)) static inline type fma(type a, type b,
                                                         type c) {
-#if defined(__aarch64__) && defined(__ARM_FEATURE_FMA)
-    return vfma_f32(c, a, b);
-#else
     return a * b + c;
-#endif
   }
   __attribute__((always_inline)) static inline type div(type a, type b) {
     return a / b;
@@ -205,11 +202,7 @@ template <> struct simd_traits<double, 1> {
   }
   __attribute__((always_inline)) static inline type fma(type a, type b,
                                                         type c) {
-#if defined(__aarch64__) && defined(__ARM_FEATURE_FMA)
-    return vfma_f64(c, a, b);
-#else
     return a * b + c;
-#endif
   }
   __attribute__((always_inline)) static inline type div(type a, type b) {
     return a / b;

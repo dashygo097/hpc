@@ -1,20 +1,20 @@
 #pragma once
 
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 #include "../../backends/backends.hh"
 #endif
 
-#ifdef ENABLE_OPENBLAS
-#define ENABLE_GEMM_OPENBLAS_BRANCH(name)                                      \
+#ifdef HPC_ENABLE_OPENBLAS
+#define HPC_ENABLE_GEMM_OPENBLAS_BRANCH(name)                                  \
   else if constexpr (backend == Backend::OPENBLAS) {                           \
     details::name##_openblas<T, BackendParams...>(M, K, N, C, A, B, alpha,     \
                                                   beta);                       \
   }
 #else
-#define ENABLE_GEMM_OPENBLAS_BRANCH(name)
+#define HPC_ENABLE_GEMM_OPENBLAS_BRANCH(name)
 #endif
 
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 namespace hpc::l3 {
 namespace details {
 

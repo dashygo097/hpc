@@ -18,11 +18,11 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       details::name##_seq<T, BackendParams...>(M, K, N, C, A, B, alpha, beta); \
     }                                                                          \
-    ENABLE_GEMM_SIMD_BRANCH(name)                                              \
-    ENABLE_GEMM_OPENMP_BRANCH(name)                                            \
-    ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)                                       \
-    ENABLE_GEMM_OPENBLAS_BRANCH(name)                                          \
-    ENABLE_GEMM_ACCELERATE_BRANCH(name)                                        \
+    HPC_ENABLE_GEMM_SIMD_BRANCH(name)                                          \
+    HPC_ENABLE_GEMM_OPENMP_BRANCH(name)                                        \
+    HPC_ENABLE_GEMM_OPENMP_SIMD_BRANCH(name)                                   \
+    HPC_ENABLE_GEMM_OPENBLAS_BRANCH(name)                                      \
+    HPC_ENABLE_GEMM_ACCELERATE_BRANCH(name)                                    \
   }
 
 namespace hpc::l3 {

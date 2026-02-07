@@ -1,10 +1,10 @@
 #pragma once
 
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 #include "../../backends/backends.hh"
 #endif
 
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 namespace hpc::l2 {
 namespace details {
 

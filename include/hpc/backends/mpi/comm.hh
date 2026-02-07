@@ -1,11 +1,11 @@
 #pragma once
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
 #include <iostream>
 #include <mpi.h>
 #endif
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
 namespace hpc::mpi {
 class MPICommunicator {
 public:

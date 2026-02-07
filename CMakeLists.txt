@@ -41,12 +41,12 @@ include(BuildSummaries)
 
 if(HPC_STANDALONE)
   # Apps
-  if(ENABLE_DEMOS)
+  if(HPC_ENABLE_DEMOS)
     add_subdirectory(demos)
   endif()
 
   # Benchmarks
-  if(ENABLE_BENCHMARKING)
+  if(HPC_ENABLE_BENCHMARKING)
     add_subdirectory(benchmarks)
   endif()
 endif()

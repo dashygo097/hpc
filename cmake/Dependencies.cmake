@@ -2,20 +2,20 @@
 
 # --- 3rdparty libraries (always included) ---
 include_directories(3rdparty)
-if(ENABLE_BENCHMARKING)
+if(HPC_ENABLE_BENCHMARKING)
   add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
   add_subdirectory(3rdparty/benchmark EXCLUDE_FROM_ALL)
 endif()
 
 # --- CUDA ---
-if(ENABLE_CUDA AND NOT APPLE)
+if(HPC_ENABLE_CUDA AND NOT APPLE)
   include(CheckLanguage)
   check_language(CUDA)
   
   if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
     find_package(CUDAToolkit REQUIRED)
-    set(HAS_CUDA TRUE CACHE INTERNAL "CUDA is available")
+    set(HPC_HAS_CUDA TRUE CACHE INTERNAL "CUDA is available")
     
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fPIC")
@@ -25,26 +25,26 @@ if(ENABLE_CUDA AND NOT APPLE)
     message(STATUS "CUDA compiler detected: ${CMAKE_CUDA_COMPILER}")
     message(STATUS "CUDA toolkit version: ${CUDAToolkit_VERSION}")
   else()
-    set(HAS_CUDA FALSE CACHE INTERNAL "CUDA is not available")
+    set(HPC_HAS_CUDA FALSE CACHE INTERNAL "CUDA is not available")
     message(WARNING "CUDA requested but compiler not found; CUDA support disabled.")
   endif()
 else()
-  set(HAS_CUDA FALSE CACHE INTERNAL "CUDA is not available")
-  if(APPLE AND ENABLE_CUDA)
+  set(HPC_HAS_CUDA FALSE CACHE INTERNAL "CUDA is not available")
+  if(APPLE AND HPC_ENABLE_CUDA)
     message(STATUS "CUDA not supported on macOS; CUDA support disabled.")
   endif()
 endif()
 
 # --- CUBLAS ---
-if(ENABLE_CUBLAS AND HAS_CUDA) 
-  set(HAS_CUBLAS TRUE CACHE INTERNAL "CUBLAS is available")
+if(HPC_ENABLE_CUBLAS AND HPC_HAS_CUDA) 
+  set(HPC_HAS_CUBLAS TRUE CACHE INTERNAL "CUBLAS is available")
   message(STATUS "CUBLAS found")
 else()
-  set(HAS_CUBLAS FALSE CACHE INTERNAL "CUBLAS is not available")
+  set(HPC_HAS_CUBLAS FALSE CACHE INTERNAL "CUBLAS is not available")
 endif()
 
 # --- OpenMP ---
-if(ENABLE_OPENMP)
+if(HPC_ENABLE_OPENMP)
   if(APPLE)
     # macOS-specific OpenMP setup (Homebrew libomp)
     set(OPENMP_PATH "/opt/homebrew/opt/libomp" CACHE PATH "Path to OpenMP installation")
@@ -61,19 +61,19 @@ if(ENABLE_OPENMP)
   
   find_package(OpenMP)
   if(OpenMP_CXX_FOUND)
-    set(HAS_OPENMP TRUE CACHE INTERNAL "OpenMP is available")
+    set(HPC_HAS_OPENMP TRUE CACHE INTERNAL "OpenMP is available")
     message(STATUS "OpenMP C version: ${OpenMP_C_VERSION}")
     message(STATUS "OpenMP CXX version: ${OpenMP_CXX_VERSION}")
   else()
-    set(HAS_OPENMP FALSE CACHE INTERNAL "OpenMP is not available")
+    set(HPC_HAS_OPENMP FALSE CACHE INTERNAL "OpenMP is not available")
     message(WARNING "OpenMP requested but not found")
   endif()
 else()
-  set(HAS_OPENMP FALSE CACHE INTERNAL "OpenMP is not available")
+  set(HPC_HAS_OPENMP FALSE CACHE INTERNAL "OpenMP is not available")
 endif()
 
 # --- SIMD Detection ---
-if(ENABLE_SIMD)
+if(HPC_ENABLE_SIMD)
   include(CheckCXXSourceCompiles)
 
   # Detect platform SIMD capabilities
@@ -85,14 +85,14 @@ if(ENABLE_SIMD)
         simd_float4 v = {1.0f, 2.0f, 3.0f, 4.0f};
         return 0;
       }
-    " HAS_APPLE_SIMD)
+    " HPC_HAS_APPLE_SIMD)
       
-    if(HAS_APPLE_SIMD)
-      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+    if(HPC_HAS_APPLE_SIMD)
+      set(HPC_HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
       set(SIMD_TYPE "Apple" CACHE INTERNAL "SIMD implementation type")
       message(STATUS "SIMD: Apple Silicon SIMD detected (M-series chip)")
     else()
-      set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+      set(HPC_HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
       message(WARNING "SIMD requested but Apple SIMD headers not found")
     endif()
     
@@ -104,15 +104,14 @@ if(ENABLE_SIMD)
         float32x4_t v = vdupq_n_f32(1.0f);
         return 0;
       }
-    " HAS_ARM_NEON)
+    " HPC_HAS_ARM_NEON)
     
-    if(HAS_ARM_NEON)
-      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+    if(HPC_HAS_ARM_NEON)
+      set(HPC_HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
       set(SIMD_TYPE "NEON" CACHE INTERNAL "SIMD implementation type")
       message(STATUS "SIMD: ARM NEON detected")
-      add_compile_options(-mfpu=neon)
     else()
-      set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+      set(HPC_HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
       message(WARNING "SIMD requested but ARM NEON not available")
     endif()
     
@@ -124,7 +123,7 @@ if(ENABLE_SIMD)
         __m256 v = _mm256_set1_ps(1.0f);
         return 0;
       }
-    " HAS_AVX)
+    " HPC_HAS_AVX)
     
     check_cxx_source_compiles("
       #include <xmmintrin.h>
@@ -132,58 +131,58 @@ if(ENABLE_SIMD)
         __m128 v = _mm_set1_ps(1.0f);
         return 0;
       }
-    " HAS_SSE)
+    " HPC_HAS_SSE)
     
-    if(HAS_AVX)
-      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+    if(HPC_HAS_AVX)
+      set(HPC_HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
       set(SIMD_TYPE "AVX" CACHE INTERNAL "SIMD implementation type")
       add_compile_options(-mavx -mfma)
       message(STATUS "SIMD: AVX detected")
-    elseif(HAS_SSE)
-      set(HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
+    elseif(HPC_HAS_SSE)
+      set(HPC_HAS_SIMD TRUE CACHE INTERNAL "SIMD is available")
       set(SIMD_TYPE "SSE" CACHE INTERNAL "SIMD implementation type")
       add_compile_options(-msse4.2)
       message(STATUS "SIMD: SSE4.2 detected")
     else()
-      set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+      set(HPC_HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
       message(WARNING "SIMD requested but no x86 SIMD extensions found")
     endif()
   else()
-    set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+    set(HPC_HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
     message(WARNING "SIMD requested but platform ${CMAKE_SYSTEM_PROCESSOR} not recognized")
   endif()
 else()
-  set(HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
+  set(HPC_HAS_SIMD FALSE CACHE INTERNAL "SIMD is not available")
 endif()
  
 
 # --- MPI ---
-if(ENABLE_MPI)
+if(HPC_ENABLE_MPI)
   find_package(MPI)
   if(MPI_CXX_FOUND)
-    set(HAS_MPI TRUE CACHE INTERNAL "MPI is available")
+    set(HPC_HAS_MPI TRUE CACHE INTERNAL "MPI is available")
     message(STATUS "MPI C version: ${MPI_C_VERSION}")
     message(STATUS "MPI CXX version: ${MPI_CXX_VERSION}")
   else()
-    set(HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
+    set(HPC_HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
     message(WARNING "MPI requested but not found")
   endif()
 else()
-  set(HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
+  set(HPC_HAS_MPI FALSE CACHE INTERNAL "MPI is not available")
 endif()
 
 # --- Pybind11 ---
-if(ENABLE_PYBIND11) 
+if(HPC_ENABLE_PYBIND11) 
   add_subdirectory(3rdparty/pybind11)
 
-  set(HAS_PYBIND11 TRUE CACHE INTERNAL "pybind11 is available")
+  set(HPC_HAS_PYBIND11 TRUE CACHE INTERNAL "pybind11 is available")
   message(STATUS "pybind11 found: ${pybind11_VERSION}")
 else()
-  set(HAS_PYBIND11 FALSE CACHE INTERNAL "pybind11 is not available")
+  set(HPC_HAS_PYBIND11 FALSE CACHE INTERNAL "pybind11 is not available")
 endif()
 
 # --- PyTorch ---
-if(ENABLE_PYTORCH)
+if(HPC_ENABLE_PYTORCH)
   find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
   
   execute_process(
@@ -208,32 +207,32 @@ if(ENABLE_PYTORCH)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP})
   
-  set(HAS_PYTORCH TRUE CACHE INTERNAL "PyTorch is available")
+  set(HPC_HAS_PYTORCH TRUE CACHE INTERNAL "PyTorch is available")
   message(STATUS "PyTorch found at: ${TORCH_CMAKE_PATH}")
   message(STATUS "PyTorch version: ${Torch_VERSION}")
 else()
-  set(HAS_PYTORCH FALSE CACHE INTERNAL "PyTorch is not available")
+  set(HPC_HAS_PYTORCH FALSE CACHE INTERNAL "PyTorch is not available")
 endif()
 
 # --- OpenBLAS ---
-if(ENABLE_OPENBLAS)
+if(HPC_ENABLE_OPENBLAS)
   find_package(BLAS REQUIRED)
   if(BLAS_FOUND)
-    set(HAS_OPENBLAS TRUE CACHE INTERNAL "OpenBLAS is available")
+    set(HPC_HAS_OPENBLAS TRUE CACHE INTERNAL "OpenBLAS is available")
     message(STATUS "OpenBLAS found: ${BLAS_LIBRARIES}")
   else()
-    set(HAS_OPENBLAS FALSE CACHE INTERNAL "OpenBLAS is not available")
+    set(HPC_HAS_OPENBLAS FALSE CACHE INTERNAL "OpenBLAS is not available")
     message(WARNING "OpenBLAS requested but not found")
   endif()
 else()
-  set(HAS_OPENBLAS FALSE CACHE INTERNAL "OpenBLAS is not available")
+  set(HPC_HAS_OPENBLAS FALSE CACHE INTERNAL "OpenBLAS is not available")
 endif()
 
 # --- Apple Accelerate ---
-if(APPLE AND ENABLE_ACCELERATE)
+if(APPLE AND HPC_ENABLE_ACCELERATE)
   find_library(ACCELERATE_LIB Accelerate REQUIRED)
-  set(HAS_ACCELERATE TRUE CACHE INTERNAL "Accelerate is available")
+  set(HPC_HAS_ACCELERATE TRUE CACHE INTERNAL "Accelerate is available")
   message(STATUS "Apple Accelerate framework found")
 else()
-  set(HAS_ACCELERATE FALSE CACHE INTERNAL "Accelerate is not available")
+  set(HPC_HAS_ACCELERATE FALSE CACHE INTERNAL "Accelerate is not available")
 endif()

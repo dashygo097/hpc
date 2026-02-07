@@ -1,12 +1,12 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 #include "./err.cuh"
 #include <cuda_runtime.h>
 #include <memory>
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 namespace hpc::cu {
 
 // Memory Allocation

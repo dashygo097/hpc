@@ -19,12 +19,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       details::name##_seq<T, BackendParams...>(n, dst, src, scalar);           \
     }                                                                          \
-    ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)                                   \
-    ENABLE_SIMD_VECTOR_SCALAR_BRANCH(name)                                     \
-    ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH(name)                              \
-    ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH(name)                               \
-    ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)                                     \
-    ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH(name)                                   \
+    HPC_ENABLE_OPENMP_VECTOR_SCALAR_BRANCH(name)                               \
+    HPC_ENABLE_SIMD_VECTOR_SCALAR_BRANCH(name)                                 \
+    HPC_ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH(name)                          \
+    HPC_ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH(name)                           \
+    HPC_ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)                                 \
+    HPC_ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH(name)                               \
   }
 
 #define L1_FACTORY_BINARY(name)                                                \
@@ -34,12 +34,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       details::name##_seq<T, BackendParams...>(n, dst, src1, src2);            \
     }                                                                          \
-    ENABLE_OPENMP_BINARY_BRANCH(name)                                          \
-    ENABLE_SIMD_BINARY_BRANCH(name)                                            \
-    ENABLE_OPENMP_SIMD_BINARY_BRANCH(name)                                     \
-    ENABLE_ACCELERATE_BINARY_BRANCH(name)                                      \
-    ENABLE_CUDA_BINARY_BRANCH(name)                                            \
-    ENABLE_CUBLAS_BINARY_BRANCH(name)                                          \
+    HPC_ENABLE_OPENMP_BINARY_BRANCH(name)                                      \
+    HPC_ENABLE_SIMD_BINARY_BRANCH(name)                                        \
+    HPC_ENABLE_OPENMP_SIMD_BINARY_BRANCH(name)                                 \
+    HPC_ENABLE_ACCELERATE_BINARY_BRANCH(name)                                  \
+    HPC_ENABLE_CUDA_BINARY_BRANCH(name)                                        \
+    HPC_ENABLE_CUBLAS_BINARY_BRANCH(name)                                      \
   }
 
 #define L1_FACTORY_UNARY(name)                                                 \
@@ -49,12 +49,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       details::name##_seq<T, BackendParams...>(n, dst, src);                   \
     }                                                                          \
-    ENABLE_OPENMP_UNARY_BRANCH(name)                                           \
-    ENABLE_SIMD_UNARY_BRANCH(name)                                             \
-    ENABLE_OPENMP_SIMD_UNARY_BRANCH(name)                                      \
-    ENABLE_ACCELERATE_UNARY_BRANCH(name)                                       \
-    ENABLE_CUDA_UNARY_BRANCH(name)                                             \
-    ENABLE_CUBLAS_UNARY_BRANCH(name)                                           \
+    HPC_ENABLE_OPENMP_UNARY_BRANCH(name)                                       \
+    HPC_ENABLE_SIMD_UNARY_BRANCH(name)                                         \
+    HPC_ENABLE_OPENMP_SIMD_UNARY_BRANCH(name)                                  \
+    HPC_ENABLE_ACCELERATE_UNARY_BRANCH(name)                                   \
+    HPC_ENABLE_CUDA_UNARY_BRANCH(name)                                         \
+    HPC_ENABLE_CUBLAS_UNARY_BRANCH(name)                                       \
   }
 
 #define L1_FACTORY_SCALAR(name)                                                \
@@ -63,12 +63,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       details::name##_seq<T, BackendParams...>(n, dst, scalar);                \
     }                                                                          \
-    ENABLE_OPENMP_SCALAR_BRANCH(name)                                          \
-    ENABLE_SIMD_SCALAR_BRANCH(name)                                            \
-    ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                     \
-    ENABLE_ACCELERATE_SCALAR_BRANCH(name)                                      \
-    ENABLE_CUDA_SCALAR_BRANCH(name)                                            \
-    ENABLE_CUBLAS_SCALAR_BRANCH(name)                                          \
+    HPC_ENABLE_OPENMP_SCALAR_BRANCH(name)                                      \
+    HPC_ENABLE_SIMD_SCALAR_BRANCH(name)                                        \
+    HPC_ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                 \
+    HPC_ENABLE_ACCELERATE_SCALAR_BRANCH(name)                                  \
+    HPC_ENABLE_CUDA_SCALAR_BRANCH(name)                                        \
+    HPC_ENABLE_CUBLAS_SCALAR_BRANCH(name)                                      \
   }
 
 #define L1_FACTORY_REDUCE(name)                                                \
@@ -77,12 +77,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       return details::name##_seq<T, BackendParams...>(n, src);                 \
     }                                                                          \
-    ENABLE_OPENMP_REDUCE_BRANCH(name)                                          \
-    ENABLE_SIMD_REDUCE_BRANCH(name)                                            \
-    ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                     \
-    ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                      \
-    ENABLE_CUDA_REDUCE_BRANCH(name)                                            \
-    ENABLE_CUBLAS_REDUCE_BRANCH(name)                                          \
+    HPC_ENABLE_OPENMP_REDUCE_BRANCH(name)                                      \
+    HPC_ENABLE_SIMD_REDUCE_BRANCH(name)                                        \
+    HPC_ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                 \
+    HPC_ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                  \
+    HPC_ENABLE_CUDA_REDUCE_BRANCH(name)                                        \
+    HPC_ENABLE_CUBLAS_REDUCE_BRANCH(name)                                      \
     return T{};                                                                \
   }
 
@@ -93,12 +93,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       return details::name##_seq<T, BackendParams...>(n, src1, src2);          \
     }                                                                          \
-    ENABLE_OPENMP_REDUCE2_BRANCH(name)                                         \
-    ENABLE_SIMD_REDUCE2_BRANCH(name)                                           \
-    ENABLE_OPENMP_SIMD_REDUCE2_BRANCH(name)                                    \
-    ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                     \
-    ENABLE_CUDA_REDUCE2_BRANCH(name)                                           \
-    ENABLE_CUBLAS_REDUCE2_BRANCH(name)                                         \
+    HPC_ENABLE_OPENMP_REDUCE2_BRANCH(name)                                     \
+    HPC_ENABLE_SIMD_REDUCE2_BRANCH(name)                                       \
+    HPC_ENABLE_OPENMP_SIMD_REDUCE2_BRANCH(name)                                \
+    HPC_ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                 \
+    HPC_ENABLE_CUDA_REDUCE2_BRANCH(name)                                       \
+    HPC_ENABLE_CUBLAS_REDUCE2_BRANCH(name)                                     \
     return T{};                                                                \
   }
 
@@ -108,12 +108,12 @@
     if constexpr (backend == Backend::SEQUENTIAL) {                            \
       return details::name##_seq<T, BackendParams...>(n, src);                 \
     }                                                                          \
-    ENABLE_OPENMP_REDUCE_BRANCH(name)                                          \
-    ENABLE_SIMD_REDUCE_BRANCH(name)                                            \
-    ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                     \
-    ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                      \
-    ENABLE_CUDA_REDUCE_BRANCH(name)                                            \
-    ENABLE_CUBLAS_REDUCE_BRANCH(name)                                          \
+    HPC_ENABLE_OPENMP_REDUCE_BRANCH(name)                                      \
+    HPC_ENABLE_SIMD_REDUCE_BRANCH(name)                                        \
+    HPC_ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                 \
+    HPC_ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                  \
+    HPC_ENABLE_CUDA_REDUCE_BRANCH(name)                                        \
+    HPC_ENABLE_CUBLAS_REDUCE_BRANCH(name)                                      \
     return size_t{};                                                           \
   }
 
@@ -138,45 +138,45 @@ L1_FACTORY_INDEXED_REDUCE(iamax)
 #undef L1_FACTORY_REDUCE
 #undef L1_FACTORY_REDUCE2
 #undef L1_FACTORY_INDEXED_REDUCE
-#undef ENABLE_OPENMP_VECTOR_SCALAR_BRANCH
-#undef ENABLE_OPENMP_BINARY_BRANCH
-#undef ENABLE_OPENMP_UNARY_BRANCH
-#undef ENABLE_OPENMP_SCALAR_BRANCH
-#undef ENABLE_OPENMP_REDUCE_BRANCH
-#undef ENABLE_OPENMP_REDUCE2_BRANCH
-#undef ENABLE_SIMD_VECTOR_SCALAR_BRANCH
-#undef ENABLE_SIMD_BINARY_BRANCH
-#undef ENABLE_SIMD_UNARY_BRANCH
-#undef ENABLE_SIMD_SCALAR_BRANCH
-#undef ENABLE_SIMD_REDUCE_BRANCH
-#undef ENABLE_SIMD_REDUCE2_BRANCH
-#undef ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH
-#undef ENABLE_OPENMP_SIMD_BINARY_BRANCH
-#undef ENABLE_OPENMP_SIMD_UNARY_BRANCH
-#undef ENABLE_OPENMP_SIMD_SCALAR_BRANCH
-#undef ENABLE_OPENMP_SIMD_REDUCE_BRANCH
-#undef ENABLE_OPENMP_SIMD_REDUCE2_BRANCH
-#undef ENABLE_OPENBLAS_VECTOR_SCALAR_BRANCH
-#undef ENABLE_OPENBLAS_BINARY_BRANCH
-#undef ENABLE_OPENBLAS_UNARY_BRANCH
-#undef ENABLE_OPENBLAS_SCALAR_BRANCH
-#undef ENABLE_OPENBLAS_REDUCE_BRANCH
-#undef ENABLE_OPENBLAS_REDUCE2_BRANCH
-#undef ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH
-#undef ENABLE_ACCELERATE_BINARY_BRANCH
-#undef ENABLE_ACCELERATE_UNARY_BRANCH
-#undef ENABLE_ACCELERATE_SCALAR_BRANCH
-#undef ENABLE_ACCELERATE_REDUCE_BRANCH
-#undef ENABLE_ACCELERATE_REDUCE2_BRANCH
-#undef ENABLE_CUDA_VECTOR_SCALAR_BRANCH
-#undef ENABLE_CUDA_BINARY_BRANCH
-#undef ENABLE_CUDA_UNARY_BRANCH
-#undef ENABLE_CUDA_SCALAR_BRANCH
-#undef ENABLE_CUDA_REDUCE_BRANCH
-#undef ENABLE_CUDA_REDUCE2_BRANCH
-#undef ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH
-#undef ENABLE_CUBLAS_BINARY_BRANCH
-#undef ENABLE_CUBLAS_UNARY_BRANCH
-#undef ENABLE_CUBLAS_SCALAR_BRANCH
-#undef ENABLE_CUBLAS_REDUCE_BRANCH
-#undef ENABLE_CUBLAS_REDUCE2_BRANCH
+#undef HPC_ENABLE_OPENMP_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_OPENMP_BINARY_BRANCH
+#undef HPC_ENABLE_OPENMP_UNARY_BRANCH
+#undef HPC_ENABLE_OPENMP_SCALAR_BRANCH
+#undef HPC_ENABLE_OPENMP_REDUCE_BRANCH
+#undef HPC_ENABLE_OPENMP_REDUCE2_BRANCH
+#undef HPC_ENABLE_SIMD_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_SIMD_BINARY_BRANCH
+#undef HPC_ENABLE_SIMD_UNARY_BRANCH
+#undef HPC_ENABLE_SIMD_SCALAR_BRANCH
+#undef HPC_ENABLE_SIMD_REDUCE_BRANCH
+#undef HPC_ENABLE_SIMD_REDUCE2_BRANCH
+#undef HPC_ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_OPENMP_SIMD_BINARY_BRANCH
+#undef HPC_ENABLE_OPENMP_SIMD_UNARY_BRANCH
+#undef HPC_ENABLE_OPENMP_SIMD_SCALAR_BRANCH
+#undef HPC_ENABLE_OPENMP_SIMD_REDUCE_BRANCH
+#undef HPC_ENABLE_OPENMP_SIMD_REDUCE2_BRANCH
+#undef HPC_ENABLE_OPENBLAS_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_OPENBLAS_BINARY_BRANCH
+#undef HPC_ENABLE_OPENBLAS_UNARY_BRANCH
+#undef HPC_ENABLE_OPENBLAS_SCALAR_BRANCH
+#undef HPC_ENABLE_OPENBLAS_REDUCE_BRANCH
+#undef HPC_ENABLE_OPENBLAS_REDUCE2_BRANCH
+#undef HPC_ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_ACCELERATE_BINARY_BRANCH
+#undef HPC_ENABLE_ACCELERATE_UNARY_BRANCH
+#undef HPC_ENABLE_ACCELERATE_SCALAR_BRANCH
+#undef HPC_ENABLE_ACCELERATE_REDUCE_BRANCH
+#undef HPC_ENABLE_ACCELERATE_REDUCE2_BRANCH
+#undef HPC_ENABLE_CUDA_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_CUDA_BINARY_BRANCH
+#undef HPC_ENABLE_CUDA_UNARY_BRANCH
+#undef HPC_ENABLE_CUDA_SCALAR_BRANCH
+#undef HPC_ENABLE_CUDA_REDUCE_BRANCH
+#undef HPC_ENABLE_CUDA_REDUCE2_BRANCH
+#undef HPC_ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH
+#undef HPC_ENABLE_CUBLAS_BINARY_BRANCH
+#undef HPC_ENABLE_CUBLAS_UNARY_BRANCH
+#undef HPC_ENABLE_CUBLAS_SCALAR_BRANCH
+#undef HPC_ENABLE_CUBLAS_REDUCE_BRANCH
+#undef HPC_ENABLE_CUBLAS_REDUCE2_BRANCH

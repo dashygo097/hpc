@@ -5,15 +5,15 @@
 #include <iostream>
 #include <string>
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
 #include <omp.h>
 #endif
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
 #include <mpi.h>
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
 
@@ -32,25 +32,25 @@
 
 #define __TIME_SEQUENTIAL(name) __TIME_SCOPE(SEQUENTIAL, name)
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
 #define __TIME_OPENMP(name) __TIME_SCOPE(OPENMP, name)
 #else
 #define __TIME_OPENMP(name) __TIME_SCOPE(SEQUENTIAL, name)
 #endif
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
 #define __TIME_MPI(name) __TIME_SCOPE(MPI, name)
 #else
 #define __TIME_MPI(name) __TIME_SCOPE(SEQUENTIAL, name)
 #endif
 
-#ifdef ENABLE_SIMD
+#ifdef HPC_ENABLE_SIMD
 #define __TIME_SIMD(name) __TIME_SCOPE(SIMD, name)
 #else
 #define __TIME_SIMD(name) __TIME_SCOPE(SEQUENTIAL, name)
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 #define __TIME_CUDA(name) __TIME_SCOPE(CUDA, name)
 #else
 #define __TIME_CUDA(name) __TIME_SCOPE(SEQUENTIAL, name)
@@ -67,7 +67,7 @@ public:
   explicit Timer(Backend mode = Backend::SEQUENTIAL,
                  const std::string &name = "Timer")
       : backend_(mode), label_(name), elapsed_(0.0) {
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
     if (backend_ == Backend::MPI) {
       int initialized = 0;
       MPI_Initialized(&initialized);
@@ -79,7 +79,7 @@ public:
   }
 
   ~Timer() {
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
     if (backend_ == Backend::CUDA && start_event_ != nullptr) {
       cudaEventDestroy(start_event_);
       cudaEventDestroy(stop_event_);
@@ -95,20 +95,20 @@ public:
   Timer(Timer &&other) noexcept
       : backend_(other.backend_), label_(std::move(other.label_)),
         elapsed_(other.elapsed_), start_time_(other.start_time_)
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
         ,
         start_omp_(other.start_omp_)
 #endif
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
         ,
         start_mpi_(other.start_mpi_)
 #endif
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
         ,
         start_event_(other.start_event_), stop_event_(other.stop_event_)
 #endif
   {
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
     other.start_event_ = nullptr;
     other.stop_event_ = nullptr;
 #endif
@@ -122,14 +122,14 @@ public:
       break;
     }
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
     case Backend::OPENMP: {
       start_omp_ = omp_get_wtime();
       break;
     }
 #endif
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
     case Backend::MPI: {
       MPI_Barrier(MPI_COMM_WORLD);
       start_mpi_ = MPI_Wtime();
@@ -137,7 +137,7 @@ public:
     }
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
     case Backend::CUDA: {
       if (start_event_ == nullptr) {
         cudaEventCreate(&start_event_);
@@ -163,14 +163,14 @@ public:
       break;
     }
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
     case Backend::OPENMP: {
       elapsed_ = omp_get_wtime() - start_omp_;
       break;
     }
 #endif
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
     case Backend::MPI: {
       elapsed_ = MPI_Wtime() - start_mpi_;
       MPI_Barrier(MPI_COMM_WORLD);
@@ -178,7 +178,7 @@ public:
     }
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
     case Backend::CUDA: {
       cudaEventRecord(stop_event_);
       cudaEventSynchronize(stop_event_);
@@ -237,15 +237,15 @@ private:
   // Backend-specific timing data
   std::chrono::high_resolution_clock::time_point start_time_;
 
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
   double start_omp_ = 0.0;
 #endif
 
-#ifdef ENABLE_MPI
+#ifdef HPC_ENABLE_MPI
   double start_mpi_ = 0.0;
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
   cudaEvent_t start_event_ = nullptr;
   cudaEvent_t stop_event_ = nullptr;
 #endif

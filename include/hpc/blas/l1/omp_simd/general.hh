@@ -1,13 +1,13 @@
 #pragma once
 
-#if defined(ENABLE_SIMD) && defined(ENABLE_OPENMP)
+#if defined(HPC_ENABLE_OPENMP) && defined(HPC_ENABLE_SIMD)
 #include "../../../backends/backends.hh"
 #include <algorithm>
-#include <cstring>
 #include <cmath>
+#include <cstring>
 #endif
 
-#if defined(ENABLE_SIMD) && defined(ENABLE_OPENMP)
+#if defined(HPC_ENABLE_OPENMP) && defined(HPC_ENABLE_SIMD)
 namespace hpc::l1 {
 namespace details {
 

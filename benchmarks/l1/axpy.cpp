@@ -126,29 +126,29 @@ DEFINE_AXPY_VEC_BENCHMARK(Seq_8192, hpc::l1::axpy, hpc::Backend::SEQUENTIAL,
                           8192)
 
 // OpenMP
-#ifdef ENABLE_OPENMP
+#ifdef HPC_ENABLE_OPENMP
 DEFINE_AXPY_VEC_BENCHMARK(OpenMP_8192, hpc::l1::axpy, hpc::Backend::OPENMP,
                           8192)
 #endif
 
 // SIMD
-#ifdef ENABLE_SIMD
+#ifdef HPC_ENABLE_SIMD
 DEFINE_AXPY_VEC_BENCHMARK(SIMD_4, hpc::l1::axpy, hpc::Backend::SIMD, 4)
 #endif
 
 // OpenMP + SIMD
-#if defined(ENABLE_OPENMP) && defined(ENABLE_SIMD)
+#if defined(HPC_ENABLE_OPENMP) && defined(HPC_ENABLE_SIMD)
 DEFINE_AXPY_VEC_BENCHMARK(OpenMP_SIMD_8192_4, hpc::l1::axpy,
                           hpc::Backend::OPENMP_SIMD, 8192, 4)
 #endif
 
 // OpenBLAS
-#ifdef ENABLE_OPENBLAS
+#ifdef HPC_ENABLE_OPENBLAS
 DEFINE_AXPY_VEC_BENCHMARK(OpenBLAS, hpc::l1::axpy, hpc::Backend::OPENBLAS)
 #endif
 
 // Apple Accelerate
-#ifdef ENABLE_ACCELERATE
+#ifdef HPC_ENABLE_ACCELERATE
 DEFINE_AXPY_VEC_BENCHMARK(Accelerate, hpc::l1::axpy, hpc::Backend::ACCELERATE)
 #endif
 

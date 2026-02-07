@@ -1,10 +1,10 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 #include "./err.cuh"
 #endif
 
-#ifdef ENABLE_CUDA
+#ifdef HPC_ENABLE_CUDA
 namespace hpc::cu {
 
 inline void printDeviceInfo(int device_id = 0) {
