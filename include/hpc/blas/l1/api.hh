@@ -23,6 +23,7 @@
     HPC_ENABLE_SIMD_VECTOR_SCALAR_BRANCH(name)                                 \
     HPC_ENABLE_OPENMP_SIMD_VECTOR_SCALAR_BRANCH(name)                          \
     HPC_ENABLE_ACCELERATE_VECTOR_SCALAR_BRANCH(name)                           \
+    HPC_ENABLE_OPENBLAS_VECTOR_SCALAR_BRANCH(name)                             \
     HPC_ENABLE_CUDA_VECTOR_SCALAR_BRANCH(name)                                 \
     HPC_ENABLE_CUBLAS_VECTOR_SCALAR_BRANCH(name)                               \
   }
@@ -37,6 +38,7 @@
     HPC_ENABLE_OPENMP_BINARY_BRANCH(name)                                      \
     HPC_ENABLE_SIMD_BINARY_BRANCH(name)                                        \
     HPC_ENABLE_OPENMP_SIMD_BINARY_BRANCH(name)                                 \
+    HPC_ENABLE_OPENBLAS_BINARY_BRANCH(name)                                    \
     HPC_ENABLE_ACCELERATE_BINARY_BRANCH(name)                                  \
     HPC_ENABLE_CUDA_BINARY_BRANCH(name)                                        \
     HPC_ENABLE_CUBLAS_BINARY_BRANCH(name)                                      \
@@ -53,6 +55,7 @@
     HPC_ENABLE_SIMD_UNARY_BRANCH(name)                                         \
     HPC_ENABLE_OPENMP_SIMD_UNARY_BRANCH(name)                                  \
     HPC_ENABLE_ACCELERATE_UNARY_BRANCH(name)                                   \
+    HPC_ENABLE_OPENBLAS_UNARY_BRANCH(name)                                     \
     HPC_ENABLE_CUDA_UNARY_BRANCH(name)                                         \
     HPC_ENABLE_CUBLAS_UNARY_BRANCH(name)                                       \
   }
@@ -66,6 +69,7 @@
     HPC_ENABLE_OPENMP_SCALAR_BRANCH(name)                                      \
     HPC_ENABLE_SIMD_SCALAR_BRANCH(name)                                        \
     HPC_ENABLE_OPENMP_SIMD_SCALAR_BRANCH(name)                                 \
+    HPC_ENABLE_OPENBLAS_SCALAR_BRANCH(name)                                    \
     HPC_ENABLE_ACCELERATE_SCALAR_BRANCH(name)                                  \
     HPC_ENABLE_CUDA_SCALAR_BRANCH(name)                                        \
     HPC_ENABLE_CUBLAS_SCALAR_BRANCH(name)                                      \
@@ -80,6 +84,7 @@
     HPC_ENABLE_OPENMP_REDUCE_BRANCH(name)                                      \
     HPC_ENABLE_SIMD_REDUCE_BRANCH(name)                                        \
     HPC_ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                 \
+    HPC_ENABLE_OPENBLAS_REDUCE_BRANCH(name)                                    \
     HPC_ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                  \
     HPC_ENABLE_CUDA_REDUCE_BRANCH(name)                                        \
     HPC_ENABLE_CUBLAS_REDUCE_BRANCH(name)                                      \
@@ -96,6 +101,7 @@
     HPC_ENABLE_OPENMP_REDUCE2_BRANCH(name)                                     \
     HPC_ENABLE_SIMD_REDUCE2_BRANCH(name)                                       \
     HPC_ENABLE_OPENMP_SIMD_REDUCE2_BRANCH(name)                                \
+    HPC_ENABLE_OPENBLAS_REDUCE2_BRANCH(name)                                   \
     HPC_ENABLE_ACCELERATE_REDUCE2_BRANCH(name)                                 \
     HPC_ENABLE_CUDA_REDUCE2_BRANCH(name)                                       \
     HPC_ENABLE_CUBLAS_REDUCE2_BRANCH(name)                                     \
@@ -111,6 +117,7 @@
     HPC_ENABLE_OPENMP_REDUCE_BRANCH(name)                                      \
     HPC_ENABLE_SIMD_REDUCE_BRANCH(name)                                        \
     HPC_ENABLE_OPENMP_SIMD_REDUCE_BRANCH(name)                                 \
+    HPC_ENABLE_OPENBLAS_REDUCE_BRANCH(name)                                    \
     HPC_ENABLE_ACCELERATE_REDUCE_BRANCH(name)                                  \
     HPC_ENABLE_CUDA_REDUCE_BRANCH(name)                                        \
     HPC_ENABLE_CUBLAS_REDUCE_BRANCH(name)                                      \
